@@ -1,0 +1,130 @@
+import { useParams, Link } from 'react-router-dom'
+import { ArrowLeft } from 'lucide-react'
+import { useAsync } from '../hooks/useAsync'
+import { api } from '../services/api'
+import { Loader, ErrorState } from '../components/States'
+import PitchBackdrop from '../components/PitchBackdrop'
+import RoleIcon from '../components/RoleIcon'
+import RankBadge from '../components/RankBadge'
+import TeamMark from '../components/TeamMark'
+import StatGrid from '../components/StatGrid'
+import Movement, { FormDelta } from '../components/Movement'
+import { LineChart, BarChart } from '../components/Charts'
+import { formatINR, roleMeta, fmtDecimal, oversFromBalls, dateTime, pad2 } from '../lib/format'
+
+export default function PlayerProfile() {
+  const { id } = useParams()
+  const { data, error, loading, reload } = useAsync(() => api.getPlayer(id), [id])
+
+  if (loading && !data) return <Loader full />
+  if (error) return <div className="page"><ErrorState error={error} onRetry={reload} /></div>
+
+  const { player: p, rankingHistory, matches, bids } = data
+  const role = roleMeta(p.playing_role)
+  const accent = p.team ? p.team.color : undefined
+  const movement = p.previous_rank && p.current_rank ? p.previous_rank - p.current_rank : 0
+
+  return (
+    <div className="page profile">
+      <Link to="/rankings" className="back-link"><ArrowLeft size={16} /> Rankings</Link>
+
+      <section className="profile-hero" style={accent ? { '--accent': accent } : undefined}>
+        <PitchBackdrop className="hero-pitch" />
+        <span className="hero-watermark" aria-hidden="true">{p.initials}</span>
+        <div className="profile-hero-body">
+          <p className="hero-lot">Player <b>#{pad2(p.auction_order)}</b> <span className="hero-code">{p.player_code}</span></p>
+          <h1 className="profile-name">{p.name}</h1>
+          <div className="hero-tags">
+            <span className={`role-chip role-${role.key}`}><RoleIcon role={p.playing_role} size={20} /> {role.label}</span>
+            {p.batting_style && <span className="hero-style">{p.batting_style}</span>}
+            {p.bowling_style && <span className="hero-style">{p.bowling_style}</span>}
+          </div>
+          <div className="profile-facts">
+            <RankBadge rank={p.current_rank} size="lg" />
+            <div><small>Ranking points</small><b>{p.ranking_points}</b></div>
+            <div><small>{p.category} rank</small><b>{p.category_rank ? `#${p.category_rank}` : 'NR'}</b></div>
+            <div><small>Form</small><FormDelta value={p.ranking_points - p.previous_ranking_points} /></div>
+            <div><small>Movement</small><Movement value={movement} /></div>
+            <div><small>Form rating</small><b>{p.form_points}/100</b></div>
+          </div>
+        </div>
+        <aside className="profile-auction">
+          <small>Auction status</small>
+          <b className={`status-tag st-${p.status.replace(' ', '-').toLowerCase()}`}>{p.status}</b>
+          <small>Base price</small><b>{formatINR(p.base_price)}</b>
+          {p.team && (
+            <>
+              <small>Team</small>
+              <span className="team-cell"><TeamMark team={p.team} size={30} /> {p.team.team_name}</span>
+              <small>Auction price</small><b className="gold">{formatINR(p.sold_price)}</b>
+            </>
+          )}
+        </aside>
+      </section>
+
+      <div className="profile-grid">
+        <section className="panel">
+          <h2>Batting</h2>
+          <StatGrid items={[
+            { label: 'Matches', value: p.matches }, { label: 'Innings', value: p.innings }, { label: 'Not outs', value: p.not_outs },
+            { label: 'Runs', value: p.runs, emphasis: true }, { label: 'Average', value: fmtDecimal(p.batting_average) },
+            { label: 'Strike rate', value: fmtDecimal(p.strike_rate, 1) }, { label: 'Highest', value: p.highest_score || '—' },
+            { label: '50s', value: p.fifties }, { label: '100s', value: p.hundreds },
+          ]} />
+        </section>
+        <section className="panel">
+          <h2>Bowling</h2>
+          <StatGrid items={[
+            { label: 'Overs', value: oversFromBalls(p.balls_bowled) }, { label: 'Wickets', value: p.wickets, emphasis: true },
+            { label: 'Runs conceded', value: p.runs_conceded }, { label: 'Economy', value: fmtDecimal(p.economy) },
+            { label: 'Average', value: fmtDecimal(p.bowling_average) }, { label: 'Strike rate', value: fmtDecimal(p.bowling_strike_rate, 1) },
+            { label: 'Best', value: p.best_bowling || '—' }, { label: '3W / 4W / 5W', value: `${p.three_wkt_hauls} / ${p.four_wkt_hauls} / ${p.five_wkt_hauls}` },
+          ]} />
+        </section>
+        <section className="panel">
+          <h2>Fielding & impact</h2>
+          <StatGrid items={[
+            { label: 'Catches', value: p.catches }, { label: 'Stumpings', value: p.stumpings },
+            { label: 'Run outs', value: p.run_outs }, { label: 'Player of match', value: p.player_of_match, emphasis: true },
+          ]} />
+        </section>
+        <section className="panel">
+          <h2>Ranking history</h2>
+          <LineChart label="Ranking points over time" points={rankingHistory.map(h => ({ y: h.points }))} format={(v) => `${v} pts`} />
+        </section>
+        <section className="panel panel-span">
+          <h2>Match history</h2>
+          <BarChart label={p.playing_role === 'Bowler' ? 'Wickets per match' : 'Runs per match'}
+            bars={[...matches].reverse().map(m => ({ value: p.playing_role === 'Bowler' ? m.wickets : m.runs, accent: m.runs >= 50 || m.wickets >= 3 }))} />
+          {matches.length > 0 && (
+            <div className="table-scroll">
+              <table className="table table-compact">
+                <thead><tr><th>Match</th><th>Date</th><th className="num-col">Runs (balls)</th><th className="num-col">Bowling</th><th className="num-col">Ct / St</th></tr></thead>
+                <tbody>
+                  {matches.map(m => (
+                    <tr key={m.id}>
+                      <td>{m.match_label}</td><td className="muted">{m.match_date ? String(m.match_date).slice(0, 10) : '—'}</td>
+                      <td className="num-col">{m.runs} ({m.balls_faced})</td>
+                      <td className="num-col">{m.balls_bowled ? `${m.wickets}/${m.runs_conceded} (${oversFromBalls(m.balls_bowled)})` : '—'}</td>
+                      <td className="num-col">{m.catches} / {m.stumpings}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+        {bids.length > 0 && (
+          <section className="panel panel-span">
+            <h2>Auction bids</h2>
+            <ol className="bid-trail">
+              {bids.map((b, i) => (
+                <li key={i} style={{ '--team': b.color }}><b>{b.short_name}</b> <span>{formatINR(b.amount)}</span> <small className="muted">{dateTime(b.at)}</small></li>
+              ))}
+            </ol>
+          </section>
+        )}
+      </div>
+    </div>
+  )
+}

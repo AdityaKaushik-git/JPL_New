@@ -1,0 +1,62 @@
+# Render Blueprint — JPL auction
+# Render has no managed MySQL, so MySQL runs as a private Docker service with a
+# persistent disk. The web service reaches it over Render's private network.
+# NOTE: run exactly ONE web instance — live auction state and the timer live in
+# that process (Socket.IO). Private services and disks require a paid plan.
+services:
+  - type: pserv
+    name: jpl-mysql
+    runtime: image
+    image:
+      url: docker.io/library/mysql:8.0
+    plan: starter
+    disk:
+      name: mysql-data
+      mountPath: /var/lib/mysql
+      sizeGB: 5
+    envVars:
+      - key: MYSQL_DATABASE
+        value: jpl_auction
+      - key: MYSQL_USER
+        value: jpl
+      - key: MYSQL_PASSWORD
+        generateValue: true
+      - key: MYSQL_ROOT_PASSWORD
+        generateValue: true
+
+  - type: web
+    name: jpl-auction
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: starter
+    numInstances: 1
+    healthCheckPath: /api/health
+    envVars:
+      - key: DB_HOST
+        fromService:
+          type: pserv
+          name: jpl-mysql
+          property: host
+      - key: DB_PORT
+        value: "3306"
+      - key: DB_NAME
+        value: jpl_auction
+      - key: DB_USER
+        value: jpl
+      - key: DB_PASS
+        fromService:
+          type: pserv
+          name: jpl-mysql
+          envVarKey: MYSQL_PASSWORD
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_LOGIN_ID
+        value: ADMIN001
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: AUCTION_INITIAL_SECONDS
+        value: "30"
+      - key: AUCTION_BID_RESET_SECONDS
+        value: "15"
+      - key: AUCTION_AUTO_FINALIZE
+        value: "true"
