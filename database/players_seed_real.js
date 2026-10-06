@@ -20284,7 +20284,7 @@ async function main() {
     await pool.query('SET FOREIGN_KEY_CHECKS = 0');
     const tables = ['teams', 'auction_results', 'bids', 'auctions', 'ranking_history', 'player_matches', 'players'];
     for (const t of tables) {
-      try { await pool.query(TRUNCATE TABLE ); } catch(e) {}
+      try { await pool.query('TRUNCATE TABLE ' + t); } catch(e) {}
     }
     await pool.query('SET FOREIGN_KEY_CHECKS = 1');
     console.log('Tables wiped.');
