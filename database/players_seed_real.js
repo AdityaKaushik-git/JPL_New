@@ -20317,7 +20317,7 @@ async function main() {
     
     // Recalculate rankings for all base_price_auto = 1
     console.log('Recalculating rankings and base prices...');
-    await recalculateRankings();
+    await recalculateRankings(pool);
     console.log('Done recalculating rankings.');
     
   } catch (err) {
