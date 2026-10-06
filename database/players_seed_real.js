@@ -20291,7 +20291,7 @@ async function main() {
 
     for (const p of players) {
       // Check if exists
-      const [rows] = await pool.query('SELECT player_id FROM players WHERE enrollment_number = ?', [p.enrollment_number]);
+      const [rows] = await pool.query('SELECT id FROM players WHERE enrollment_number = ?', [p.enrollment_number]);
       
       if (rows.length > 0) {
         skipped++;
