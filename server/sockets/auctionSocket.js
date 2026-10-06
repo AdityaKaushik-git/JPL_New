@@ -28,6 +28,7 @@
  */
 const pool = require('../config/db');
 const { verifyToken } = require('../middleware/auth');
+const sessionRegistry = require('../services/sessionRegistry');
 const hub = require('./hub');
 const {
     INITIAL_TIMER_SECONDS,
@@ -713,15 +714,22 @@ module.exports = (io) => {
 
     io.use((socket, next) => {
         const token = socket.handshake.auth && socket.handshake.auth.token;
-        socket.user = { id: 'guest_' + socket.id, role: 'guest' };
-        if (token) {
-            try { socket.user = verifyToken(token); } catch (e) { /* stays guest */ }
+        if (!token) {
+            return next(new Error('Authentication required. Please log in first.'));
         }
-        next();
+        try {
+            socket.user = verifyToken(token);
+            socket.token = token;
+            sessionRegistry.touchSession(socket.user, token, socket.id);
+            next();
+        } catch (e) {
+            return next(new Error('Session expired or invalid token. Please log in again.'));
+        }
     });
 
     io.on('connection', (socket) => {
         connectedUsers.set(socket.id, socket.user);
+        sessionRegistry.touchSession(socket.user, socket.token, socket.id);
         io.emit('live:stats', liveStats());
         sendSnapshot(socket);
 
@@ -785,6 +793,7 @@ module.exports = (io) => {
         });
 
         socket.on('disconnect', () => {
+            sessionRegistry.socketDisconnected(socket.user, socket.token, socket.id);
             connectedUsers.delete(socket.id);
             io.emit('live:stats', liveStats());
         });

@@ -31,6 +31,7 @@ const json = (method, body) => ({ method, body: JSON.stringify(body || {}) })
 export const api = {
   // auth — there is no public registration
   login: (body) => request('/auth/login', json('POST', body)),
+  logout: () => request('/auth/logout', json('POST')),
   getMe: () => request('/auth/me'),
 
   // public

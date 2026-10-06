@@ -6,6 +6,7 @@ const { loginLimiter } = require('../middleware/rateLimit');
 
 // Public registration has been removed. Franchises are created by the admin only.
 router.post('/login', loginLimiter, authController.login);
+router.post('/logout', authMiddleware, authController.logout);
 router.get('/me', authMiddleware, authController.getMe);
 
 module.exports = router;

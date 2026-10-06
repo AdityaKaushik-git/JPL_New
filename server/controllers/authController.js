@@ -34,6 +34,8 @@ function shapeUser(u) {
 const USER_COLUMNS = `id, full_name, enrollment_number, email, mobile, role, team_name, team_short_name,
     team_color, starting_purse, purse, total_spent, squad_count, max_squad_size, status`;
 
+const sessionRegistry = require('../services/sessionRegistry');
+
 exports.login = async (req, res) => {
     try {
         const loginId = String((req.body && req.body.loginId) || '').trim();
@@ -61,6 +63,13 @@ exports.login = async (req, res) => {
             { expiresIn: '24h', algorithm: 'HS256' }
         );
 
+        // Enforce strict active session limits
+        try {
+            sessionRegistry.registerSession(user, token, req);
+        } catch (sessionErr) {
+            return res.status(sessionErr.status || 403).json({ message: sessionErr.message });
+        }
+
         res.json({ message: 'Login successful', token, user: shapeUser(user) });
     } catch (error) {
         console.error('LOGIN ERROR:', error.message);
@@ -68,6 +77,16 @@ exports.login = async (req, res) => {
             console.error('DATABASE CONNECTION FAILED — check DB_* environment variables');
         }
         res.status(500).json({ message: 'Server error. Please try again later.' });
+    }
+};
+
+exports.logout = async (req, res) => {
+    try {
+        const token = req.headers.authorization && req.headers.authorization.split(' ')[1];
+        sessionRegistry.removeSession(req.user, token);
+        res.json({ message: 'Logged out successfully' });
+    } catch (error) {
+        res.status(500).json({ message: 'Logout failed' });
     }
 };
 

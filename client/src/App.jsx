@@ -35,17 +35,15 @@ function AppRoutes() {
     <>
       {!chromeless && <Navbar />}
       <Routes>
-        <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Landing />} />
         <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
         <Route path="/register" element={<Navigate to="/login" replace />} />
+        <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
 
-        {/* public */}
-        <Route path="/live" element={<Live />} />
-        <Route path="/rankings" element={<Rankings />} />
-        <Route path="/players/:id" element={<PlayerProfile />} />
-        <Route path="/history" element={<History />} />
-
-        {/* signed in */}
+        {/* protected — requires login 1st */}
+        <Route path="/live" element={<ProtectedRoute><Live /></ProtectedRoute>} />
+        <Route path="/rankings" element={<ProtectedRoute><Rankings /></ProtectedRoute>} />
+        <Route path="/players/:id" element={<ProtectedRoute><PlayerProfile /></ProtectedRoute>} />
+        <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="/auction" element={<ProtectedRoute><AuctionEntry /></ProtectedRoute>} />

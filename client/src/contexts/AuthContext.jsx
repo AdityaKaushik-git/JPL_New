@@ -10,6 +10,7 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   const logout = useCallback(() => {
+    api.logout().catch(() => {})
     localStorage.removeItem('jpl_token')
     localStorage.removeItem('jpl_user')
     setUser(null)
