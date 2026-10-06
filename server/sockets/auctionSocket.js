@@ -4,7 +4,7 @@
  * The server is the only source of truth. Clients send intents
  * ("place a bid", "sell"), never values that the server trusts:
  *   - the bid amount is recomputed from the server's own state
- *   - purse, squad count and franchise status are read from MySQL under row locks
+ *   - purse, squad count, role counts and franchise status are read from MySQL under row locks
  *   - every state-changing handler runs through one serial queue, so two bids
  *     that arrive in the same millisecond are processed one after the other
  *
@@ -16,6 +16,15 @@
  *   auction:stateUpdate, auction:timer, auction:notification, auction:bidPlaced,
  *   auction:sold, auction:unsold, auction:playerReset, teams:update, purse:update,
  *   players:changed, live:stats
+ *
+ * Role-slot enforcement (NEW):
+ *   Each team has hard limits: 5 Batsmen, 5 Bowlers, 3 All-Rounders, 2 Wicket-Keepers,
+ *   4 max foreign players, 2 min uncapped players.
+ *   These limits are checked at both bid time AND sale time (inside DB transactions).
+ *   The relevant columns on `users` are:
+ *     batsmen_count, bowlers_count, allrounders_count, keepers_count,
+ *     foreign_count, uncapped_count
+ *   and are incremented atomically in sellCurrent().
  */
 const pool = require('../config/db');
 const { verifyToken } = require('../middleware/auth');
@@ -27,6 +36,12 @@ const {
     RESULT_HOLD_MS,
     getIncrement,
     getNextBid,
+    MAX_BATSMEN,
+    MAX_BOWLERS,
+    MAX_ALLROUNDERS,
+    MAX_KEEPERS,
+    MAX_FOREIGN_PLAYERS,
+    MIN_UNCAPPED_PLAYERS,
 } = require('../config/auction');
 const { toRupees, formatINR } = require('../utils/money');
 const { publicPlayer, publicFranchise } = require('../services/serializers');
@@ -34,6 +49,45 @@ const { listFranchises, FRANCHISE_COLUMNS } = require('../services/franchises');
 
 const BID_HISTORY_LIMIT = 30;
 
+// ---------------------------------------------------------------------------
+// Role slot helpers
+// ---------------------------------------------------------------------------
+function checkRoleSlot(role, counts) {
+    const rc = counts || {};
+    switch (role) {
+        case 'Batsman':
+            if (Number(rc.batsmen_count || 0) >= MAX_BATSMEN)
+                return `BATSMAN SLOT FULL — maximum ${MAX_BATSMEN} batsmen per squad`;
+            break;
+        case 'Bowler':
+            if (Number(rc.bowlers_count || 0) >= MAX_BOWLERS)
+                return `BOWLER SLOT FULL — maximum ${MAX_BOWLERS} bowlers per squad`;
+            break;
+        case 'All-Rounder':
+            if (Number(rc.allrounders_count || 0) >= MAX_ALLROUNDERS)
+                return `ALL-ROUNDER SLOT FULL — maximum ${MAX_ALLROUNDERS} all-rounders per squad`;
+            break;
+        case 'Wicket Keeper':
+            if (Number(rc.keepers_count || 0) >= MAX_KEEPERS)
+                return `WICKET-KEEPER SLOT FULL — maximum ${MAX_KEEPERS} wicketkeeper per squad`;
+            break;
+    }
+    return null;
+}
+
+function roleCountColumn(role) {
+    const map = {
+        'Batsman':      'batsmen_count',
+        'Bowler':       'bowlers_count',
+        'All-Rounder':  'allrounders_count',
+        'Wicket Keeper':'keepers_count',
+    };
+    return map[role] || null;
+}
+
+// ---------------------------------------------------------------------------
+// Auction state
+// ---------------------------------------------------------------------------
 function emptyAuction() {
     return {
         auctionId: null,
@@ -260,20 +314,48 @@ module.exports = (io) => {
         try {
             await connection.beginTransaction();
 
+            // Lock the franchise row and re-validate purse, squad, and role slots
             const [users] = await connection.query(
                 `SELECT id, role, status, purse, squad_count, max_squad_size,
+                        batsmen_count, bowlers_count, allrounders_count, keepers_count,
+                        foreign_count, uncapped_count,
                         (SELECT COUNT(*) FROM teams t WHERE t.user_id = users.id) AS roster
                  FROM users WHERE id = ? FOR UPDATE`, [user.id]
             );
             const f = users[0];
             if (!f || f.role !== 'user') throw new AuctionError('Franchise account not found.');
             if (f.status !== 'active') throw new AuctionError('Your franchise account is disabled. Contact the admin.');
+
             const squad = Math.max(Number(f.squad_count), Number(f.roster));
             if (squad >= Number(f.max_squad_size)) {
                 throw new AuctionError(`SQUAD FULL — ${squad} / ${f.max_squad_size}. You cannot bid on more players.`);
             }
+
+            // Role slot validation
+            const playerRole = activeAuction.player && activeAuction.player.playing_role;
+            if (playerRole) {
+                const roleErr = checkRoleSlot(playerRole, f);
+                if (roleErr) throw new AuctionError(roleErr);
+            }
+
+            // Foreign player cap
+            const isForeign = activeAuction.player && activeAuction.player.country &&
+                activeAuction.player.country.trim().toLowerCase() !== 'india';
+            if (isForeign && Number(f.foreign_count || 0) >= MAX_FOREIGN_PLAYERS) {
+                throw new AuctionError(`FOREIGN CAP REACHED — maximum  overseas players per squad.`);
+            }
+
+            // Uncapped minimum: if squad would be full after this purchase and
+            // the team still needs uncapped players, block non-uncapped bids.
+            const willFill = (squad + 1) >= Number(f.max_squad_size);
+            const uncappedNow = Number(f.uncapped_count || 0);
+            const playerUncapped = activeAuction.player && Boolean(activeAuction.player.is_uncapped);
+            if (!playerUncapped && willFill && uncappedNow < MIN_UNCAPPED_PLAYERS) {
+                throw new AuctionError(`UNCAPPED REQUIREMENT — you need at least  uncapped players. Buy  more uncapped player(s) first.`);
+            }
+
             if (toRupees(f.purse) < amount) {
-                throw new AuctionError(`Insufficient purse. You have ${formatINR(f.purse)} remaining.`);
+                throw new AuctionError(`INSUFFICIENT PURSE — You have ${formatINR(f.purse)} remaining.`);
             }
 
             const [auctions] = await connection.query(
@@ -345,23 +427,32 @@ module.exports = (io) => {
         const amount = a.currentBid;
         const bidderId = a.highestBidder.id;
         const playerId = a.player.id;
+        const playerRole = a.player.playing_role;
 
         const connection = await pool.getConnection();
         let newPurse;
         try {
             await connection.beginTransaction();
 
+            // Lock the franchise row and re-validate purse, squad, and role slots
             const [users] = await connection.query(
                 `SELECT id, status, purse, squad_count, max_squad_size,
+                        batsmen_count, bowlers_count, allrounders_count, keepers_count,
                         (SELECT COUNT(*) FROM teams t WHERE t.user_id = users.id) AS roster
                  FROM users WHERE id = ? AND role = 'user' FOR UPDATE`, [bidderId]
             );
             const f = users[0];
             if (!f) throw new AuctionError('Winning franchise no longer exists. Mark the player UNSOLD.');
+
             const squad = Math.max(Number(f.squad_count), Number(f.roster));
             if (squad >= Number(f.max_squad_size)) {
                 throw new AuctionError(`Cannot sell: ${a.highestBidder.team_name} already has ${squad} / ${f.max_squad_size} players.`);
             }
+
+            // Role slot re-check at sale time (concurrent protection)
+            const roleErr = checkRoleSlot(playerRole, f);
+            if (roleErr) throw new AuctionError(`Cannot sell: ${roleErr}`);
+
             if (toRupees(f.purse) < amount) {
                 throw new AuctionError(`Cannot sell: ${a.highestBidder.team_name} no longer has ${formatINR(amount)}.`);
             }
@@ -369,10 +460,20 @@ module.exports = (io) => {
             const [auctions] = await connection.query('SELECT status FROM auctions WHERE id = ? FOR UPDATE', [a.auctionId]);
             if (!auctions.length || auctions[0].status === 'Completed') throw new AuctionError('This player has already been closed.');
 
+            // Deduct purse and increment squad count
             await connection.query(
                 `UPDATE users SET purse = purse - ?, total_spent = total_spent + ?, squad_count = squad_count + 1
                  WHERE id = ?`, [amount, amount, bidderId]
             );
+
+            // Increment role count atomically
+            const roleCol = roleCountColumn(playerRole);
+            if (roleCol) {
+                await connection.query(
+                    `UPDATE users SET ${roleCol} = ${roleCol} + 1 WHERE id = ?`, [bidderId]
+                );
+            }
+
             await connection.query('INSERT INTO teams (user_id, player_id, purchase_price) VALUES (?, ?, ?)', [bidderId, playerId, amount]);
             await connection.query(
                 "INSERT INTO auction_results (auction_id, player_id, status, winning_bid, winning_user_id) VALUES (?, ?, 'Sold', ?, ?)",
@@ -396,6 +497,7 @@ module.exports = (io) => {
             playerName: a.player.name,
             initials: a.player.initials,
             role: a.player.playing_role,
+            country: a.player.country,
             lot: a.lot,
             teamId: a.highestBidder.id,
             teamName: a.highestBidder.team_name,

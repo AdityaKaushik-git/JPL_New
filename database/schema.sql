@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS users (
     purse DECIMAL(15,2) NOT NULL DEFAULT 0.00,          -- remaining purse
     total_spent DECIMAL(15,2) NOT NULL DEFAULT 0.00,
     squad_count INT NOT NULL DEFAULT 0,
-    max_squad_size INT NOT NULL DEFAULT 12,
+    max_squad_size INT NOT NULL DEFAULT 15,
     status ENUM('active', 'disabled') NOT NULL DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

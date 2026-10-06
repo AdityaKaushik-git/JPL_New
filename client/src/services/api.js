@@ -50,6 +50,7 @@ export const api = {
   getProfile: () => request('/users/profile'),
   updateProfile: (body) => request('/users/profile', json('PUT', body)),
   updatePlayerProfile: (body) => request('/users/player-profile', json('PUT', body)),
+  importPlayers: (body) => request('/admin/players/import', json('POST', body)),
 
   // admin
   getAdminStats: () => request('/admin/stats'),

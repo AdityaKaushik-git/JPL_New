@@ -14,7 +14,7 @@ const NUM_KEYS = NUM.flatMap(([, f]) => f.map(([k]) => k))
 
 export const EMPTY_PLAYER = {
   name: '', enrollment_number: '', playing_role: 'Batsman', batting_style: '', bowling_style: '', course: '', year: '',
-  base_price: 500000, auction_order: '', highest_score: '', best_bowling: '',
+  base_price: 500000, auction_order: '', highest_score: '', best_bowling: '', country: '', is_uncapped: false,
   ...Object.fromEntries(NUM_KEYS.map(k => [k, 0])),
 }
 

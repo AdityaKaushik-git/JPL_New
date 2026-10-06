@@ -1,15 +1,25 @@
 /**
- * JPL auction rules — the single source of truth for business constants.
+ * JPL 2026 auction rules — the single source of truth for business constants.
  *
  * Money is handled in whole rupees on the server. MySQL stores it as DECIMAL,
  * and every value that crosses the wire is re-validated here before use.
  */
 
-// ₹18,00,00,000 — assigned by the server to every franchise the admin creates.
-const STARTING_PURSE = 180000000;
+// ₹75,00,00,000 — assigned by the server to every franchise the admin creates.
+const STARTING_PURSE = 750000000;
 
-// A franchise may own at most 12 players. The owner is NOT a player.
-const MAX_SQUAD_SIZE = 12;
+// A franchise may own exactly 15 players.
+const MAX_SQUAD_SIZE = 15;
+
+// Role-slot limits (STRICT — enforced in the auction engine and validated in DB)
+const MAX_BATSMEN     = 5;  // max Batsman per squad
+const MAX_BOWLERS     = 5;  // max Bowler per squad
+const MAX_ALLROUNDERS = 3;  // max All-Rounder per squad
+const MAX_KEEPERS     = 2;  // max Wicket Keeper per squad (NEW: was 1, now 2)
+
+// Foreign-player and uncapped-player limits (NEW)
+const MAX_FOREIGN_PLAYERS  = 4;  // max overseas players per squad
+const MIN_UNCAPPED_PLAYERS = 2;  // min uncapped players per squad
 
 // Timer (seconds). The server owns the clock; clients only display it.
 const INITIAL_TIMER_SECONDS = clampInt(process.env.AUCTION_INITIAL_SECONDS, 30, 5, 600);
@@ -25,16 +35,25 @@ const AUTO_FINALIZE = String(process.env.AUCTION_AUTO_FINALIZE || 'true').toLowe
 const RESULT_HOLD_MS = 6000;
 
 /**
- * Bid increment ladder.
- *   below ₹1 Cr        → +₹1,00,000
- *   ₹1 Cr – below ₹5 Cr → +₹5,00,000
- *   ₹5 Cr and above     → +₹10,00,000
+ * Bid increment ladder (JPL 2026 rules).
+ *
+ *   current bid ≥ ₹20 Cr (200,000,000)         → +₹5,00,000  (₹5 Cr)
+ *   ₹10 Cr – ₹19.99 Cr (100,000,000–199,999,999) → +₹2,00,000  (₹2 Cr)
+ *   ₹5 Cr  – ₹9.99 Cr  (50,000,000–99,999,999)  → +₹1,00,000  (₹1 Cr)
+ *   ₹2 Cr  – ₹4.99 Cr  (20,000,000–49,999,999)  → +₹50,000   (₹50 L)
+ *   ₹1 Cr  – ₹1.99 Cr  (10,000,000–19,999,999)  → +₹25,000   (₹25 L)
+ *   ₹50 L  – ₹99.99 L  (5,000,000–9,999,999)    → +₹10,000   (₹10 L)
+ *   ₹10 L  – ₹49.99 L  (1,000,000–4,999,999)    → +₹5,000    (₹5 L)
  */
 function getIncrement(currentBid) {
     const cb = Number(currentBid) || 0;
-    if (cb < 10000000) return 100000;
-    if (cb < 50000000) return 500000;
-    return 1000000;
+    if (cb >= 200000000) return 50000000;   // ≥ ₹20 Cr  → +₹5 Cr
+    if (cb >= 100000000) return 20000000;   // ≥ ₹10 Cr  → +₹2 Cr
+    if (cb >= 50000000)  return 10000000;   // ≥ ₹5 Cr   → +₹1 Cr
+    if (cb >= 20000000)  return 5000000;    // ≥ ₹2 Cr   → +₹50 L
+    if (cb >= 10000000)  return 2500000;    // ≥ ₹1 Cr   → +₹25 L
+    if (cb >= 5000000)   return 1000000;    // ≥ ₹50 L   → +₹10 L
+    return 500000;                          //  ₹10-50 L  → +₹5 L
 }
 
 function getNextBid(currentBid, basePrice) {
@@ -52,6 +71,12 @@ function clampInt(value, fallback, min, max) {
 module.exports = {
     STARTING_PURSE,
     MAX_SQUAD_SIZE,
+    MAX_BATSMEN,
+    MAX_BOWLERS,
+    MAX_ALLROUNDERS,
+    MAX_KEEPERS,
+    MAX_FOREIGN_PLAYERS,
+    MIN_UNCAPPED_PLAYERS,
     INITIAL_TIMER_SECONDS,
     BID_RESET_SECONDS,
     AUTO_FINALIZE,

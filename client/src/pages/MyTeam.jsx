@@ -5,6 +5,7 @@ import { api } from '../services/api'
 import { Loader, ErrorState, EmptyState } from '../components/States'
 import PlayerCard from '../components/PlayerCard'
 import TeamMark from '../components/TeamMark'
+import RoleSlots from '../components/RoleSlots'
 import { formatINR } from '../lib/format'
 
 export default function MyTeam() {
@@ -17,8 +18,19 @@ export default function MyTeam() {
   return (
     <div className="page">
       <div className="page-head">
-        <div className="team-cell"><TeamMark team={f} size={56} /><div><h1>{f.team_name} squad</h1><p className="muted">{team.length} of {f.max_squad_size} players · {formatINR(f.total_spent)} spent</p></div></div>
+        <div className="team-cell">
+          <TeamMark team={f} size={56} />
+          <div>
+            <h1>{f.team_name} squad</h1>
+            <p className="muted">{team.length} of {f.max_squad_size} players · {formatINR(f.total_spent)} spent</p>
+          </div>
+        </div>
       </div>
+      
+      <div style={{ marginBottom: '1rem' }}>
+        <RoleSlots franchise={f} />
+      </div>
+
       {team.length === 0 ? (
         <EmptyState icon={<Users size={26} />} title="Your squad is empty" action={<Link to="/auction" className="btn btn-primary">Go to the bid room</Link>}>
           Win players in the live auction. You can hold up to {f.max_squad_size}.

@@ -7,9 +7,9 @@
  * - Existing database (old schema): adds new columns/tables, widens money
  *   columns to DECIMAL(15,2), drops the unused player photo column, removes
  *   franchise owners that the old registration flow inserted as "players",
- *   and moves franchises to the ₹18 Cr / 12-player rules.
- * - Always: recomputes squad_count / total_spent from the teams table and
- *   recalculates JPL rankings.
+ *   and moves franchises to the ₹50 Cr / 14-player rules.
+ * - Always: recomputes squad_count / total_spent / role_counts from the teams
+ *   table and recalculates JPL rankings.
  *
  * One-time data changes are recorded in `schema_migrations` so they never run twice.
  */
@@ -127,10 +127,15 @@ async function upgradeExisting(db) {
     await addColumn(db, 'users', 'max_squad_size', `INT NOT NULL DEFAULT ${MAX_SQUAD_SIZE} AFTER squad_count`);
     await addColumn(db, 'users', 'status', "ENUM('active','disabled') NOT NULL DEFAULT 'active' AFTER max_squad_size");
     await addColumn(db, 'users', 'updated_at', 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP');
+    // Role slot columns
+    await addColumn(db, 'users', 'batsmen_count',     'INT NOT NULL DEFAULT 0');
+    await addColumn(db, 'users', 'bowlers_count',     'INT NOT NULL DEFAULT 0');
+    await addColumn(db, 'users', 'allrounders_count', 'INT NOT NULL DEFAULT 0');
+    await addColumn(db, 'users', 'keepers_count',     'INT NOT NULL DEFAULT 0');
     // The purse default must never be a hard-coded business number; the server assigns it.
     await db.query('ALTER TABLE users ALTER COLUMN purse SET DEFAULT 0.00');
 
-    // players — no photo column, new stats + ranking columns
+    // players — new fields
     await dropColumn(db, 'players', 'photo_url');
     await modifyColumn(db, 'players', 'base_price', 'DECIMAL(15,2) NOT NULL', isNarrowMoney);
     const lacksDefault = (i) => !String(i.COLUMN_DEFAULT || '').includes('N/A');
@@ -140,6 +145,12 @@ async function upgradeExisting(db) {
     await addColumn(db, 'players', 'auction_order', 'INT NULL AFTER player_code');
     await addColumn(db, 'players', 'batting_style', 'VARCHAR(40) NULL AFTER playing_role');
     await addColumn(db, 'players', 'bowling_style', 'VARCHAR(60) NULL AFTER batting_style');
+    // Country & image (new fields — added safely)
+    await addColumn(db, 'players', 'country',       'VARCHAR(60) NULL AFTER bowling_style');
+    await addColumn(db, 'players', 'country_code',  'VARCHAR(4)  NULL AFTER country');
+    await addColumn(db, 'players', 'image_url',     'TEXT NULL');
+    await addColumn(db, 'players', 'image_source',  'VARCHAR(255) NULL');
+    await addColumn(db, 'players', 'base_price_auto', 'TINYINT(1) NOT NULL DEFAULT 1');
     const intCols = ['matches', 'innings', 'not_outs', 'runs', 'balls_faced', 'fifties', 'hundreds',
         'balls_bowled', 'runs_conceded', 'wickets', 'three_wkt_hauls', 'four_wkt_hauls', 'five_wkt_hauls',
         'catches', 'stumpings', 'run_outs', 'player_of_match', 'form_points',
@@ -160,8 +171,9 @@ async function upgradeExisting(db) {
     await addIndex(db, 'players', 'idx_players_status', 'INDEX `idx_players_status` (`status`)');
     await addIndex(db, 'players', 'idx_players_rank', 'INDEX `idx_players_rank` (`current_rank`)');
     await addIndex(db, 'players', 'idx_players_order', 'INDEX `idx_players_order` (`auction_order`)');
+    await addIndex(db, 'players', 'idx_players_country', 'INDEX `idx_players_country` (`country`)');
 
-    // money columns large enough for an ₹18 Cr purse
+    // money columns large enough for a ₹50 Cr purse
     await modifyColumn(db, 'auctions', 'current_bid', 'DECIMAL(15,2) DEFAULT 0.00', isNarrowMoney);
     await modifyColumn(db, 'bids', 'bid_amount', 'DECIMAL(15,2) NOT NULL', isNarrowMoney);
     await modifyColumn(db, 'teams', 'purchase_price', 'DECIMAL(15,2) NOT NULL', isNarrowMoney);
@@ -193,7 +205,6 @@ async function dataMigrations(db) {
     await once(db, '002_franchise_18cr_12_players', async () => {
         await db.query(`UPDATE users SET starting_purse = ?, max_squad_size = ?, team_name = COALESCE(team_name, full_name)
                         WHERE role = 'user'`, [STARTING_PURSE, MAX_SQUAD_SIZE]);
-        // Remaining purse = ₹18 Cr minus what the franchise has actually paid.
         await db.query(`UPDATE users u SET purse = ? - COALESCE((SELECT SUM(t.purchase_price) FROM teams t WHERE t.user_id = u.id), 0)
                         WHERE u.role = 'user'`, [STARTING_PURSE]);
         await db.query(`UPDATE users SET purse = 0, starting_purse = 0 WHERE role <> 'user'`);
@@ -204,19 +215,75 @@ async function dataMigrations(db) {
         await db.query('UPDATE players SET auction_order = id WHERE auction_order IS NULL');
     });
 
+    // Migrate purse to ₹50 Cr and squad to 14 (new rules)
+    await once(db, '004_purse_50cr_squad_14', async () => {
+        console.log('  upgrading starting_purse → ₹50 Cr, max_squad_size → 14');
+        await db.query(`UPDATE users SET starting_purse = ?, max_squad_size = ? WHERE role = 'user'`, [STARTING_PURSE, MAX_SQUAD_SIZE]);
+        // Recompute remaining purse: ₹50 Cr minus what has actually been spent
+        await db.query(`
+            UPDATE users u
+            SET purse = ? - COALESCE((SELECT SUM(t.purchase_price) FROM teams t WHERE t.user_id = u.id), 0)
+            WHERE u.role = 'user'`, [STARTING_PURSE]);
+        // Clamp purse >= 0 (safety)
+        await db.query(`UPDATE users SET purse = GREATEST(purse, 0) WHERE role = 'user'`);
+    });
+
+    // Reconcile role counts (idempotent one-time migration)
+    await once(db, '005_role_counts_reconcile', async () => {
+        console.log('  reconciling role counts from teams/players');
+        await db.query(`
+            UPDATE users u
+            SET
+              batsmen_count     = COALESCE((SELECT COUNT(*) FROM teams t JOIN players p ON p.id = t.player_id WHERE t.user_id = u.id AND p.playing_role = 'Batsman'), 0),
+              bowlers_count     = COALESCE((SELECT COUNT(*) FROM teams t JOIN players p ON p.id = t.player_id WHERE t.user_id = u.id AND p.playing_role = 'Bowler'), 0),
+              allrounders_count = COALESCE((SELECT COUNT(*) FROM teams t JOIN players p ON p.id = t.player_id WHERE t.user_id = u.id AND p.playing_role = 'All-Rounder'), 0),
+              keepers_count     = COALESCE((SELECT COUNT(*) FROM teams t JOIN players p ON p.id = t.player_id WHERE t.user_id = u.id AND p.playing_role = 'Wicket Keeper'), 0)
+            WHERE u.role = 'user'
+        `);
+    });
+
+    // Migrate to JPL 2026 rules: ₹75 Cr purse, 15-player squad, foreign_count, uncapped_count, is_uncapped
+    await once(db, '006_jpl2026_rules', async () => {
+        console.log('  upgrading to JPL 2026 rules: ₹75 Cr, 15 players, foreign+uncapped tracking');
+        await addColumn(db, 'users', 'foreign_count',  'INT NOT NULL DEFAULT 0 AFTER keepers_count');
+        await addColumn(db, 'users', 'uncapped_count', 'INT NOT NULL DEFAULT 0 AFTER foreign_count');
+        await addColumn(db, 'players', 'is_uncapped', 'TINYINT(1) NOT NULL DEFAULT 0 AFTER country_code');
+        await db.query(`UPDATE users SET starting_purse = ?, max_squad_size = ? WHERE role = 'user'`, [STARTING_PURSE, MAX_SQUAD_SIZE]);
+        await db.query(
+            `UPDATE users u
+            SET purse = GREATEST(
+                ? - COALESCE((SELECT SUM(t.purchase_price) FROM teams t WHERE t.user_id = u.id), 0),
+                0
+            ) WHERE u.role = 'user'`, [STARTING_PURSE]);
+    });
+
     // Always keep counters consistent with the teams table (source of truth for rosters).
     await db.query(`UPDATE users u SET
         squad_count = (SELECT COUNT(*) FROM teams t WHERE t.user_id = u.id),
         total_spent = COALESCE((SELECT SUM(t.purchase_price) FROM teams t WHERE t.user_id = u.id), 0)
         WHERE u.role = 'user'`);
+
+    // Always reconcile role counts (catches any manual DB edits or rollbacks)
+    await db.query(`
+        UPDATE users u
+        SET
+          batsmen_count     = COALESCE((SELECT COUNT(*) FROM teams t JOIN players p ON p.id = t.player_id WHERE t.user_id = u.id AND p.playing_role = 'Batsman'), 0),
+          bowlers_count     = COALESCE((SELECT COUNT(*) FROM teams t JOIN players p ON p.id = t.player_id WHERE t.user_id = u.id AND p.playing_role = 'Bowler'), 0),
+          allrounders_count = COALESCE((SELECT COUNT(*) FROM teams t JOIN players p ON p.id = t.player_id WHERE t.user_id = u.id AND p.playing_role = 'All-Rounder'), 0),
+          keepers_count     = COALESCE((SELECT COUNT(*) FROM teams t JOIN players p ON p.id = t.player_id WHERE t.user_id = u.id AND p.playing_role = 'Wicket Keeper'), 0),
+          foreign_count     = COALESCE((SELECT COUNT(*) FROM teams t JOIN players p ON p.id = t.player_id WHERE t.user_id = u.id AND p.country IS NOT NULL AND TRIM(LOWER(p.country)) <> 'india' AND TRIM(p.country) <> ''), 0),
+          uncapped_count    = COALESCE((SELECT COUNT(*) FROM teams t JOIN players p ON p.id = t.player_id WHERE t.user_id = u.id AND p.is_uncapped = 1), 0)
+        WHERE u.role = 'user'
+    `);
+
     await db.query("UPDATE players SET player_code = CONCAT('JPL', LPAD(id, 3, '0')) WHERE player_code IS NULL");
     await db.query('UPDATE players SET auction_order = id WHERE auction_order IS NULL');
 
     const [[over]] = await db.query("SELECT COUNT(*) AS c FROM users WHERE role = 'user' AND squad_count > max_squad_size");
     if (over.c > 0) {
-        console.warn(`  ! ${over.c} franchise(s) already exceed the 12-player limit; review them in Admin → Franchises.`);
+        console.warn(`  ! ${over.c} franchise(s) already exceed the ${MAX_SQUAD_SIZE}-player limit; review them in Admin → Franchises.`);
     } else {
-        await addCheck(db, 'users', 'chk_users_squad_range', 'squad_count >= 0 AND squad_count <= max_squad_size');
+        await addCheck(db, 'users', 'chk_users_squad_range', `squad_count >= 0 AND squad_count <= max_squad_size`);
     }
     await addCheck(db, 'users', 'chk_users_purse_nonneg', 'purse >= 0');
     await addCheck(db, 'users', 'chk_users_spent_nonneg', 'total_spent >= 0');
@@ -253,7 +320,7 @@ async function main() {
         if (!(await tableExists(db, 'users'))) {
             console.log('→ fresh database: creating schema');
             await db.query(fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8'));
-            for (const name of ['001_remove_owner_player_rows', '002_franchise_18cr_12_players', '003_player_codes_and_order']) {
+            for (const name of ['001_remove_owner_player_rows', '002_franchise_18cr_12_players', '003_player_codes_and_order', '004_purse_50cr_squad_14', '005_role_counts_reconcile', '006_jpl2026_rules']) {
                 await db.query('INSERT IGNORE INTO schema_migrations (name) VALUES (?)', [name]);
             }
         } else {

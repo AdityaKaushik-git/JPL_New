@@ -47,6 +47,26 @@ async function refundSale(connection, record) {
         [amount, amount, record.winning_user_id]
     );
     await connection.query('DELETE FROM teams WHERE player_id = ? AND user_id = ?', [record.player_id, record.winning_user_id]);
+
+    // Note: To be perfectly consistent, role counts, foreign_count, and uncapped_count should also be updated.
+    // However, the system runs an auto-reconciliation on role/foreign/uncapped counts 
+    // in migrate.js. For live safety, we'll explicitly force a sync or decrement here.
+    const [players] = await connection.query('SELECT playing_role, country, is_uncapped FROM players WHERE id = ?', [record.player_id]);
+    if (players.length) {
+        const p = players[0];
+        const roleMap = { 'Batsman': 'batsmen_count', 'Bowler': 'bowlers_count', 'All-Rounder': 'allrounders_count', 'Wicket Keeper': 'keepers_count' };
+        const col = roleMap[p.playing_role];
+        if (col) {
+            await connection.query(`UPDATE users SET  = GREATEST( - 1, 0) WHERE id = ?`, [record.winning_user_id]);
+        }
+        const isForeign = p.country && p.country.trim().toLowerCase() !== 'india';
+        if (isForeign) {
+            await connection.query('UPDATE users SET foreign_count = GREATEST(foreign_count - 1, 0) WHERE id = ?', [record.winning_user_id]);
+        }
+        if (p.is_uncapped) {
+            await connection.query('UPDATE users SET uncapped_count = GREATEST(uncapped_count - 1, 0) WHERE id = ?', [record.winning_user_id]);
+        }
+    }
 }
 
 // ---------------------------------------------------------------------------

@@ -26,6 +26,13 @@ function publicPlayer(p, extra = {}) {
         bowling_style: p.bowling_style || null,
         course: p.course,
         year: p.year,
+        // Country & image (new fields — safe if columns don't exist yet)
+        country: p.country || null,
+        country_code: p.country_code || null,
+        is_uncapped: p.is_uncapped !== undefined ? Boolean(Number(p.is_uncapped)) : false,
+        image_url: p.image_url || null,
+        image_source: p.image_source || null,
+        base_price_auto: p.base_price_auto !== undefined ? Boolean(Number(p.base_price_auto)) : true,
         base_price: toRupees(p.base_price),
         status: p.status,
 
@@ -95,7 +102,14 @@ function publicFranchise(u) {
         remaining_purse: toRupees(u.purse),
         total_spent: toRupees(u.total_spent),
         squad_count: n(u.squad_count) || 0,
-        max_squad_size: n(u.max_squad_size) || 12,
+        max_squad_size: n(u.max_squad_size) || 15,
+        // Role slot counts (squad composition enforcement — 5/5/3/1 = 14)
+        batsmen_count: n(u.batsmen_count) || 0,
+        bowlers_count: n(u.bowlers_count) || 0,
+        allrounders_count: n(u.allrounders_count) || 0,
+        keepers_count: n(u.keepers_count) || 0,
+        foreign_count: n(u.foreign_count) || 0,
+        uncapped_count: n(u.uncapped_count) || 0,
         status: u.status || 'active',
     };
 }

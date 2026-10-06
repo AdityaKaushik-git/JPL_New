@@ -9,6 +9,7 @@ import { useAuctionSocket } from '../hooks/useAuctionSocket'
 import { useFullscreen } from '../hooks/useFullscreen'
 import { useAuth } from '../contexts/AuthContext'
 import { formatINR, formatShort } from '../lib/format'
+import RoleSlots, { canBidForRole, roleBlockMessage, canBidForeign, foreignBlockMessage, canBidUncapped, uncappedBlockMessage } from '../components/RoleSlots'
 
 /** Franchise owner's bid room: the broadcast plus a bid dock. The server re-validates everything. */
 export default function BidRoom() {
@@ -36,6 +37,7 @@ export default function BidRoom() {
   let block = null
   if (me && me.status === 'disabled') block = { icon: <Lock size={18} />, text: 'Your franchise is disabled' }
   else if (full) block = { icon: <Lock size={18} />, text: `Squad full — ${squad} / ${maxSquad}` }
+  else if (state.player && me && !canBidForRole(me, state.player.playing_role)) block = { icon: <Lock size={18} />, text: roleBlockMessage(me, state.player.playing_role) }
   else if (!state.player || state.status === 'Completed' || state.status === 'Pending') block = { icon: <Gavel size={18} />, text: 'Waiting for the next player' }
   else if (state.status === 'Paused') block = { icon: <PauseCircle size={18} />, text: 'Auction paused' }
   else if (state.status === 'Processing') block = { icon: <Gavel size={18} />, text: 'Closing this player' }
@@ -66,6 +68,7 @@ export default function BidRoom() {
         <small>Squad</small>
         <b className={full ? 'text-danger' : ''}>{full ? 'Squad full' : `${squad} / ${maxSquad}`}</b>
       </div>
+      <RoleSlots franchise={me} currentRole={state.player?.playing_role} compact={true} />
       <button className={`bid-button${block ? ' is-blocked' : ''}${block && block.tone === 'lead' ? ' is-lead' : ''}`}
         onClick={placeBid} disabled={Boolean(block)} aria-describedby="bid-hint">
         {block ? <>{block.icon}<span>{block.text}</span></> : <><Gavel size={22} /><span>Bid {formatINR(state.nextBid)}</span></>}

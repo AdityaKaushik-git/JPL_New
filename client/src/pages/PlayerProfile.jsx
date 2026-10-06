@@ -10,7 +10,19 @@ import TeamMark from '../components/TeamMark'
 import StatGrid from '../components/StatGrid'
 import Movement, { FormDelta } from '../components/Movement'
 import { LineChart, BarChart } from '../components/Charts'
+import PlayerAvatar from '../components/PlayerAvatar'
 import { formatINR, roleMeta, fmtDecimal, oversFromBalls, dateTime, pad2 } from '../lib/format'
+
+function priceTierLabel(points) {
+  if (points >= 900) return '900+ pts → ₹4 Cr tier'
+  if (points >= 800) return '800-899 pts → ₹3 Cr tier'
+  if (points >= 700) return '700-799 pts → ₹2 Cr tier'
+  if (points >= 600) return '600-699 pts → ₹1.5 Cr tier'
+  if (points >= 500) return '500-599 pts → ₹1 Cr tier'
+  if (points >= 400) return '400-499 pts → ₹50 L tier'
+  if (points >= 300) return '300-399 pts → ₹25 L tier'
+  return 'Below 300 pts → base tier'
+}
 
 export default function PlayerProfile() {
   const { id } = useParams()
@@ -31,10 +43,16 @@ export default function PlayerProfile() {
       <section className="profile-hero" style={accent ? { '--accent': accent } : undefined}>
         <PitchBackdrop className="hero-pitch" />
         <span className="hero-watermark" aria-hidden="true">{p.initials}</span>
-        <div className="profile-hero-body">
+        
+        <div style={{ position: 'relative', zIndex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', paddingLeft: '1.5rem' }}>
+          <PlayerAvatar player={p} size="hero" />
+        </div>
+
+        <div className="profile-hero-body" style={{ gridColumn: '2' }}>
           <p className="hero-lot">Player <b>#{pad2(p.auction_order)}</b> <span className="hero-code">{p.player_code}</span></p>
           <h1 className="profile-name">{p.name}</h1>
           <div className="hero-tags">
+            {p.country && <span className="chip" style={{ fontSize: '0.9rem', fontWeight: 600, background: 'rgba(255,255,255,0.1)' }}>{p.country}</span>}
             <span className={`role-chip role-${role.key}`}><RoleIcon role={p.playing_role} size={20} /> {role.label}</span>
             {p.batting_style && <span className="hero-style">{p.batting_style}</span>}
             {p.bowling_style && <span className="hero-style">{p.bowling_style}</span>}
@@ -48,10 +66,17 @@ export default function PlayerProfile() {
             <div><small>Form rating</small><b>{p.form_points}/100</b></div>
           </div>
         </div>
-        <aside className="profile-auction">
+        
+        <aside className="profile-auction" style={{ gridColumn: '3' }}>
           <small>Auction status</small>
           <b className={`status-tag st-${p.status.replace(' ', '-').toLowerCase()}`}>{p.status}</b>
           <small>Base price</small><b>{formatINR(p.base_price)}</b>
+          
+          <div style={{ marginTop: '0.5rem', padding: '0.5rem', background: 'rgba(242,193,78,0.08)', borderRadius: '4px', borderLeft: '3px solid var(--gold)' }}>
+            <small style={{ color: 'var(--gold)', margin: 0 }}>Why this price?</small>
+            <div style={{ fontSize: '0.8rem', fontWeight: 600 }}>{priceTierLabel(p.ranking_points)}</div>
+          </div>
+
           {p.team && (
             <>
               <small>Team</small>

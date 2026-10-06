@@ -9,37 +9,42 @@ const { parseMoney } = require('../utils/money');
 const ROLES = ['Batsman', 'Bowler', 'All-Rounder', 'Wicket Keeper'];
 
 const TEXT_FIELDS = {
-    name: { required: true, max: 100 },
+    name:          { required: true,  max: 100 },
     enrollment_number: { required: true, max: 50 },
-    course: { required: false, max: 50 },
-    year: { required: false, max: 20 },
+    course:        { required: false, max: 50 },
+    year:          { required: false, max: 20 },
     batting_style: { required: false, max: 40 },
     bowling_style: { required: false, max: 60 },
     highest_score: { required: false, max: 10 },
-    best_bowling: { required: false, max: 10 },
+    best_bowling:  { required: false, max: 10 },
+    // New: country and image fields
+    country:       { required: false, max: 60 },
+    country_code:  { required: false, max: 4 },
+    image_url:     { required: false, max: 500 },
+    image_source:  { required: false, max: 255 },
 };
 
 // name: [min, max]
 const INT_FIELDS = {
-    auction_order: [0, 100000],
-    matches: [0, 1000],
-    innings: [0, 1000],
-    not_outs: [0, 1000],
-    runs: [0, 100000],
-    balls_faced: [0, 100000],
-    fifties: [0, 500],
-    hundreds: [0, 500],
-    balls_bowled: [0, 100000],
-    runs_conceded: [0, 100000],
-    wickets: [0, 5000],
-    three_wkt_hauls: [0, 500],
-    four_wkt_hauls: [0, 500],
-    five_wkt_hauls: [0, 500],
-    catches: [0, 5000],
-    stumpings: [0, 5000],
-    run_outs: [0, 5000],
-    player_of_match: [0, 500],
-    form_points: [0, 100],
+    auction_order:    [0, 100000],
+    matches:          [0, 1000],
+    innings:          [0, 1000],
+    not_outs:         [0, 1000],
+    runs:             [0, 100000],
+    balls_faced:      [0, 100000],
+    fifties:          [0, 500],
+    hundreds:         [0, 500],
+    balls_bowled:     [0, 100000],
+    runs_conceded:    [0, 100000],
+    wickets:          [0, 5000],
+    three_wkt_hauls:  [0, 500],
+    four_wkt_hauls:   [0, 500],
+    five_wkt_hauls:   [0, 500],
+    catches:          [0, 5000],
+    stumpings:        [0, 5000],
+    run_outs:         [0, 5000],
+    player_of_match:  [0, 500],
+    form_points:      [0, 100],
 };
 
 /**
@@ -61,7 +66,13 @@ function validatePlayer(body, partial = false) {
         const v = body[field] === null || body[field] === undefined ? '' : String(body[field]).trim();
         if (rule.required && !v) { errors.push(`${field} is required`); continue; }
         if (v.length > rule.max) { errors.push(`${field} must be at most ${rule.max} characters`); continue; }
-        values[field] = v || (field === 'course' || field === 'year' ? 'N/A' : null);
+
+        // country_code: uppercase
+        if (field === 'country_code' && v) {
+            values[field] = v.toUpperCase().slice(0, 4);
+        } else {
+            values[field] = v || (field === 'course' || field === 'year' ? 'N/A' : null);
+        }
     }
 
     if ('playing_role' in body || !partial) {
@@ -70,9 +81,15 @@ function validatePlayer(body, partial = false) {
     }
 
     if ('base_price' in body || !partial) {
-        const price = parseMoney(body.base_price, { min: 1000, max: 180000000 });
-        if (price === null) errors.push('base_price must be a whole rupee amount between ₹1,000 and ₹18,00,00,000');
+        // Max ₹50 Cr (500,000,000) to match the new starting purse
+        const price = parseMoney(body.base_price, { min: 1000, max: 500000000 });
+        if (price === null) errors.push('base_price must be a whole rupee amount between ₹1,000 and ₹50,00,00,000');
         else values.base_price = price;
+    }
+
+    // base_price_auto: boolean flag (1 = auto-calculate from points, 0 = admin override)
+    if ('base_price_auto' in body) {
+        values.base_price_auto = body.base_price_auto ? 1 : 0;
     }
 
     for (const [field, [min, max]] of Object.entries(INT_FIELDS)) {

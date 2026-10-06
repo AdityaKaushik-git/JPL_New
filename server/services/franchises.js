@@ -9,7 +9,9 @@ const { STARTING_PURSE, MAX_SQUAD_SIZE } = require('../config/auction');
 
 const FRANCHISE_COLUMNS = `id, full_name, team_name, team_short_name, team_color,
     (logo IS NOT NULL AND logo <> '') AS logo, starting_purse, purse, total_spent,
-    squad_count, max_squad_size, status, updated_at`;
+    squad_count, max_squad_size,
+    batsmen_count, bowlers_count, allrounders_count, keepers_count,
+    status, updated_at`;
 
 const PALETTE = ['#C8102E', '#1F6FEB', '#2FA36B', '#F2C14E', '#8B5CF6', '#E8590C', '#0EA5A4', '#DB2777'];
 const LOGO_MAX_CHARS = 400000; // ≈ 290 KB image once base64-decoded
@@ -97,7 +99,7 @@ async function getFranchise(db, id) {
 }
 
 /**
- * Creates a franchise. Starting purse, remaining purse, spend, squad count and
+ * Creates a franchise. Starting purse (₹50 Cr), remaining purse, spend, squad count and
  * squad limit are fixed by the server. Throws { status, message, errors }.
  */
 async function createFranchise(db, body) {
@@ -132,8 +134,10 @@ async function createFranchise(db, body) {
         `INSERT INTO users
             (full_name, enrollment_number, email, mobile, password_hash, role,
              team_name, team_short_name, team_color, logo,
-             starting_purse, purse, total_spent, squad_count, max_squad_size, status)
-         VALUES (?, ?, ?, NULL, ?, 'user', ?, ?, ?, ?, ?, ?, 0, 0, ?, 'active')`,
+             starting_purse, purse, total_spent, squad_count, max_squad_size,
+             batsmen_count, bowlers_count, allrounders_count, keepers_count,
+             foreign_count, uncapped_count, status)
+         VALUES (?, ?, ?, NULL, ?, 'user', ?, ?, ?, ?, ?, ?, 0, 0, ?, 0, 0, 0, 0, 0, 0, 'active')`,
         [values.full_name, values.enrollment_number, values.email, hash,
          values.team_name, values.team_short_name, values.team_color, values.logo,
          STARTING_PURSE, STARTING_PURSE, MAX_SQUAD_SIZE]

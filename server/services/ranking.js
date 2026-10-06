@@ -75,6 +75,20 @@
  *    A player's first ranking sets previous_ranking_points = ranking_points
  *    (form 0), because there is no earlier rating to compare against.
  *    Every change is also written to ranking_history for the profile chart.
+ *
+ *  Base Price Formula
+ *  ------------------
+ *    Points ≥ 900  → ₹4,00,00,000
+ *    800–899       → ₹3,00,00,000
+ *    700–799       → ₹2,00,00,000
+ *    600–699       → ₹1,50,00,000
+ *    500–599       → ₹1,00,00,000
+ *    400–499       → ₹50,00,000
+ *    300–399       → ₹25,00,000
+ *    200–299       → ₹10,00,000
+ *    100–199       → ₹5,00,000
+ *    1–99          → ₹2,00,000
+ *    0 (unranked)  → ₹1,00,000
  * ============================================================================
  */
 
@@ -184,6 +198,36 @@ function computePoints(p) {
     };
 }
 
+/**
+ * Auto base price from JPL ranking points (transparent, documented formula).
+ *
+ * Points ≥ 900  → ₹4,00,00,000  (₹4 Cr)
+ * 800–899       → ₹3,00,00,000  (₹3 Cr)
+ * 700–799       → ₹2,00,00,000  (₹2 Cr)
+ * 600–699       → ₹1,50,00,000  (₹1.5 Cr)
+ * 500–599       → ₹1,00,00,000  (₹1 Cr)
+ * 400–499       → ₹50,00,000    (₹50 L)
+ * 300–399       → ₹25,00,000    (₹25 L)
+ * 200–299       → ₹10,00,000    (₹10 L)
+ * 100–199       → ₹5,00,000     (₹5 L)
+ * 1–99          → ₹2,00,000     (₹2 L)
+ * 0 (unranked)  → ₹1,00,000     (₹1 L minimum)
+ */
+function basePriceFromPoints(points) {
+    const p = Math.round(Number(points) || 0);
+    if (p >= 900) return 40000000; // ₹4 Cr
+    if (p >= 800) return 30000000; // ₹3 Cr
+    if (p >= 700) return 20000000; // ₹2 Cr
+    if (p >= 600) return 15000000; // ₹1.5 Cr
+    if (p >= 500) return 10000000; // ₹1 Cr
+    if (p >= 400) return  5000000; // ₹50 L
+    if (p >= 300) return  2500000; // ₹25 L
+    if (p >= 200) return  1000000; // ₹10 L
+    if (p >= 100) return   500000; // ₹5 L
+    if (p >= 1)   return   200000; // ₹2 L
+    return 100000;                 // ₹1 L (unranked minimum)
+}
+
 function sortForRank(a, b) {
     return (b.newPoints - a.newPoints)
         || (num(b.form_points) - num(a.form_points))
@@ -195,6 +239,8 @@ function sortForRank(a, b) {
  * Recomputes derived stats, points and ranks for every player inside one
  * transaction and records history rows for anything that changed.
  * Accepts an optional existing connection (already in a transaction).
+ *
+ * Also auto-updates base_price for players where base_price_auto = 1.
  */
 async function recalculateRankings(pool, existingConnection = null) {
     const connection = existingConnection || await pool.getConnection();
@@ -231,8 +277,6 @@ async function recalculateRankings(pool, existingConnection = null) {
             const oldPoints = num(p.ranking_points);
 
             const pointsChanged = oldPoints !== p.newPoints;
-            // First time a player is ranked there is no earlier rating to compare with,
-            // so the baseline becomes the new rating (form = 0, shown as "new").
             const firstRanking = oldRank === null && newRank !== null && oldPoints === 0;
             const rankChanged = oldRank !== newRank;
             const catRankChanged = oldCatRank !== newCatRank;
@@ -242,21 +286,45 @@ async function recalculateRankings(pool, existingConnection = null) {
             const previousRank = rankChanged ? oldRank : (p.previous_rank === null ? null : num(p.previous_rank));
             const previousCatRank = catRankChanged ? oldCatRank : (p.previous_category_rank === null ? null : num(p.previous_category_rank));
 
-            await connection.query(
-                `UPDATE players SET
-                    batting_average = ?, strike_rate = ?, economy = ?, bowling_average = ?, bowling_strike_rate = ?,
-                    ranking_points = ?, previous_ranking_points = ?,
-                    current_rank = ?, previous_rank = ?,
-                    category_rank = ?, previous_category_rank = ?
-                 WHERE id = ?`,
-                [
-                    p.batting_average, p.strike_rate, p.economy, p.bowling_average, p.bowling_strike_rate,
-                    p.newPoints, previousPoints,
-                    newRank, previousRank,
-                    newCatRank, previousCatRank,
-                    p.id,
-                ]
-            );
+            // Auto base price — only update if the column exists and base_price_auto = 1
+            const autoPrice = basePriceFromPoints(p.newPoints);
+            const shouldUpdatePrice = p.base_price_auto === undefined || Number(p.base_price_auto) === 1;
+
+            if (shouldUpdatePrice) {
+                await connection.query(
+                    `UPDATE players SET
+                        batting_average = ?, strike_rate = ?, economy = ?, bowling_average = ?, bowling_strike_rate = ?,
+                        ranking_points = ?, previous_ranking_points = ?,
+                        current_rank = ?, previous_rank = ?,
+                        category_rank = ?, previous_category_rank = ?,
+                        base_price = ?
+                     WHERE id = ?`,
+                    [
+                        p.batting_average, p.strike_rate, p.economy, p.bowling_average, p.bowling_strike_rate,
+                        p.newPoints, previousPoints,
+                        newRank, previousRank,
+                        newCatRank, previousCatRank,
+                        autoPrice,
+                        p.id,
+                    ]
+                );
+            } else {
+                await connection.query(
+                    `UPDATE players SET
+                        batting_average = ?, strike_rate = ?, economy = ?, bowling_average = ?, bowling_strike_rate = ?,
+                        ranking_points = ?, previous_ranking_points = ?,
+                        current_rank = ?, previous_rank = ?,
+                        category_rank = ?, previous_category_rank = ?
+                     WHERE id = ?`,
+                    [
+                        p.batting_average, p.strike_rate, p.economy, p.bowling_average, p.bowling_strike_rate,
+                        p.newPoints, previousPoints,
+                        newRank, previousRank,
+                        newCatRank, previousCatRank,
+                        p.id,
+                    ]
+                );
+            }
 
             if (pointsChanged || rankChanged || catRankChanged) {
                 changed++;
@@ -284,5 +352,6 @@ module.exports = {
     battingScore,
     bowlingScore,
     keepingScore,
+    basePriceFromPoints,
     recalculateRankings,
 };
