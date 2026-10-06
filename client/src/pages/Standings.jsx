@@ -36,59 +36,44 @@ export default function Standings() {
       </div>
       
       {!teams.length ? <EmptyState title="No franchises yet" /> : (
-        <div className="leaderboard-container" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1rem' }}>
+        <div className="lb-container">
           {sortedTeams.map((t, idx) => {
             const rank = idx + 1;
-            let medal = '';
-            let rankColor = 'var(--text)';
-            let scale = 1;
-            let bg = 'var(--surface)';
+            let rowClass = 'lb-row';
+            let rankDisplay = `#${rank}`;
             
             if (rank === 1) { 
-              medal = '🥇'; 
-              rankColor = '#FFD700'; 
-              scale = 1.02;
-              bg = 'linear-gradient(90deg, rgba(255, 215, 0, 0.1) 0%, var(--surface) 100%)';
+              rowClass += ' is-1st';
+              rankDisplay = '1st';
             } else if (rank === 2) { 
-              medal = '🥈'; 
-              rankColor = '#C0C0C0'; 
-              scale = 1.01;
-              bg = 'linear-gradient(90deg, rgba(192, 192, 192, 0.1) 0%, var(--surface) 100%)';
+              rowClass += ' is-2nd';
+              rankDisplay = '2nd';
             } else if (rank === 3) { 
-              medal = '🥉'; 
-              rankColor = '#CD7F32'; 
-              bg = 'linear-gradient(90deg, rgba(205, 127, 50, 0.1) 0%, var(--surface) 100%)';
+              rowClass += ' is-3rd';
+              rankDisplay = '3rd';
             }
 
             return (
               <button 
                 key={t.id} 
                 onClick={() => setOpen(t)}
-                style={{ 
-                  display: 'flex', alignItems: 'center', padding: '1.25rem', 
-                  background: bg, border: '1px solid var(--line)', 
-                  borderRadius: '12px', borderLeft: `8px solid ${t.color || 'var(--primary)'}`, 
-                  cursor: 'pointer', transition: 'all 0.2s ease', 
-                  transform: `scale(${scale})`, textAlign: 'left',
-                  boxShadow: rank === 1 ? '0 4px 20px rgba(0,0,0,0.3)' : 'none'
-                }}
-                onMouseOver={(e) => e.currentTarget.style.transform = `scale(${scale * 1.01}) translateY(-2px)`}
-                onMouseOut={(e) => e.currentTarget.style.transform = `scale(${scale}) translateY(0)`}
+                className={rowClass}
+                style={{ '--team': t.color || 'var(--night-4)' }}
               >
                 
-                <div style={{ width: '70px', textAlign: 'center', fontSize: rank <= 3 ? '2.5rem' : '1.5rem', fontWeight: '900', color: rankColor, textShadow: rank === 1 ? '0 0 10px rgba(255,215,0,0.3)' : 'none' }}>
-                  {medal ? medal : `#${rank}`}
+                <div className="lb-rank">
+                  {rankDisplay}
                 </div>
                 
-                <div style={{ marginRight: '1.5rem' }}>
+                <div className="lb-logo">
                   <TeamMark team={t} size={64} />
                 </div>
                 
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <h2 style={{ margin: 0, fontSize: rank === 1 ? '1.75rem' : '1.4rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: 800 }}>{t.team_name}</h2>
-                  <div style={{ color: 'var(--chalk-2)', fontSize: '0.9rem', marginTop: '0.25rem' }}>{t.owner_name}</div>
+                <div className="lb-core">
+                  <h2 className="lb-name">{t.team_name}</h2>
+                  <div className="lb-owner">{t.owner_name}</div>
                   
-                  <div style={{ display: 'flex', gap: '1rem', fontSize: '0.75rem', color: 'var(--chalk-2)', marginTop: '0.75rem', flexWrap: 'wrap' }}>
+                  <div className="lb-composition">
                     <span title="Batsmen">BAT: <b>{t.batsmen_count || 0}</b></span>
                     <span title="Bowlers">BOWL: <b>{t.bowlers_count || 0}</b></span>
                     <span title="All-Rounders">AR: <b>{t.allrounders_count || 0}</b></span>
@@ -98,20 +83,20 @@ export default function Standings() {
                   </div>
                 </div>
                 
-                <div style={{ display: 'flex', gap: '2.5rem', textAlign: 'right', alignItems: 'center' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', minWidth: '80px' }}>
-                    <div style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--text)' }}>{formatShort(t.remaining_purse)}</div>
-                    <div style={{ fontSize: '0.7rem', color: 'var(--chalk-2)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Purse Left</div>
+                <div className="lb-stats">
+                  <div className="lb-stat-box">
+                    <div className="lb-stat-val">{formatShort(t.remaining_purse)}</div>
+                    <div className="lb-stat-label">Purse Left</div>
                   </div>
                   
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', minWidth: '60px' }}>
-                    <div style={{ fontSize: '1.2rem', fontWeight: 700, color: t.squad_count >= t.max_squad_size ? 'var(--danger)' : 'var(--text)' }}>{t.squad_count}/{t.max_squad_size}</div>
-                    <div style={{ fontSize: '0.7rem', color: 'var(--chalk-2)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Squad</div>
+                  <div className={`lb-stat-box${t.squad_count >= t.max_squad_size ? ' is-danger' : ''}`}>
+                    <div className="lb-stat-val">{t.squad_count}/{t.max_squad_size}</div>
+                    <div className="lb-stat-label">Squad</div>
                   </div>
                   
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', background: 'rgba(0,0,0,0.2)', padding: '0.75rem 1.25rem', borderRadius: '8px', border: rank === 1 ? '1px solid rgba(255,215,0,0.3)' : '1px solid transparent' }}>
-                    <div style={{ fontSize: rank === 1 ? '2.2rem' : '1.8rem', fontWeight: 900, color: 'var(--gold)', lineHeight: 1 }}>{Number(t.total_player_points || 0).toLocaleString('en-IN')}</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--gold)', textTransform: 'uppercase', letterSpacing: '1px', opacity: 0.8, marginTop: '0.25rem' }}>Total Points</div>
+                  <div className="lb-pts-box">
+                    <div className="lb-pts-val">{Number(t.total_player_points || 0).toLocaleString('en-IN')}</div>
+                    <div className="lb-pts-label">Total Points</div>
                   </div>
                 </div>
                 
