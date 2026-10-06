@@ -330,10 +330,13 @@ async function main() {
             await upgradeExisting(db);
         }
 
-        for (const name of ['001_remove_owner_player_rows', '002_franchise_18cr_12_players', '003_player_codes_and_order', '004_purse_50cr_squad_14', '005_role_counts_reconcile', '006_jpl2026_rules']) {
-            await db.query('INSERT IGNORE INTO schema_migrations (name) VALUES (?)', [name]);
+        if (isFresh) {
+            for (const name of ['001_remove_owner_player_rows', '002_franchise_18cr_12_players', '003_player_codes_and_order', '004_purse_50cr_squad_14', '005_role_counts_reconcile', '006_jpl2026_rules']) {
+                await db.query('INSERT IGNORE INTO schema_migrations (name) VALUES (?)', [name]);
+            }
         }
 
+        await db.query('DELETE FROM schema_migrations WHERE name = ?', ['006_jpl2026_rules']);
         await dataMigrations(db);
         await ensureAdmin(db);
 
