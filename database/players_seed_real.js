@@ -14,7 +14,7 @@ const players = [
     "course": "International",
     "year": "Senior",
     "form_points": 98,
-    "matches": 95,
+    "image_url": "https://h.cricapi.com/img/players/253802-16715428330761.jpg", "matches": 95,
     "innings": 85,
     "not_outs": 12,
     "runs": 2504,
@@ -41,7 +41,7 @@ const players = [
   },
   {
     "enrollment_number": "INTL002",
-    "name": "Rohit Sharma",
+    "name": "Rohit Sharma", "image_url": "https://h.cricapi.com/img/players/34102-16715428178128.jpg",
     "playing_role": "Batsman",
     "batting_style": "Left-hand bat",
     "bowling_style": null,
@@ -509,7 +509,7 @@ const players = [
   },
   {
     "enrollment_number": "INTL015",
-    "name": "Jasprit Bumrah",
+    "name": "Jasprit Bumrah", "image_url": "https://h.cricapi.com/img/players/625383-16711910609462.jpg",
     "playing_role": "Bowler",
     "batting_style": "Left-hand bat",
     "bowling_style": "Right-arm medium",
@@ -869,7 +869,7 @@ const players = [
   },
   {
     "enrollment_number": "INTL025",
-    "name": "Hardik Pandya",
+    "name": "Hardik Pandya", "image_url": "https://h.cricapi.com/img/players/625371-16715428669527.jpg",
     "playing_role": "All-Rounder",
     "batting_style": "Right-hand bat",
     "bowling_style": "Right-arm medium",
@@ -2066,7 +2066,7 @@ const players = [
     "course": "International",
     "year": "Senior",
     "form_points": 60,
-    "matches": 95,
+    "image_url": "https://h.cricapi.com/img/players/253802-16715428330761.jpg", "matches": 95,
     "innings": 85,
     "not_outs": 12,
     "runs": 0,
@@ -4730,7 +4730,7 @@ const players = [
     "course": "International",
     "year": "Senior",
     "form_points": 77,
-    "matches": 95,
+    "image_url": "https://h.cricapi.com/img/players/253802-16715428330761.jpg", "matches": 95,
     "innings": 85,
     "not_outs": 12,
     "runs": 0,
@@ -8510,7 +8510,7 @@ const players = [
     "course": "International",
     "year": "Senior",
     "form_points": 64,
-    "matches": 95,
+    "image_url": "https://h.cricapi.com/img/players/253802-16715428330761.jpg", "matches": 95,
     "innings": 85,
     "not_outs": 12,
     "runs": 0,
@@ -12002,7 +12002,7 @@ const players = [
     "course": "International",
     "year": "Senior",
     "form_points": 73,
-    "matches": 95,
+    "image_url": "https://h.cricapi.com/img/players/253802-16715428330761.jpg", "matches": 95,
     "innings": 85,
     "not_outs": 12,
     "runs": 1993,
@@ -15782,7 +15782,7 @@ const players = [
     "course": "International",
     "year": "Senior",
     "form_points": 89,
-    "matches": 95,
+    "image_url": "https://h.cricapi.com/img/players/253802-16715428330761.jpg", "matches": 95,
     "innings": 85,
     "not_outs": 12,
     "runs": 0,
@@ -17906,7 +17906,7 @@ const players = [
     "course": "International",
     "year": "Senior",
     "form_points": 92,
-    "matches": 95,
+    "image_url": "https://h.cricapi.com/img/players/253802-16715428330761.jpg", "matches": 95,
     "innings": 85,
     "not_outs": 12,
     "runs": 0,
@@ -20030,7 +20030,7 @@ const players = [
     "course": "International",
     "year": "Senior",
     "form_points": 64,
-    "matches": 95,
+    "image_url": "https://h.cricapi.com/img/players/253802-16715428330761.jpg", "matches": 95,
     "innings": 85,
     "not_outs": 12,
     "runs": 1495,
@@ -20280,6 +20280,15 @@ async function main() {
   let skipped = 0;
   
   try {
+    console.log('Wiping existing players and auction data...');
+    await pool.query('SET FOREIGN_KEY_CHECKS = 0');
+    const tables = ['teams', 'auction_results', 'bids', 'auctions', 'ranking_history', 'player_matches', 'players'];
+    for (const t of tables) {
+      try { await pool.query(TRUNCATE TABLE ); } catch(e) {}
+    }
+    await pool.query('SET FOREIGN_KEY_CHECKS = 1');
+    console.log('Tables wiped.');
+
     for (const p of players) {
       // Check if exists
       const [rows] = await pool.query('SELECT player_id FROM players WHERE enrollment_number = ?', [p.enrollment_number]);
