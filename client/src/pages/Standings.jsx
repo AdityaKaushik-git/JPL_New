@@ -29,7 +29,7 @@ export default function Standings() {
 
   return (
     <div className="page">
-      <div className="page-head"><div><h1>Teams</h1><p className="muted">Purse, points and squad composition for every franchise. Each started with {formatINR(750000000)}.</p></div></div>
+      <div className="page-head"><div><h1>Live Rankings</h1><p className="muted">Purse, points and squad composition for every franchise. Each started with {formatINR(750000000)}.</p></div></div>
       
       {teams.length > 0 && <LeaderPanel teams={teams} />}
 

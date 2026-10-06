@@ -8,7 +8,7 @@ import { formatShort } from '../lib/format'
 const PUBLIC_LINKS = [
   { to: '/live', label: 'Live screen' },
   { to: '/rankings', label: 'Rankings' },
-  { to: '/standings', label: 'Teams' },
+  { to: '/standings', label: 'Live Rankings' },
   { to: '/history', label: 'Results' },
 ]
 
@@ -17,6 +17,7 @@ const LINKS = {
     { to: '/dashboard', label: 'Overview' },
     { to: '/admin/control', label: 'Control center' },
     { to: '/admin', label: 'Manage', end: true },
+    { to: '/standings', label: 'Live Rankings' },
     { to: '/rankings', label: 'Rankings' },
     { to: '/history', label: 'Results' },
   ],
@@ -26,13 +27,13 @@ const LINKS = {
     { to: '/my-team', label: 'Squad' },
     { to: '/my-bids', label: 'My bids' },
     { to: '/rankings', label: 'Rankings' },
-    { to: '/standings', label: 'Teams' },
+    { to: '/standings', label: 'Live Rankings' },
   ],
   player: [
     { to: '/dashboard', label: 'My card' },
     { to: '/live', label: 'Live screen' },
     { to: '/rankings', label: 'Rankings' },
-    { to: '/standings', label: 'Teams' },
+    { to: '/standings', label: 'Live Rankings' },
   ],
 }
 
