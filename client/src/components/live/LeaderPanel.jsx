@@ -1,10 +1,13 @@
 /**
  * LeaderPanel — shows the current JPL leader and WHY they are leading.
  */
+import { useAuth } from '../../contexts/AuthContext'
 import TeamMark from '../TeamMark'
 import { formatINR, formatShort } from '../../lib/format'
 
 export default function LeaderPanel({ teams }) {
+  const { user } = useAuth()
+  if (user?.role !== 'admin') return null
   if (!teams || !teams.length) return null
   
   // Sort by total_player_points (primary), remaining_purse (tiebreak 1), batsmen_points (tiebreak 2)

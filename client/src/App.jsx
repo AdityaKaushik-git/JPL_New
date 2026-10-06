@@ -43,13 +43,13 @@ function AppRoutes() {
         <Route path="/live" element={<Live />} />
         <Route path="/rankings" element={<Rankings />} />
         <Route path="/players/:id" element={<PlayerProfile />} />
-        <Route path="/standings" element={<Standings />} />
         <Route path="/history" element={<History />} />
 
         {/* signed in */}
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="/auction" element={<ProtectedRoute><AuctionEntry /></ProtectedRoute>} />
+        <Route path="/standings" element={<ProtectedRoute roles={['admin']}><Standings /></ProtectedRoute>} />
         <Route path="/my-team" element={<ProtectedRoute roles={['user']}><MyTeam /></ProtectedRoute>} />
         <Route path="/my-bids" element={<ProtectedRoute roles={['user']}><MyBids /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute roles={['admin']}><Admin /></ProtectedRoute>} />

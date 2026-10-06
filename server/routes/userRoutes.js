@@ -1,14 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
-const { authMiddleware, franchiseMiddleware } = require('../middleware/auth');
+const { authMiddleware, adminMiddleware, franchiseMiddleware } = require('../middleware/auth');
 
 router.use(authMiddleware);
 
 router.get('/dashboard', userController.getDashboard);
 router.get('/profile', userController.getProfile);
 router.put('/profile', userController.updateProfile);
-router.get('/standings', userController.getStandings);
+router.get('/standings', adminMiddleware, userController.getStandings);
 
 router.get('/my-team', franchiseMiddleware, userController.getTeam);
 router.get('/my-bids', franchiseMiddleware, userController.getBids);

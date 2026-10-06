@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react'
+import { useAuth } from '../../contexts/AuthContext'
 import TeamMark from '../TeamMark'
 import { formatShort } from '../../lib/format'
 
 /** Bottom strip: every franchise's purse and squad, with a subtle pulse when that team bids. */
 export default function TeamStrip({ teams, pulse, leaderId, onSelectTeam }) {
+  const { user } = useAuth()
+  const isAdmin = user?.role === 'admin'
   const [pulsing, setPulsing] = useState(null)
   useEffect(() => {
     if (!pulse) return
@@ -19,10 +22,10 @@ export default function TeamStrip({ teams, pulse, leaderId, onSelectTeam }) {
         const full = t.squad_count >= t.max_squad_size
         return (
           <div key={t.id}
-            onClick={() => onSelectTeam && onSelectTeam(t.id)}
+            onClick={() => isAdmin && onSelectTeam && onSelectTeam(t.id)}
             className={`team-chip${pulsing === t.id ? ' is-pulse' : ''}${leaderId === t.id ? ' is-leading' : ''}${full ? ' is-full' : ''}`}
-            style={{ cursor: onSelectTeam ? 'pointer' : 'default', '--team': t.color }}
-            title={`Click to view ${t.team_name} full details`}
+            style={{ cursor: isAdmin && onSelectTeam ? 'pointer' : 'default', '--team': t.color }}
+            title={isAdmin ? `Click to view ${t.team_name} full details` : undefined}
           >
             <TeamMark team={t} size={34} />
             <div className="team-chip-text">

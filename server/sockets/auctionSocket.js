@@ -142,37 +142,99 @@ module.exports = (io) => {
         return getNextBid(activeAuction.currentBid, activeAuction.player.base_price);
     }
 
-    function getSanitizedState() {
+    function getSanitizedState(user = {}) {
         const a = activeAuction;
+        const isAdmin = user && user.role === 'admin';
+        const userId = user && user.id;
+
+        let bidder = null;
+        if (a.highestBidder) {
+            if (isAdmin) {
+                bidder = a.highestBidder;
+            } else if (userId && a.highestBidder.id === userId) {
+                bidder = {
+                    id: userId,
+                    team_name: 'You (Highest Bidder)',
+                    short_name: 'YOU',
+                    color: a.highestBidder.color || '#C8102E',
+                    isYou: true,
+                };
+            } else {
+                bidder = {
+                    id: 'hidden',
+                    team_name: 'Active Bidder (Confidential)',
+                    short_name: 'BID',
+                    color: '#64748B',
+                    isHidden: true,
+                };
+            }
+        }
+
+        const sanitizedHistory = (a.bidHistory || []).map(b => {
+            if (isAdmin) return b;
+            const isYou = userId && b.teamId === userId;
+            return {
+                teamId: isYou ? userId : 'hidden',
+                teamName: isYou ? 'You' : 'Anonymous Bidder',
+                shortName: isYou ? 'YOU' : 'BID',
+                userName: isYou ? 'You' : 'Anonymous Bidder',
+                color: isYou ? b.color : '#64748B',
+                amount: b.amount,
+                at: b.at,
+                isYou,
+                isHidden: !isYou,
+            };
+        });
+
+        let sanitizedResult = a.result;
+        if (a.result && a.result.type === 'SOLD' && !isAdmin) {
+            const isWinner = userId && a.result.teamId === userId;
+            sanitizedResult = {
+                ...a.result,
+                teamName: isWinner ? a.result.teamName : 'Winning Franchise',
+                shortName: isWinner ? a.result.shortName : 'WIN',
+            };
+        }
+
         return {
             auctionId: a.auctionId,
             status: a.status,
             player: a.player,
             lot: a.lot,
             currentBid: a.currentBid,
-            highestBidder: a.highestBidder,
-            // kept for backwards compatibility with older clients
-            highestBidderName: a.highestBidder ? a.highestBidder.team_name : null,
-            highestBidderId: a.highestBidder ? a.highestBidder.id : null,
+            highestBidder: bidder,
+            highestBidderName: bidder ? bidder.team_name : null,
+            highestBidderId: bidder ? bidder.id : null,
             timeLeft: a.timeLeft,
             timerTotal: a.timerTotal,
-            bidHistory: a.bidHistory,
+            bidHistory: sanitizedHistory,
             bidCount: a.bidCount,
             nextBid: a.status === 'Completed' ? 0 : nextBid(),
             increment: getIncrement(a.currentBid),
-            result: a.result,
+            result: sanitizedResult,
             serverTime: Date.now(),
         };
     }
 
     function broadcastState() {
-        io.emit('auction:stateUpdate', getSanitizedState());
+        for (const socket of io.sockets.sockets.values()) {
+            socket.emit('auction:stateUpdate', getSanitizedState(socket.user));
+        }
     }
 
     async function broadcastTeams() {
         try {
             const teams = await listFranchises(pool);
-            io.emit('teams:update', teams);
+            for (const socket of io.sockets.sockets.values()) {
+                const isAdmin = socket.user && socket.user.role === 'admin';
+                const sanitizedTeams = teams.map(t => {
+                    if (isAdmin) return t;
+                    // Redact live ranking points from team list for non-admins
+                    const { total_player_points, batsmen_points, ...rest } = t;
+                    return rest;
+                });
+                socket.emit('teams:update', sanitizedTeams);
+            }
             return teams;
         } catch (err) {
             console.error('TEAMS BROADCAST ERROR:', err.message);
@@ -400,7 +462,15 @@ module.exports = (io) => {
         });
         activeAuction.bidHistory = activeAuction.bidHistory.slice(0, BID_HISTORY_LIMIT);
 
-        io.emit('auction:bidPlaced', { teamId: team.id, amount, shortName: team.short_name });
+        for (const s of io.sockets.sockets.values()) {
+            const isAdmin = s.user && s.user.role === 'admin';
+            const isYou = s.user && s.user.id === team.id;
+            s.emit('auction:bidPlaced', {
+                teamId: (isAdmin || isYou) ? team.id : 'hidden',
+                amount,
+                shortName: isAdmin ? team.short_name : (isYou ? 'YOU' : 'BID'),
+            });
+        }
         broadcastState();
     }
 
@@ -628,9 +698,17 @@ module.exports = (io) => {
     }
 
     function sendSnapshot(socket) {
-        socket.emit('auction:stateUpdate', getSanitizedState());
+        socket.emit('auction:stateUpdate', getSanitizedState(socket.user));
         socket.emit('live:stats', liveStats());
-        listFranchises(pool).then(teams => socket.emit('teams:update', teams)).catch(() => {});
+        const isAdmin = socket.user && socket.user.role === 'admin';
+        listFranchises(pool).then(teams => {
+            const sanitizedTeams = teams.map(t => {
+                if (isAdmin) return t;
+                const { total_player_points, batsmen_points, ...rest } = t;
+                return rest;
+            });
+            socket.emit('teams:update', sanitizedTeams);
+        }).catch(() => {});
     }
 
     io.use((socket, next) => {

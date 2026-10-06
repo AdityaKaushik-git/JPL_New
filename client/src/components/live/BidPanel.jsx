@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useAuth } from '../../contexts/AuthContext'
 import AnimatedNumber from '../AnimatedNumber'
 import TeamMark from '../TeamMark'
 import TimerRing from './TimerRing'
@@ -6,6 +7,8 @@ import { formatINR } from '../../lib/format'
 
 /** Current bid, current bidder, next bid and the timer — the second and third biggest things on screen. */
 export default function BidPanel({ state, onSelectTeam }) {
+  const { user } = useAuth()
+  const isAdmin = user?.role === 'admin'
   const { currentBid, highestBidder, nextBid, status, timeLeft, timerTotal, bidCount, player } = state
   const [bump, setBump] = useState(false)
   const last = useRef(currentBid)
@@ -21,6 +24,8 @@ export default function BidPanel({ state, onSelectTeam }) {
   }, [currentBid])
 
   const hasBid = currentBid > 0
+  const canClickBidder = isAdmin && highestBidder && highestBidder.id !== 'hidden'
+
   return (
     <section className="bidpanel" aria-label="Bidding" style={highestBidder ? { '--team': highestBidder.color } : undefined}>
       <p className="label">{hasBid ? 'Current bid' : 'Opening bid'}</p>
@@ -32,9 +37,9 @@ export default function BidPanel({ state, onSelectTeam }) {
         <div
           className={`bidder${highestBidder ? ' has-bidder' : ''}`}
           key={highestBidder ? highestBidder.id : 'none'}
-          onClick={() => highestBidder && onSelectTeam && onSelectTeam(highestBidder.id)}
-          style={{ cursor: highestBidder && onSelectTeam ? 'pointer' : 'default' }}
-          title={highestBidder ? `Click to view ${highestBidder.team_name} full details` : undefined}
+          onClick={() => canClickBidder && onSelectTeam && onSelectTeam(highestBidder.id)}
+          style={{ cursor: canClickBidder && onSelectTeam ? 'pointer' : 'default' }}
+          title={canClickBidder ? `Click to view ${highestBidder.team_name} full details` : undefined}
         >
           {highestBidder ? (
             <>
