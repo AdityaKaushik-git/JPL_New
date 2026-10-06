@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
-import { Plus, Pencil, Trash2, RotateCcw, Calculator, Search, KeyRound, Power, ListOrdered } from 'lucide-react'
+import { Plus, Pencil, Trash2, RotateCcw, Calculator, Search, KeyRound, Power, ListOrdered, Eye } from 'lucide-react'
 import ToastContainer from '../components/Toast'
 import Modal, { ConfirmDialog } from '../components/Modal'
+import FranchiseModal from '../components/FranchiseModal'
 import { Loader, ErrorState, EmptyState } from '../components/States'
 import FranchiseForm from '../components/admin/FranchiseForm'
 import PlayerEditor, { MatchLog } from '../components/admin/PlayerEditor'
@@ -142,6 +143,7 @@ function MatchLogLoader({ player, notify }) {
 
 function FranchisesTab({ notify }) {
   const { data, error, loading, reload } = useAsync(() => api.getAdminFranchises(), [])
+  const [selectedFranchiseId, setSelectedFranchiseId] = useState(null)
   const [creating, setCreating] = useState(false)
   const [editing, setEditing] = useState(null)
   const [pwFor, setPwFor] = useState(null)
@@ -176,7 +178,7 @@ function FranchisesTab({ notify }) {
   return (
     <section className="panel">
       <div className="toolbar">
-        <p className="muted">Every franchise starts with {formatINR(180000000)} and room for 12 players. Owners bid; they don't play.</p>
+        <p className="muted">Every franchise starts with {formatINR(750000000)} and room for 15 players. Owners bid; they don't play.</p>
         <span className="spacer" />
         <button className="btn btn-primary btn-sm" onClick={() => { setErrors({}); setCreating(true) }}><Plus size={15} /> Create franchise</button>
       </div>
@@ -189,17 +191,18 @@ function FranchisesTab({ notify }) {
         <div className="franchise-grid">
           {list.map(f => (
             <article key={f.id} className={`franchise-card${f.status === 'disabled' ? ' is-disabled' : ''}`} style={{ '--team': f.color }}>
-              <header>
+              <header style={{ cursor: 'pointer' }} onClick={() => setSelectedFranchiseId(f.id)} title="Click to view full franchise info">
                 <TeamMark team={f} size={52} />
                 <div><h3>{f.team_name}</h3><p className="muted">{f.owner_name} · {f.login_id}</p></div>
               </header>
-              <dl className="franchise-nums">
+              <dl className="franchise-nums" style={{ cursor: 'pointer' }} onClick={() => setSelectedFranchiseId(f.id)} title="Click to view full franchise info">
                 <div><dt>Remaining</dt><dd>{formatShort(f.remaining_purse)}</dd></div>
                 <div><dt>Spent</dt><dd>{formatShort(f.total_spent)}</dd></div>
                 <div><dt>Squad</dt><dd>{f.squad_count} / {f.max_squad_size}</dd></div>
               </dl>
-              <div className="purse-bar"><i style={{ width: `${Math.min(100, (f.total_spent / f.starting_purse) * 100)}%` }} /></div>
+              <div className="purse-bar" style={{ cursor: 'pointer' }} onClick={() => setSelectedFranchiseId(f.id)}><i style={{ width: `${Math.min(100, (f.total_spent / f.starting_purse) * 100)}%` }} /></div>
               <footer>
+                <button className="btn btn-ghost btn-sm" onClick={() => setSelectedFranchiseId(f.id)}><Eye size={14} /> Profile</button>
                 <button className="btn btn-ghost btn-sm" onClick={() => { setErrors({}); setEditing(f) }}><Pencil size={14} /> Edit</button>
                 <button className="btn btn-ghost btn-sm" onClick={() => setPwFor(f)}><KeyRound size={14} /> Password</button>
                 <button className={`btn btn-sm ${f.status === 'active' ? 'btn-ghost' : 'btn-success'}`} onClick={() => toggle(f)}><Power size={14} /> {f.status === 'active' ? 'Disable' : 'Enable'}</button>
@@ -208,6 +211,8 @@ function FranchisesTab({ notify }) {
           ))}
         </div>
       )}
+
+      <FranchiseModal franchiseId={selectedFranchiseId} onClose={() => setSelectedFranchiseId(null)} />
 
       <Modal open={creating} title="Create franchise" onClose={() => setCreating(false)} width={680}>
         {creating && <FranchiseForm errors={errors} busy={busy} onSubmit={create} onCancel={() => setCreating(false)} />}

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { Play, Pause, SkipForward, CheckCircle2, XCircle, RotateCcw, Radio, Wifi, WifiOff, Search } from 'lucide-react'
 import ToastContainer from '../components/Toast'
 import { ConfirmDialog } from '../components/Modal'
+import FranchiseModal from '../components/FranchiseModal'
 import { useToast } from '../hooks/useToast'
 import { useAuctionSocket } from '../hooks/useAuctionSocket'
 import { useAsync } from '../hooks/useAsync'
@@ -26,6 +27,7 @@ export default function AdminControl() {
   const { state, teams, connection, emit, stats } = socket
   const [confirm, setConfirm] = useState(null)
   const [query, setQuery] = useState('')
+  const [selectedFranchiseId, setSelectedFranchiseId] = useState(null)
 
   const all = players.data ? players.data.players : []
   const queue = useMemo(() => all.filter(p => p.status === 'Available')
@@ -168,7 +170,7 @@ export default function AdminControl() {
             <thead><tr><th>Team</th><th className="num-col">Purse</th><th className="num-col">Spent</th><th className="num-col">Squad</th></tr></thead>
             <tbody>
               {teams.map(t => (
-                <tr key={t.id} className={state.highestBidder?.id === t.id ? 'row-lead' : ''}>
+                <tr key={t.id} className={state.highestBidder?.id === t.id ? 'row-lead' : ''} style={{ cursor: 'pointer' }} onClick={() => setSelectedFranchiseId(t.id)} title="Click to view full franchise profile">
                   <td><span className="team-cell"><TeamMark team={t} size={28} /> {t.team_name}{t.status === 'disabled' && <em className="chip chip-muted">disabled</em>}</span></td>
                   <td className="num-col">{formatShort(t.remaining_purse)}</td>
                   <td className="num-col">{formatShort(t.total_spent)}</td>
@@ -179,6 +181,7 @@ export default function AdminControl() {
           </table>
         </section>
       </div>
+      <FranchiseModal franchiseId={selectedFranchiseId} onClose={() => setSelectedFranchiseId(null)} />
     </div>
   )
 }
