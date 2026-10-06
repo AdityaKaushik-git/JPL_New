@@ -317,14 +317,21 @@ async function main() {
             name VARCHAR(100) PRIMARY KEY,
             applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)`);
 
+                const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
+        // ALWAYS run schema to ensure missing tables are created.
+        const queries = schema.split(';').filter(q => q.trim().length > 0);
+        for (const q of queries) {
+            await db.query(q);
+        }
+
         if (!(await tableExists(db, 'users'))) {
-            console.log('→ fresh database: creating schema');
-            await db.query(fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8'));
-            for (const name of ['001_remove_owner_player_rows', '002_franchise_18cr_12_players', '003_player_codes_and_order', '004_purse_50cr_squad_14', '005_role_counts_reconcile', '006_jpl2026_rules']) {
-                await db.query('INSERT IGNORE INTO schema_migrations (name) VALUES (?)', [name]);
-            }
+            console.log('  fresh database: creating schema');
         } else {
             await upgradeExisting(db);
+        }
+
+        for (const name of ['001_remove_owner_player_rows', '002_franchise_18cr_12_players', '003_player_codes_and_order', '004_purse_50cr_squad_14', '005_role_counts_reconcile', '006_jpl2026_rules']) {
+            await db.query('INSERT IGNORE INTO schema_migrations (name) VALUES (?)', [name]);
         }
 
         await dataMigrations(db);
