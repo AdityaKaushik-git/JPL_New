@@ -317,7 +317,8 @@ async function main() {
             name VARCHAR(100) PRIMARY KEY,
             applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)`);
 
-                const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
+                const isFresh = !(await tableExists(db, 'users'));
+        const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
         // ALWAYS run schema to ensure missing tables are created.
         const queries = schema.split(';').filter(q => q.trim().length > 0);
         for (const q of queries) {
