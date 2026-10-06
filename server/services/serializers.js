@@ -42,6 +42,8 @@ function publicPlayer(p, extra = {}) {
         previous_rank: n(p.previous_rank),
         category_rank: n(p.category_rank),
         previous_category_rank: n(p.previous_category_rank),
+        set_number: n(p.category_rank) ? Math.ceil(Number(p.category_rank) / 10) : null,
+        set_label: n(p.category_rank) ? `Set ${Math.ceil(Number(p.category_rank) / 10)}` : null,
         form_points: n(p.form_points) || 0,
 
         matches: n(p.matches) || 0,
@@ -110,6 +112,8 @@ function publicFranchise(u) {
         keepers_count: n(u.keepers_count) || 0,
         foreign_count: n(u.foreign_count) || 0,
         uncapped_count: n(u.uncapped_count) || 0,
+        total_player_points: n(u.total_player_points) || 0,
+        batsmen_points: n(u.batsmen_points) || 0,
         status: u.status || 'active',
     };
 }

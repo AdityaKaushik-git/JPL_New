@@ -342,16 +342,22 @@ module.exports = (io) => {
             const isForeign = activeAuction.player && activeAuction.player.country &&
                 activeAuction.player.country.trim().toLowerCase() !== 'india';
             if (isForeign && Number(f.foreign_count || 0) >= MAX_FOREIGN_PLAYERS) {
-                throw new AuctionError(`FOREIGN CAP REACHED — maximum  overseas players per squad.`);
+                throw new AuctionError(`FOREIGN CAP REACHED — maximum ${MAX_FOREIGN_PLAYERS} overseas players per squad.`);
             }
 
-            // Uncapped minimum: if squad would be full after this purchase and
-            // the team still needs uncapped players, block non-uncapped bids.
-            const willFill = (squad + 1) >= Number(f.max_squad_size);
+            // Uncapped minimum requirement lookahead:
+            // If buying a capped player, verify remaining squad slots after this purchase
+            // are sufficient to fulfill the MIN_UNCAPPED_PLAYERS requirement.
             const uncappedNow = Number(f.uncapped_count || 0);
             const playerUncapped = activeAuction.player && Boolean(activeAuction.player.is_uncapped);
-            if (!playerUncapped && willFill && uncappedNow < MIN_UNCAPPED_PLAYERS) {
-                throw new AuctionError(`UNCAPPED REQUIREMENT — you need at least  uncapped players. Buy  more uncapped player(s) first.`);
+            if (!playerUncapped && uncappedNow < MIN_UNCAPPED_PLAYERS) {
+                const uncappedNeeded = MIN_UNCAPPED_PLAYERS - uncappedNow;
+                const remainingSlotsAfterThis = Number(f.max_squad_size) - (squad + 1);
+                if (remainingSlotsAfterThis < uncappedNeeded) {
+                    throw new AuctionError(
+                        `UNCAPPED REQUIREMENT — you need at least ${MIN_UNCAPPED_PLAYERS} uncapped players. You must buy ${uncappedNeeded} more uncapped player(s) with your remaining ${Number(f.max_squad_size) - squad} slot(s).`
+                    );
+                }
             }
 
             if (toRupees(f.purse) < amount) {

@@ -1,4 +1,4 @@
-import { forwardRef } from 'react'
+import { forwardRef, useState } from 'react'
 import { Maximize2, Minimize2, Wifi, WifiOff, Users } from 'lucide-react'
 import Brand from '../Brand'
 import PlayerHero from './PlayerHero'
@@ -6,6 +6,7 @@ import BidPanel from './BidPanel'
 import TeamStrip from './TeamStrip'
 import BidFeed from './BidFeed'
 import ResultOverlay from './ResultOverlay'
+import FranchiseModal from '../FranchiseModal'
 import TeamMark from '../TeamMark'
 import { formatINR, pad2 } from '../../lib/format'
 
@@ -25,6 +26,7 @@ const LiveStage = forwardRef(function LiveStage({ socket, fullscreen, dock, lead
   const { state, teams, stats, connection, overlay, pulse, dismissOverlay } = socket
   const { player, status, lot, result } = state
   const leaderId = state.highestBidder ? state.highestBidder.id : null
+  const [selectedTeamId, setSelectedTeamId] = useState(null)
 
   return (
     <div className={`stage stage-${status.toLowerCase()}${fullscreen && fullscreen.active ? ' is-fullscreen' : ''}`} ref={ref}>
@@ -69,7 +71,7 @@ const LiveStage = forwardRef(function LiveStage({ socket, fullscreen, dock, lead
               )}
             </div>
             <div className="stage-side">
-              <BidPanel state={state} />
+              <BidPanel state={state} onSelectTeam={setSelectedTeamId} />
               <BidFeed bids={state.bidHistory} />
             </div>
           </>
@@ -82,9 +84,10 @@ const LiveStage = forwardRef(function LiveStage({ socket, fullscreen, dock, lead
         )}
       </main>
 
-      <TeamStrip teams={teams} pulse={pulse} leaderId={leaderId} />
+      <TeamStrip teams={teams} pulse={pulse} leaderId={leaderId} onSelectTeam={setSelectedTeamId} />
       {dock}
       <ResultOverlay result={overlay} onDismiss={dismissOverlay} />
+      <FranchiseModal franchiseId={selectedTeamId} onClose={() => setSelectedTeamId(null)} />
     </div>
   )
 })

@@ -268,10 +268,37 @@ async function recalculateRankings(pool, existingConnection = null) {
         }
         Object.values(byCategory).forEach(list => list.forEach((p, i) => { p.newCategoryRank = i + 1; }));
 
+        // Auction Set Ordering (Rule 5): Set 1 (Bat 1-10, Bowl 1-10, WK 1-10, AR 1-10), Set 2...
+        const roleSeq = ['Batsman', 'Bowler', 'Wicket Keeper', 'All-Rounder'];
+        const setOrderedPlayers = [];
+        const maxLen = Math.max(
+            (byCategory['Batsman'] || []).length,
+            (byCategory['Bowler'] || []).length,
+            (byCategory['Wicket Keeper'] || []).length,
+            (byCategory['All-Rounder'] || []).length
+        );
+        const maxSets = Math.max(1, Math.ceil(maxLen / 10));
+
+        for (let s = 0; s < maxSets; s++) {
+            const start = s * 10;
+            const end = start + 10;
+            for (const role of roleSeq) {
+                const list = byCategory[role] || [];
+                const chunk = list.slice(start, end);
+                setOrderedPlayers.push(...chunk);
+            }
+        }
+
+        const setPlayerIds = new Set(setOrderedPlayers.map(p => p.id));
+        const remainingPlayers = players.filter(p => !setPlayerIds.has(p.id)).sort(sortForRank);
+        const finalOrdered = [...setOrderedPlayers, ...remainingPlayers];
+        finalOrdered.forEach((p, i) => { p.newAuctionOrder = i + 1; });
+
         let changed = 0;
         for (const p of players) {
             const newRank = p.ranked ? p.newRank : null;
             const newCatRank = p.ranked ? p.newCategoryRank : null;
+            const newAuctionOrder = p.newAuctionOrder || p.id;
             const oldRank = p.current_rank === null ? null : num(p.current_rank);
             const oldCatRank = p.category_rank === null ? null : num(p.category_rank);
             const oldPoints = num(p.ranking_points);
@@ -297,6 +324,7 @@ async function recalculateRankings(pool, existingConnection = null) {
                         ranking_points = ?, previous_ranking_points = ?,
                         current_rank = ?, previous_rank = ?,
                         category_rank = ?, previous_category_rank = ?,
+                        auction_order = ?,
                         base_price = ?
                      WHERE id = ?`,
                     [
@@ -304,6 +332,7 @@ async function recalculateRankings(pool, existingConnection = null) {
                         p.newPoints, previousPoints,
                         newRank, previousRank,
                         newCatRank, previousCatRank,
+                        newAuctionOrder,
                         autoPrice,
                         p.id,
                     ]
@@ -314,13 +343,15 @@ async function recalculateRankings(pool, existingConnection = null) {
                         batting_average = ?, strike_rate = ?, economy = ?, bowling_average = ?, bowling_strike_rate = ?,
                         ranking_points = ?, previous_ranking_points = ?,
                         current_rank = ?, previous_rank = ?,
-                        category_rank = ?, previous_category_rank = ?
+                        category_rank = ?, previous_category_rank = ?,
+                        auction_order = ?
                      WHERE id = ?`,
                     [
                         p.batting_average, p.strike_rate, p.economy, p.bowling_average, p.bowling_strike_rate,
                         p.newPoints, previousPoints,
                         newRank, previousRank,
                         newCatRank, previousCatRank,
+                        newAuctionOrder,
                         p.id,
                     ]
                 );

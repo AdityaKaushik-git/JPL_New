@@ -5,7 +5,7 @@ import TimerRing from './TimerRing'
 import { formatINR } from '../../lib/format'
 
 /** Current bid, current bidder, next bid and the timer — the second and third biggest things on screen. */
-export default function BidPanel({ state }) {
+export default function BidPanel({ state, onSelectTeam }) {
   const { currentBid, highestBidder, nextBid, status, timeLeft, timerTotal, bidCount, player } = state
   const [bump, setBump] = useState(false)
   const last = useRef(currentBid)
@@ -29,7 +29,13 @@ export default function BidPanel({ state }) {
       </div>
 
       <div className="bidpanel-row">
-        <div className={`bidder${highestBidder ? ' has-bidder' : ''}`} key={highestBidder ? highestBidder.id : 'none'}>
+        <div
+          className={`bidder${highestBidder ? ' has-bidder' : ''}`}
+          key={highestBidder ? highestBidder.id : 'none'}
+          onClick={() => highestBidder && onSelectTeam && onSelectTeam(highestBidder.id)}
+          style={{ cursor: highestBidder && onSelectTeam ? 'pointer' : 'default' }}
+          title={highestBidder ? `Click to view ${highestBidder.team_name} full details` : undefined}
+        >
           {highestBidder ? (
             <>
               <TeamMark team={highestBidder} size={46} />

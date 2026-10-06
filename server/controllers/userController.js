@@ -188,7 +188,13 @@ exports.getStandings = async (req, res) => {
                 purse: f.remaining_purse,
                 players_count: f.squad_count,
             }))
-            .sort((a, b) => b.remaining_purse - a.remaining_purse);
+            .sort((a, b) => {
+                const ptsDiff = (Number(b.total_player_points) || 0) - (Number(a.total_player_points) || 0);
+                if (ptsDiff !== 0) return ptsDiff;
+                const purseDiff = (Number(b.remaining_purse) || 0) - (Number(a.remaining_purse) || 0);
+                if (purseDiff !== 0) return purseDiff;
+                return (Number(b.batsmen_points) || 0) - (Number(a.batsmen_points) || 0);
+            });
         res.json({ standings });
     } catch (error) {
         console.error('STANDINGS ERROR:', error.message);

@@ -1063,3 +1063,33 @@ input, select, textarea { font: inherit; }
   margin-top: 0.25rem;
   font-weight: 700;
 }
+
+/* ---------- Franchise Profile Modal ---------- */
+.fmodal-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+  padding: 1.2rem 1.4rem; background: rgba(10, 18, 32, .6); border: 1px solid var(--line-2);
+  border-radius: var(--r-md); border-left: 5px solid var(--accent, var(--night-4));
+  margin-bottom: 1.25rem;
+}
+.fmodal-cell { display: flex; align-items: center; gap: 1rem; }
+.fmodal-title-row { display: flex; align-items: center; gap: .6rem; }
+.fmodal-title-row h2 { margin: 0; font-family: var(--font-display); font-size: 1.6rem; color: #fff; }
+.fmodal-score-box {
+  text-align: right; background: rgba(242, 193, 78, .08); border: 1px solid rgba(242, 193, 78, .3);
+  padding: .6rem 1.2rem; border-radius: var(--r-md);
+}
+.fmodal-score-val { font-family: var(--font-display); font-size: 1.8rem; font-weight: 900; color: var(--gold); line-height: 1; }
+.fmodal-score-label { font-size: .75rem; text-transform: uppercase; letter-spacing: .06em; color: var(--chalk-3); margin-top: .2rem; }
+
+.fmodal-stats-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: .8rem; margin-bottom: 1.25rem;
+}
+.fmodal-stat {
+  background: rgba(16, 26, 44, .7); border: 1px solid var(--line); border-radius: var(--r-md);
+  padding: .85rem 1rem; display: flex; flex-direction: column; gap: .25rem;
+}
+.fmodal-stat strong { font-family: var(--font-display); font-size: 1.25rem; color: #fff; }
+
+.fmodal-section { margin-top: 1.25rem; display: flex; flex-direction: column; gap: .75rem; }
+.fmodal-section-title { font-family: var(--font-display); font-size: 1.05rem; letter-spacing: .04em; color: var(--chalk-2); text-transform: uppercase; margin: 0; }
+

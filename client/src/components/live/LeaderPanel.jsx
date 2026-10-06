@@ -7,11 +7,13 @@ import { formatINR, formatShort } from '../../lib/format'
 export default function LeaderPanel({ teams }) {
   if (!teams || !teams.length) return null
   
-  // Sort by total_player_points (primary), remaining_purse (tiebreak)
+  // Sort by total_player_points (primary), remaining_purse (tiebreak 1), batsmen_points (tiebreak 2)
   const sorted = [...teams].sort((a, b) => {
     const ptsDiff = (Number(b.total_player_points) || 0) - (Number(a.total_player_points) || 0)
     if (ptsDiff !== 0) return ptsDiff
-    return (Number(b.remaining_purse) || 0) - (Number(a.remaining_purse) || 0)
+    const purseDiff = (Number(b.remaining_purse) || 0) - (Number(a.remaining_purse) || 0)
+    if (purseDiff !== 0) return purseDiff
+    return (Number(b.batsmen_points) || 0) - (Number(a.batsmen_points) || 0)
   })
   
   const leader = sorted[0]

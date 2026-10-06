@@ -1,29 +1,33 @@
 import { useState } from 'react'
 import { useAsync } from '../hooks/useAsync'
+import { useAuctionSocket } from '../hooks/useAuctionSocket'
 import { api } from '../services/api'
 import { Loader, ErrorState, EmptyState } from '../components/States'
 import TeamMark from '../components/TeamMark'
 import PlayerCard from '../components/PlayerCard'
-import Modal from '../components/Modal'
+import FranchiseModal from '../components/FranchiseModal'
 import { formatINR, formatShort } from '../lib/format'
 
 /** Public franchise table with squads. */
 export default function Standings() {
   const { data, error, loading, reload } = useAsync(() => api.getStandings(), [])
+  const { teams: socketTeams } = useAuctionSocket()
   const [open, setOpen] = useState(null)
-  const squad = useAsync(() => (open ? api.getFranchise(open.id) : Promise.resolve(null)), [open && open.id])
 
   if (loading && !data) return <Loader full />
   if (error) return <div className="page"><ErrorState error={error} onRetry={reload} /></div>
   
-  // Use data.standings or data.franchises depending on what api.getStandings returns.
-  const teams = (data.standings || data.franchises || []).filter(t => t.status !== 'disabled')
+  // Use real-time socket teams if available, fallback to REST API response.
+  const rawTeams = (socketTeams && socketTeams.length) ? socketTeams : (data?.standings || data?.franchises || [])
+  const teams = rawTeams.filter(t => t.status !== 'disabled')
   
-  // Sort teams by total_player_points for ranking display
+  // Sort teams by total_player_points (primary), remaining_purse (tiebreak 1), batsmen_points (tiebreak 2)
   const sortedTeams = [...teams].sort((a, b) => {
     const ptsDiff = (Number(b.total_player_points) || 0) - (Number(a.total_player_points) || 0)
     if (ptsDiff !== 0) return ptsDiff
-    return (Number(b.remaining_purse) || 0) - (Number(a.remaining_purse) || 0)
+    const purseDiff = (Number(b.remaining_purse) || 0) - (Number(a.remaining_purse) || 0)
+    if (purseDiff !== 0) return purseDiff
+    return (Number(b.batsmen_points) || 0) - (Number(a.batsmen_points) || 0)
   })
 
   return (
@@ -105,11 +109,7 @@ export default function Standings() {
           })}
         </div>
       )}
-      <Modal open={Boolean(open)} title={open ? `${open.team_name} squad` : ''} onClose={() => setOpen(null)} width={960}>
-        {squad.loading || !squad.data ? <Loader /> : squad.data.squad.length ? (
-          <div className="card-grid">{squad.data.squad.map(p => <PlayerCard key={p.id} player={p} accent={open.color} price={p.purchase_price} />)}</div>
-        ) : <p className="muted">No players bought yet.</p>}
-      </Modal>
+      <FranchiseModal franchiseId={open?.id} onClose={() => setOpen(null)} />
     </div>
   )
 }
