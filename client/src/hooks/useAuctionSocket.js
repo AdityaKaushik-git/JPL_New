@@ -3,7 +3,7 @@ import { io } from 'socket.io-client'
 
 const EMPTY_STATE = {
   auctionId: null, status: 'Pending', player: null, lot: null, currentBid: 0, highestBidder: null,
-  timeLeft: 0, timerTotal: 30, bidHistory: [], bidCount: 0, nextBid: 0, increment: 0, result: null,
+  timeLeft: 0, timerTotal: 60, bidHistory: [], bidCount: 0, nextBid: 0, increment: 0, result: null,
 }
 
 /**
