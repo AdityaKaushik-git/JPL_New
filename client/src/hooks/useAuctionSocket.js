@@ -26,7 +26,7 @@ export function useAuctionSocket({ onNotify, onPlayersChanged } = {}) {
 
   useEffect(() => {
     const socket = io({
-      auth: { token: localStorage.getItem('jpl_token') || undefined },
+      auth: { token: sessionStorage.getItem('jpl_token') || localStorage.getItem('jpl_token') || undefined },
       reconnection: true,
       reconnectionDelay: 800,
       reconnectionDelayMax: 4000,

@@ -1,7 +1,7 @@
 const BASE = '/api'
 
 function getHeaders() {
-  const token = localStorage.getItem('jpl_token')
+  const token = sessionStorage.getItem('jpl_token') || localStorage.getItem('jpl_token')
   return {
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
