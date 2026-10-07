@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Play, Pause, SkipForward, CheckCircle2, XCircle, RotateCcw, Radio, Wifi, WifiOff, Search } from 'lucide-react'
+import { Play, Pause, SkipForward, CheckCircle2, XCircle, RotateCcw, Radio, Wifi, WifiOff, Search, Square } from 'lucide-react'
 import ToastContainer from '../components/Toast'
 import { ConfirmDialog } from '../components/Modal'
 import FranchiseModal from '../components/FranchiseModal'
@@ -67,6 +67,14 @@ export default function AdminControl() {
           <p className="muted">Everything you do here is broadcast instantly to the live screen and every franchise.</p>
         </div>
         <div className="head-actions">
+          {state.status === 'Ended' ? (
+            <button className="btn btn-success btn-sm" onClick={() => emit('admin:startAuction')}><Play size={15} /> Start Auction</button>
+          ) : (
+            <>
+              <button className="btn btn-success btn-sm" onClick={() => emit('admin:startAuction')}><Play size={15} /> Start Auction</button>
+              <button className="btn btn-danger btn-sm" onClick={() => emit('admin:endAuction')}><Square size={15} /> End Auction</button>
+            </>
+          )}
           <span className={`conn conn-${connection}`}>{connection === 'online' ? <Wifi size={15} /> : <WifiOff size={15} />} {connection === 'online' ? 'Connected' : 'Reconnecting'}</span>
           <span className="chip">{stats.bidders || 0} franchises online</span>
           <Link to="/live" target="_blank" className="btn btn-ghost btn-sm"><Radio size={15} /> Open live screen</Link>

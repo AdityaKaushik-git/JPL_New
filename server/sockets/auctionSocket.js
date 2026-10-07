@@ -226,11 +226,12 @@ module.exports = (io) => {
     async function broadcastTeams() {
         try {
             const teams = await listFranchises(pool);
+            const isEnded = activeAuction.status === 'Ended';
             for (const socket of io.sockets.sockets.values()) {
                 const isAdmin = socket.user && socket.user.role === 'admin';
                 const sanitizedTeams = teams.map(t => {
-                    if (isAdmin) return t;
-                    // Redact live ranking points from team list for non-admins
+                    if (isAdmin || isEnded) return t;
+                    // Redact live ranking points from team list for non-admins during live bidding
                     const { total_player_points, batsmen_points, ...rest } = t;
                     return rest;
                 });
@@ -790,6 +791,27 @@ module.exports = (io) => {
             notify(socket, 'Player moved back to the Available queue.', 'success');
             io.emit('auction:playerReset', { playerId: id });
             hub.notifyPlayersChanged();
+        });
+
+        guard(socket, 'admin:startAuction', true, async () => {
+            if (activeAuction.status === 'Ended' || activeAuction.status === 'Pending') {
+                activeAuction.status = 'Live';
+            }
+            if (!activeAuction.player) {
+                const id = await nextAvailablePlayerId();
+                if (id) await startLot(id);
+            }
+            broadcastState();
+            await broadcastTeams();
+            notify(io, '🎉 The JPL Auction has officially STARTED!', 'success');
+        });
+
+        guard(socket, 'admin:endAuction', true, async () => {
+            stopTimer();
+            activeAuction.status = 'Ended';
+            broadcastState();
+            await broadcastTeams();
+            notify(io, '🏆 The JPL Auction has ENDED! Live rankings are now active.', 'info');
         });
 
         socket.on('disconnect', () => {

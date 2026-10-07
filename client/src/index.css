@@ -1093,3 +1093,363 @@ input, select, textarea { font: inherit; }
 .fmodal-section { margin-top: 1.25rem; display: flex; flex-direction: column; gap: .75rem; }
 .fmodal-section-title { font-family: var(--font-display); font-size: 1.05rem; letter-spacing: .04em; color: var(--chalk-2); text-transform: uppercase; margin: 0; }
 
+
+/* ---------- Live Rankings Screen & Podium Animations ---------- */
+.stage-main-rankings {
+  padding: 1.5rem;
+  width: 100%;
+  max-width: 1300px;
+  margin: 0 auto;
+}
+
+.live-rankings-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  width: 100%;
+  animation: rankingsFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes rankingsFadeIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.rankings-ambient-glow {
+  position: absolute;
+  top: -100px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 600px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(242, 193, 78, 0.15) 0%, rgba(200, 16, 46, 0.05) 50%, transparent 80%);
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(60px);
+}
+
+.rankings-hero-head {
+  text-align: center;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.rankings-title-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 1.2rem;
+  background: rgba(242, 193, 78, 0.12);
+  border: 1px solid rgba(242, 193, 78, 0.35);
+  border-radius: 999px;
+  color: var(--gold);
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  box-shadow: 0 0 20px rgba(242, 193, 78, 0.2);
+}
+
+.sparkle-icon {
+  animation: sparkleRotate 3s linear infinite;
+}
+
+@keyframes sparkleRotate {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.2); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+.rankings-main-title {
+  font-family: var(--font-display);
+  font-size: 2.6rem;
+  font-weight: 900;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  margin: 0.2rem 0;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+  background: linear-gradient(135deg, #ffffff 30%, #f2c14e 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.trophy-gold {
+  color: var(--gold);
+  filter: drop-shadow(0 0 12px rgba(242, 193, 78, 0.6));
+  animation: trophyPulse 2.5s ease-in-out infinite;
+}
+
+@keyframes trophyPulse {
+  0%, 100% { transform: scale(1) rotate(0deg); filter: drop-shadow(0 0 12px rgba(242, 193, 78, 0.6)); }
+  50% { transform: scale(1.1) rotate(3deg); filter: drop-shadow(0 0 22px rgba(242, 193, 78, 0.9)); }
+}
+
+.rankings-subtitle {
+  color: var(--chalk-3);
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* Podium Styling */
+.podium-container {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr 1fr;
+  align-items: flex-end;
+  gap: 1.25rem;
+  margin-top: 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+@media (max-width: 860px) {
+  .podium-container {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+}
+
+.podium-card {
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-lg);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+.podium-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.6), 0 0 25px var(--team-color, rgba(242, 193, 78, 0.3));
+}
+
+.podium-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+  background: var(--team-color, var(--gold));
+}
+
+.podium-1 {
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.95) 100%);
+  border: 2px solid rgba(242, 193, 78, 0.6);
+  box-shadow: 0 0 40px rgba(242, 193, 78, 0.25), 0 12px 35px rgba(0, 0, 0, 0.5);
+  padding: 2rem 1.5rem;
+  z-index: 2;
+  animation: champFloat 4s ease-in-out infinite alternate;
+}
+
+@keyframes champFloat {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-6px); }
+}
+
+.champion-crown {
+  position: absolute;
+  top: -26px;
+  color: #f2c14e;
+  filter: drop-shadow(0 0 15px rgba(242, 193, 78, 0.8));
+  animation: crownBounce 2s ease-in-out infinite;
+}
+
+@keyframes crownBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.podium-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  margin-bottom: 1rem;
+}
+
+.badge-gold {
+  background: linear-gradient(135deg, #f2c14e, #d97706);
+  color: #000;
+  box-shadow: 0 0 15px rgba(242, 193, 78, 0.4);
+}
+
+.badge-silver {
+  background: linear-gradient(135deg, #e2e8f0, #94a3b8);
+  color: #000;
+}
+
+.badge-bronze {
+  background: linear-gradient(135deg, #f97316, #b45309);
+  color: #fff;
+}
+
+.podium-team-logo {
+  margin-bottom: 0.75rem;
+  transition: transform 0.3s ease;
+}
+
+.podium-card:hover .podium-team-logo {
+  transform: scale(1.08);
+}
+
+.podium-team-name {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #fff;
+  margin: 0 0 0.1rem 0;
+}
+
+.champ-name {
+  font-size: 1.7rem;
+  background: linear-gradient(135deg, #ffffff, #f2c14e);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.podium-owner {
+  color: var(--chalk-3);
+  font-size: 0.85rem;
+  margin: 0 0 1rem 0;
+}
+
+.podium-score {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--r-md);
+  padding: 0.6rem 1.25rem;
+  width: 100%;
+  margin-bottom: 0.8rem;
+}
+
+.score-champ {
+  background: rgba(242, 193, 78, 0.12);
+  border-color: rgba(242, 193, 78, 0.35);
+}
+
+.score-val {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: var(--gold);
+  line-height: 1.1;
+}
+
+.score-lbl {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--chalk-3);
+}
+
+.podium-substats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1rem;
+  justify-content: center;
+  font-size: 0.78rem;
+  color: var(--chalk-3);
+}
+
+/* Full Leaderboard Table Styling */
+.rankings-table-card {
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.table-card-head {
+  padding: 1.2rem 1.5rem;
+  background: rgba(30, 41, 59, 0.5);
+  border-bottom: 1px solid var(--line-2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.table-card-head h3 {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  color: #fff;
+  margin: 0;
+}
+
+.muted-hint {
+  font-size: 0.8rem;
+  color: var(--chalk-3);
+}
+
+.rankings-table {
+  margin: 0;
+}
+
+.rank-row {
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+.rank-row:hover {
+  background: rgba(242, 193, 78, 0.06) !important;
+}
+
+.top-rank-1 {
+  background: rgba(242, 193, 78, 0.08);
+}
+
+.top-rank-2 {
+  background: rgba(226, 232, 240, 0.05);
+}
+
+.top-rank-3 {
+  background: rgba(249, 115, 22, 0.05);
+}
+
+.rank-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 0.95rem;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.rank-pill-1 { background: rgba(242, 193, 78, 0.2); color: var(--gold); }
+.rank-pill-2 { background: rgba(226, 232, 240, 0.2); color: #e2e8f0; }
+.rank-pill-3 { background: rgba(249, 115, 22, 0.2); color: #f97316; }
+
+.points-highlight {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  color: var(--gold);
+}

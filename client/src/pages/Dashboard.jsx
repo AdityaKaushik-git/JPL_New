@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Gavel, Radio, SlidersHorizontal, Users, Check, X, Pencil } from 'lucide-react'
+import { Gavel, Radio, SlidersHorizontal, Users, Check, X, Pencil, Play, Square } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useAsync } from '../hooks/useAsync'
+import { useAuctionSocket } from '../hooks/useAuctionSocket'
 import { api } from '../services/api'
 import { Loader, ErrorState, EmptyState } from '../components/States'
 import TeamMark from '../components/TeamMark'
@@ -86,14 +87,42 @@ function OwnerDashboard() {
 
 function AdminOverview() {
   const { data, error, loading, reload } = useAsync(() => Promise.all([api.getAdminStats(), api.getFranchises()]).then(([s, f]) => ({ s, f: f.franchises })), [])
+  const socket = useAuctionSocket()
+  const { state, emit } = socket
+
   if (loading && !data) return <Loader full />
   if (error) return <div className="page"><ErrorState error={error} onRetry={reload} /></div>
   const { s, f } = data
+  const isEnded = state.status === 'Ended'
+
   return (
     <div className="page">
       <div className="page-head">
-        <div><h1>Auction overview</h1><p className="muted">{s.soldPlayers} of {s.totalPlayers} players sold · {s.franchises} franchises</p></div>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '.6rem', flexWrap: 'wrap' }}>
+            <h1>Auction overview</h1>
+            <span className={`status-pill status-${state.status.toLowerCase()}`}>
+              {state.status === 'Live' && <i className="live-dot" aria-hidden="true" />}
+              {state.status}
+            </span>
+          </div>
+          <p className="muted">{s.soldPlayers} of {s.totalPlayers} players sold · {s.franchises} franchises</p>
+        </div>
         <div className="head-actions">
+          {isEnded ? (
+            <button className="btn btn-success" onClick={() => emit('admin:startAuction')}>
+              <Play size={16} /> Start Auction
+            </button>
+          ) : (
+            <>
+              <button className="btn btn-success" onClick={() => emit('admin:startAuction')}>
+                <Play size={16} /> Start Auction
+              </button>
+              <button className="btn btn-danger" onClick={() => emit('admin:endAuction')}>
+                <Square size={16} /> End Auction
+              </button>
+            </>
+          )}
           <Link to="/admin/control" className="btn btn-primary"><SlidersHorizontal size={16} /> Control center</Link>
           <Link to="/live" target="_blank" className="btn btn-ghost"><Radio size={16} /> Live screen</Link>
         </div>

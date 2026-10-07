@@ -7,6 +7,7 @@ import TeamStrip from './TeamStrip'
 import BidFeed from './BidFeed'
 import ResultOverlay from './ResultOverlay'
 import FranchiseModal from '../FranchiseModal'
+import LiveRankingsView from './LiveRankingsView'
 import TeamMark from '../TeamMark'
 import { formatINR, pad2 } from '../../lib/format'
 
@@ -16,6 +17,7 @@ const STATUS_LABEL = {
   Processing: 'Closing lot',
   Completed: 'Lot closed',
   Pending: 'Standing by',
+  Ended: 'Auction Ended',
 }
 
 /**
@@ -27,6 +29,39 @@ const LiveStage = forwardRef(function LiveStage({ socket, fullscreen, dock, lead
   const { player, status, lot, result } = state
   const leaderId = state.highestBidder ? state.highestBidder.id : null
   const [selectedTeamId, setSelectedTeamId] = useState(null)
+  const isEnded = status === 'Ended'
+
+  if (isEnded) {
+    return (
+      <div className={`stage stage-ended${fullscreen && fullscreen.active ? ' is-fullscreen' : ''}`} ref={ref}>
+        <header className="stage-top">
+          {leading || <Brand to="/" />}
+          <div className="stage-title">
+            <span className="stage-event">JPL Live Auction</span>
+            <span className="status-pill status-completed">🏆 Auction Completed</span>
+          </div>
+          <div className="stage-tools">
+            <span className={`conn conn-${connection}`} title={connection === 'online' ? 'Connected' : 'Reconnecting'}>
+              {connection === 'online' ? <Wifi size={15} /> : <WifiOff size={15} />}
+              <span>{connection === 'online' ? 'Connected' : connection === 'offline' ? 'Offline' : 'Reconnecting'}</span>
+            </span>
+            <span className="watching" title="People connected"><Users size={15} /> {stats.total || 0}</span>
+            {fullscreen && fullscreen.supported && (
+              <button className="icon-btn" onClick={fullscreen.toggle} aria-label={fullscreen.active ? 'Exit fullscreen' : 'Fullscreen'}>
+                {fullscreen.active ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+              </button>
+            )}
+          </div>
+        </header>
+
+        <main className="stage-main stage-main-rankings">
+          <LiveRankingsView teams={teams} onSelectTeam={setSelectedTeamId} />
+        </main>
+
+        <FranchiseModal franchiseId={selectedTeamId} onClose={() => setSelectedTeamId(null)} />
+      </div>
+    )
+  }
 
   return (
     <div className={`stage stage-${status.toLowerCase()}${fullscreen && fullscreen.active ? ' is-fullscreen' : ''}`} ref={ref}>
