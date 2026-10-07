@@ -124,7 +124,7 @@ export default function AdminControl() {
           )}
 
           <div className="control-buttons">
-            <button className="btn btn-primary btn-lg" onClick={() => emit('admin:nextPlayer')} disabled={open || !queue.length}>
+            <button className="btn btn-primary btn-lg" onClick={() => emit('admin:nextPlayer')} disabled={!queue.length || (open && Boolean(state.highestBidder))}>
               <SkipForward size={18} /> Next player
             </button>
             {state.status === 'Live' && <button className="btn btn-ghost btn-lg" onClick={() => emit('admin:pauseAuction')}><Pause size={18} /> Pause</button>}
@@ -153,7 +153,7 @@ export default function AdminControl() {
                   <b>{q.name}</b>
                   <small><RoleIcon role={q.playing_role} size={13} /> {roleMeta(q.playing_role).short} · {formatShort(q.base_price)} · {q.current_rank ? `#${q.current_rank}` : 'NR'}</small>
                 </div>
-                <button className="btn btn-ghost btn-sm" disabled={open} onClick={() => emit('admin:startPlayer', { playerId: q.id })}><Play size={14} /> Start</button>
+                <button className="btn btn-ghost btn-sm" disabled={open && Boolean(state.highestBidder)} onClick={() => emit('admin:startPlayer', { playerId: q.id })}><Play size={14} /> Start</button>
               </li>
             ))}
             {!queue.length && <li className="muted queue-empty">{players.loading ? 'Loading players…' : 'No Available players.'}</li>}

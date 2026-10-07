@@ -299,7 +299,12 @@ module.exports = (io) => {
 
     // ---- start a lot ----------------------------------------------------------
     async function startLot(playerId) {
-        if (isLotOpen()) throw new AuctionError('Finish the current player (SOLD or UNSOLD) before starting another.', 'warning');
+        if (isLotOpen()) {
+            if (activeAuction.highestBidder) {
+                throw new AuctionError('Finish the current player (SOLD or UNSOLD) before starting another.', 'warning');
+            }
+            await markCurrentUnsold();
+        }
 
         const connection = await pool.getConnection();
         let player, auctionId, lot;
@@ -801,10 +806,7 @@ module.exports = (io) => {
             if (activeAuction.status === 'Ended' || activeAuction.status === 'Pending' || activeAuction.status === 'Paused') {
                 activeAuction.status = 'Live';
             }
-            if (!activeAuction.player) {
-                const id = await nextAvailablePlayerId();
-                if (id) await startLot(id);
-            } else {
+            if (activeAuction.player) {
                 startTimer();
             }
             broadcastState();
