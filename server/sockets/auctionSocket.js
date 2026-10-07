@@ -107,6 +107,7 @@ function emptyAuction() {
 }
 
 let activeAuction = emptyAuction();
+let showLiveRankings = false;
 const connectedUsers = new Map();
 
 // ---- serial queue: one state mutation at a time -----------------------------
@@ -200,6 +201,7 @@ module.exports = (io) => {
         return {
             auctionId: a.auctionId,
             status: a.status,
+            showLiveRankings,
             player: a.player,
             lot: a.lot,
             currentBid: a.currentBid,
@@ -226,12 +228,12 @@ module.exports = (io) => {
     async function broadcastTeams() {
         try {
             const teams = await listFranchises(pool);
-            const isEnded = activeAuction.status === 'Ended';
             for (const socket of io.sockets.sockets.values()) {
                 const isAdmin = socket.user && socket.user.role === 'admin';
+                const canSeeRankings = isAdmin || showLiveRankings;
                 const sanitizedTeams = teams.map(t => {
-                    if (isAdmin || isEnded) return t;
-                    // Redact live ranking points from team list for non-admins during live bidding
+                    if (canSeeRankings) return t;
+                    // Redact live ranking points from team list when showLiveRankings is OFF for non-admins
                     const { total_player_points, batsmen_points, ...rest } = t;
                     return rest;
                 });
@@ -809,9 +811,17 @@ module.exports = (io) => {
         guard(socket, 'admin:endAuction', true, async () => {
             stopTimer();
             activeAuction.status = 'Ended';
+            showLiveRankings = true;
             broadcastState();
             await broadcastTeams();
             notify(io, '🏆 Auction Ended! Live Ranking Bidders & Final Standings are now displayed to everyone.', 'info');
+        });
+
+        guard(socket, 'admin:toggleRankings', true, async ({ enabled }) => {
+            showLiveRankings = Boolean(enabled);
+            broadcastState();
+            await broadcastTeams();
+            notify(io, `Live Rankings visibility turned ${showLiveRankings ? 'ON' : 'OFF'} by Admin.`, 'info');
         });
 
         socket.on('disconnect', () => {

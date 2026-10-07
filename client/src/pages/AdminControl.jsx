@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Play, Pause, SkipForward, CheckCircle2, XCircle, RotateCcw, Radio, Wifi, WifiOff, Search, Square } from 'lucide-react'
+import { Play, Pause, SkipForward, CheckCircle2, XCircle, RotateCcw, Radio, Wifi, WifiOff, Search, Square, Eye, EyeOff } from 'lucide-react'
 import ToastContainer from '../components/Toast'
 import { ConfirmDialog } from '../components/Modal'
 import FranchiseModal from '../components/FranchiseModal'
@@ -35,6 +35,7 @@ export default function AdminControl() {
   const unsold = all.filter(p => p.status === 'Unsold')
   const open = ['Live', 'Paused'].includes(state.status)
   const p = state.player
+  const showRankings = Boolean(state.showLiveRankings)
 
   function ask(action) {
     const name = p ? p.name : ''
@@ -67,6 +68,14 @@ export default function AdminControl() {
           <p className="muted">Everything you do here is broadcast instantly to the live screen and every franchise.</p>
         </div>
         <div className="head-actions">
+          <button
+            className={`btn btn-sm ${showRankings ? 'btn-success' : 'btn-ghost'}`}
+            onClick={() => emit('admin:toggleRankings', { enabled: !showRankings })}
+            title="Toggle whether non-admin users can see Live Rankings"
+          >
+            {showRankings ? <Eye size={15} /> : <EyeOff size={15} />}
+            Live Rankings: {showRankings ? 'ON' : 'OFF'}
+          </button>
           {state.status === 'Ended' ? (
             <button className="btn btn-success btn-sm" onClick={() => emit('admin:startAuction')}><Play size={15} /> Start Auction</button>
           ) : (

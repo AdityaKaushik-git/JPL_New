@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Gavel, Radio, SlidersHorizontal, Users, Check, X, Pencil, Play, Square } from 'lucide-react'
+import { Gavel, Radio, SlidersHorizontal, Users, Check, X, Pencil, Play, Square, Trophy, Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useAsync } from '../hooks/useAsync'
 import { useAuctionSocket } from '../hooks/useAuctionSocket'
@@ -94,6 +94,7 @@ function AdminOverview() {
   if (error) return <div className="page"><ErrorState error={error} onRetry={reload} /></div>
   const { s, f } = data
   const isEnded = state.status === 'Ended'
+  const showRankings = Boolean(state.showLiveRankings)
 
   return (
     <div className="page">
@@ -109,6 +110,14 @@ function AdminOverview() {
           <p className="muted">{s.soldPlayers} of {s.totalPlayers} players sold · {s.franchises} franchises</p>
         </div>
         <div className="head-actions">
+          <button
+            className={`btn ${showRankings ? 'btn-success' : 'btn-ghost'}`}
+            onClick={() => emit('admin:toggleRankings', { enabled: !showRankings })}
+            title="Toggle whether non-admin users can see Live Rankings"
+          >
+            {showRankings ? <Eye size={16} /> : <EyeOff size={16} />}
+            Live Rankings: {showRankings ? 'ON' : 'OFF'}
+          </button>
           {isEnded ? (
             <button className="btn btn-success" onClick={() => emit('admin:startAuction')}>
               <Play size={16} /> Start Auction

@@ -30,15 +30,18 @@ const LiveStage = forwardRef(function LiveStage({ socket, fullscreen, dock, lead
   const leaderId = state.highestBidder ? state.highestBidder.id : null
   const [selectedTeamId, setSelectedTeamId] = useState(null)
   const isEnded = status === 'Ended'
+  const showRankings = Boolean(state.showLiveRankings) || isEnded
 
-  if (isEnded) {
+  if (isEnded || showRankings) {
     return (
       <div className={`stage stage-ended${fullscreen && fullscreen.active ? ' is-fullscreen' : ''}`} ref={ref}>
         <header className="stage-top">
           {leading || <Brand to="/" />}
           <div className="stage-title">
             <span className="stage-event">JPL Live Auction</span>
-            <span className="status-pill status-completed">🏆 Auction Ended — Ranking Bidders Displayed</span>
+            <span className="status-pill status-completed">
+              {isEnded ? '🏆 Auction Ended — Ranking Bidders Displayed' : '📊 Live Rankings Active'}
+            </span>
           </div>
           <div className="stage-tools">
             <span className={`conn conn-${connection}`} title={connection === 'online' ? 'Connected' : 'Reconnecting'}>
