@@ -805,16 +805,16 @@ module.exports = (io) => {
             }
             broadcastState();
             await broadcastTeams();
-            notify(io, '🎉 The JPL Auction has officially STARTED!', 'success');
+            notify(io, 'The JPL Auction has officially STARTED!', 'success');
         });
 
         guard(socket, 'admin:endAuction', true, async () => {
             stopTimer();
             activeAuction.status = 'Ended';
-            showLiveRankings = true;
+            showLiveRankings = false;
             broadcastState();
             await broadcastTeams();
-            notify(io, '🏆 Auction Ended! Live Ranking Bidders & Final Standings are now displayed to everyone.', 'info');
+            notify(io, 'Auction Ended. Results will be shared shortly.', 'info');
         });
 
         guard(socket, 'admin:toggleRankings', true, async ({ enabled }) => {

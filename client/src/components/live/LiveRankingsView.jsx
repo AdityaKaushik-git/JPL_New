@@ -1,12 +1,13 @@
 import { useMemo } from 'react'
-import { Trophy, Award, Medal, Crown, Sparkles, TrendingUp, DollarSign, ShieldAlert } from 'lucide-react'
+import { Trophy, Award, Medal, Crown, Sparkles } from 'lucide-react'
 import TeamMark from '../TeamMark'
 import { formatINR, formatShort } from '../../lib/format'
 
 /**
-/ * Broadcast-quality animated Live Rankings & Final Standings View.
-/ * Displays the podium for top 3 teams and a full animated leaderboard.
-/ */
+ * Broadcast-quality animated Live Rankings & Final Standings View.
+ * Displays the podium for top 3 teams and a full animated leaderboard.
+ * No emojis used — pure SVG icons & clean typography.
+ */
 export default function LiveRankingsView({ teams = [], onSelectTeam }) {
   // Sort teams according to official tie-breaker rules:
   // 1. Total ICC Ranking Points (descending)
@@ -31,7 +32,6 @@ export default function LiveRankingsView({ teams = [], onSelectTeam }) {
   const champion = rankedTeams[0]
   const runnerUp = rankedTeams[1]
   const thirdPlace = rankedTeams[2]
-  const restTeams = rankedTeams.slice(3)
 
   return (
     <div className="live-rankings-wrapper">
@@ -41,16 +41,16 @@ export default function LiveRankingsView({ teams = [], onSelectTeam }) {
       {/* Header Title Banner */}
       <div className="rankings-hero-head">
         <div className="rankings-title-badge">
-          <Sparkles size={18} className="sparkle-icon" />
-          <span>AUCTION ENDED — RANKING BIDDERS DISPLAYED</span>
-          <Sparkles size={18} className="sparkle-icon" />
+          <Sparkles size={16} className="sparkle-icon" />
+          <span>OFFICIAL AUCTION STANDINGS & RANKINGS</span>
+          <Sparkles size={16} className="sparkle-icon" />
         </div>
         <h1 className="rankings-main-title">
-          <Trophy size={42} className="trophy-gold" />
-          JPL Champions & Ranking Bidders
+          <Trophy size={36} className="trophy-gold" />
+          JPL Champions & Ranking Standings
         </h1>
         <p className="rankings-subtitle">
-          Auction Ended · Official ICC T20 Points & Final Franchise Leaderboard
+          Official ICC T20 Points & Franchise Leaderboard
         </p>
       </div>
 
@@ -65,10 +65,10 @@ export default function LiveRankingsView({ teams = [], onSelectTeam }) {
               style={{ '--team-color': runnerUp.color }}
             >
               <div className="podium-badge badge-silver">
-                <Medal size={20} /> #2
+                <Medal size={18} /> RANK #2
               </div>
               <div className="podium-team-logo">
-                <TeamMark team={runnerUp} size={68} />
+                <TeamMark team={runnerUp} size={64} />
               </div>
               <h3 className="podium-team-name">{runnerUp.team_name}</h3>
               <p className="podium-owner">{runnerUp.owner_name}</p>
@@ -93,13 +93,13 @@ export default function LiveRankingsView({ teams = [], onSelectTeam }) {
               style={{ '--team-color': champion.color }}
             >
               <div className="champion-crown">
-                <Crown size={38} className="crown-icon" />
+                <Crown size={34} className="crown-icon" />
               </div>
               <div className="podium-badge badge-gold">
-                <Trophy size={22} /> CHAMPION #1
+                <Trophy size={18} /> CHAMPION #1
               </div>
               <div className="podium-team-logo logo-champ">
-                <TeamMark team={champion} size={84} />
+                <TeamMark team={champion} size={80} />
               </div>
               <h2 className="podium-team-name champ-name">{champion.team_name}</h2>
               <p className="podium-owner">{champion.owner_name}</p>
@@ -125,10 +125,10 @@ export default function LiveRankingsView({ teams = [], onSelectTeam }) {
               style={{ '--team-color': thirdPlace.color }}
             >
               <div className="podium-badge badge-bronze">
-                <Award size={20} /> #3
+                <Award size={18} /> RANK #3
               </div>
               <div className="podium-team-logo">
-                <TeamMark team={thirdPlace} size={64} />
+                <TeamMark team={thirdPlace} size={60} />
               </div>
               <h3 className="podium-team-name">{thirdPlace.team_name}</h3>
               <p className="podium-owner">{thirdPlace.owner_name}</p>
@@ -179,12 +179,20 @@ export default function LiveRankingsView({ teams = [], onSelectTeam }) {
                   >
                     <td className="num-col rank-number-cell">
                       <span className={`rank-pill rank-pill-${rank}`}>
-                        {rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`}
+                        {rank === 1 ? (
+                          <Trophy size={14} className="trophy-gold" />
+                        ) : rank === 2 ? (
+                          <Medal size={14} />
+                        ) : rank === 3 ? (
+                          <Award size={14} />
+                        ) : (
+                          `#${rank}`
+                        )}
                       </span>
                     </td>
                     <td>
                       <span className="team-cell">
-                        <TeamMark team={t} size={32} />
+                        <TeamMark team={t} size={30} />
                         <div>
                           <b>{t.team_name}</b>
                           <span className="chip-sm muted">{t.short_name}</span>

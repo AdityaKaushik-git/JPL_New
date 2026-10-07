@@ -39,7 +39,7 @@ const LiveStage = forwardRef(function LiveStage({ socket, fullscreen, dock, lead
           {leading || <Brand to="/" />}
           <div className="stage-title">
             <span className="stage-event">JPL Live Auction</span>
-            <span className="status-pill status-completed">🏆 Auction Ended</span>
+            <span className="status-pill status-completed">Auction Ended</span>
           </div>
           <div className="stage-tools">
             <span className={`conn conn-${connection}`} title={connection === 'online' ? 'Connected' : 'Reconnecting'}>
@@ -81,7 +81,7 @@ const LiveStage = forwardRef(function LiveStage({ socket, fullscreen, dock, lead
           {leading || <Brand to="/" />}
           <div className="stage-title">
             <span className="stage-event">JPL Live Auction</span>
-            <span className="status-pill status-completed">🏆 Live Rankings & Official Standings</span>
+            <span className="status-pill status-completed">Live Rankings & Standings</span>
           </div>
           <div className="stage-tools">
             <span className={`conn conn-${connection}`} title={connection === 'online' ? 'Connected' : 'Reconnecting'}>

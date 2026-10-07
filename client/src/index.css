@@ -1096,18 +1096,22 @@ input, select, textarea { font: inherit; }
 
 /* ---------- Live Rankings Screen & Podium Animations ---------- */
 .stage-main-rankings {
-  padding: 1.5rem;
+  padding: 1.25rem 1.5rem;
   width: 100%;
-  max-width: 1300px;
+  max-width: 1240px;
   margin: 0 auto;
+  overflow-y: auto;
+  flex: 1;
+  box-sizing: border-box;
 }
 
 .live-rankings-wrapper {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1.5rem;
   width: 100%;
+  padding-bottom: 2.5rem;
   animation: rankingsFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
