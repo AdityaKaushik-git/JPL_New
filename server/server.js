@@ -60,4 +60,19 @@ app.get(/(.*)/, (req, res) => {
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
     console.log(`JPL auction server running on port ${PORT}`);
+
+    // Self-ping helper for Render deployments if URL is configured
+    const appUrl = process.env.RENDER_EXTERNAL_URL || process.env.APP_URL;
+    if (appUrl) {
+        const https = require('https');
+        const http = require('http');
+        const client = appUrl.startsWith('https') ? https : http;
+        setInterval(() => {
+            client.get(`${appUrl}/api/health`, (res) => {
+                console.log(`[Keep-Alive] Pinged health endpoint — Status ${res.statusCode}`);
+            }).on('error', (err) => {
+                console.warn(`[Keep-Alive] Ping failed: ${err.message}`);
+            });
+        }, 10 * 60 * 1000); // 10 minutes
+    }
 });
