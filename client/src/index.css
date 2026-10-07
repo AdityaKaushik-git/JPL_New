@@ -1453,3 +1453,116 @@ input, select, textarea { font: inherit; }
   font-size: 1.15rem;
   color: var(--gold);
 }
+
+/* ---------- Auction Ended Waiting Screen & Mobile Responsiveness ---------- */
+.stage-ended-waiting {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 3rem 1.5rem;
+  gap: 1rem;
+  min-height: 50vh;
+}
+
+.ended-trophy-glow {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: rgba(242, 193, 78, 0.12);
+  border: 2px solid rgba(242, 193, 78, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 30px rgba(242, 193, 78, 0.3);
+  margin-bottom: 0.5rem;
+  animation: endedGlowPulse 2.5s ease-in-out infinite alternate;
+}
+
+@keyframes endedGlowPulse {
+  0% { transform: scale(0.96); box-shadow: 0 0 20px rgba(242, 193, 78, 0.2); }
+  100% { transform: scale(1.06); box-shadow: 0 0 45px rgba(242, 193, 78, 0.5); }
+}
+
+.ended-title {
+  font-family: var(--font-display);
+  font-size: 2.8rem;
+  font-weight: 900;
+  color: #fff;
+  margin: 0;
+  background: linear-gradient(135deg, #ffffff 40%, #f2c14e 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.ended-subtitle {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--gold);
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+
+.ended-chip {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid var(--line-2);
+  padding: 0.6rem 1.4rem;
+  border-radius: 999px;
+  color: var(--chalk-2);
+  font-size: 0.9rem;
+}
+
+/* Mobile Media Query Overrides */
+@media (max-width: 768px) {
+  .stage-main-rankings {
+    padding: 0.75rem;
+  }
+
+  .rankings-main-title {
+    font-size: 1.8rem;
+  }
+
+  .rankings-subtitle {
+    font-size: 0.85rem;
+  }
+
+  .podium-container {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .podium-1 {
+    order: -1;
+  }
+
+  .ended-title {
+    font-size: 2rem;
+  }
+
+  .ended-subtitle {
+    font-size: 1.1rem;
+  }
+
+  .head-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .head-actions .btn {
+    flex: 1 1 auto;
+    font-size: 0.8rem;
+    padding: 0.4rem 0.6rem;
+  }
+
+  .rankings-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .rankings-table th, .rankings-table td {
+    padding: 0.5rem 0.6rem;
+    font-size: 0.8rem;
+    white-space: nowrap;
+  }
+}

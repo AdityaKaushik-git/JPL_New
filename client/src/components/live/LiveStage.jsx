@@ -1,5 +1,5 @@
 import { forwardRef, useState } from 'react'
-import { Maximize2, Minimize2, Wifi, WifiOff, Users } from 'lucide-react'
+import { Maximize2, Minimize2, Wifi, WifiOff, Users, Trophy } from 'lucide-react'
 import Brand from '../Brand'
 import PlayerHero from './PlayerHero'
 import BidPanel from './BidPanel'
@@ -30,18 +30,58 @@ const LiveStage = forwardRef(function LiveStage({ socket, fullscreen, dock, lead
   const leaderId = state.highestBidder ? state.highestBidder.id : null
   const [selectedTeamId, setSelectedTeamId] = useState(null)
   const isEnded = status === 'Ended'
-  const showRankings = Boolean(state.showLiveRankings) || isEnded
+  const showRankings = Boolean(state.showLiveRankings)
 
-  if (isEnded || showRankings) {
+  if (isEnded && !showRankings) {
     return (
       <div className={`stage stage-ended${fullscreen && fullscreen.active ? ' is-fullscreen' : ''}`} ref={ref}>
         <header className="stage-top">
           {leading || <Brand to="/" />}
           <div className="stage-title">
             <span className="stage-event">JPL Live Auction</span>
-            <span className="status-pill status-completed">
-              {isEnded ? '🏆 Auction Ended — Ranking Bidders Displayed' : '📊 Live Rankings Active'}
+            <span className="status-pill status-completed">🏆 Auction Ended</span>
+          </div>
+          <div className="stage-tools">
+            <span className={`conn conn-${connection}`} title={connection === 'online' ? 'Connected' : 'Reconnecting'}>
+              {connection === 'online' ? <Wifi size={15} /> : <WifiOff size={15} />}
+              <span>{connection === 'online' ? 'Connected' : connection === 'offline' ? 'Offline' : 'Reconnecting'}</span>
             </span>
+            <span className="watching" title="People connected"><Users size={15} /> {stats.total || 0}</span>
+            {fullscreen && fullscreen.supported && (
+              <button className="icon-btn" onClick={fullscreen.toggle} aria-label={fullscreen.active ? 'Exit fullscreen' : 'Fullscreen'}>
+                {fullscreen.active ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+              </button>
+            )}
+          </div>
+        </header>
+
+        <main className="stage-main">
+          <div className="stage-idle stage-ended-waiting">
+            <div className="ended-trophy-glow">
+              <Trophy size={56} className="trophy-gold" />
+            </div>
+            <h1 className="ended-title">Auction Ended</h1>
+            <p className="ended-subtitle">Results will be shared shortly</p>
+            <div className="ended-chip">
+              <span>Official rankings and standings will be published shortly by the auctioneer.</span>
+            </div>
+          </div>
+        </main>
+
+        <TeamStrip teams={teams} pulse={pulse} leaderId={leaderId} onSelectTeam={setSelectedTeamId} />
+        <FranchiseModal franchiseId={selectedTeamId} onClose={() => setSelectedTeamId(null)} />
+      </div>
+    )
+  }
+
+  if (showRankings) {
+    return (
+      <div className={`stage stage-ended${fullscreen && fullscreen.active ? ' is-fullscreen' : ''}`} ref={ref}>
+        <header className="stage-top">
+          {leading || <Brand to="/" />}
+          <div className="stage-title">
+            <span className="stage-event">JPL Live Auction</span>
+            <span className="status-pill status-completed">🏆 Live Rankings & Official Standings</span>
           </div>
           <div className="stage-tools">
             <span className={`conn conn-${connection}`} title={connection === 'online' ? 'Connected' : 'Reconnecting'}>
