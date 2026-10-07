@@ -63,11 +63,15 @@ exports.login = async (req, res) => {
             { expiresIn: '24h', algorithm: 'HS256' }
         );
 
-        // Enforce strict active session limits
+        // Enforce strict active session limits with force logout option
+        const forceLogoutOthers = Boolean(req.body && req.body.forceLogoutOthers);
         try {
-            sessionRegistry.registerSession(user, token, req);
+            sessionRegistry.registerSession(user, token, req, forceLogoutOthers);
         } catch (sessionErr) {
-            return res.status(sessionErr.status || 403).json({ message: sessionErr.message });
+            return res.status(sessionErr.status || 403).json({
+                message: sessionErr.message,
+                canForceLogout: Boolean(sessionErr.canForceLogout),
+            });
         }
 
         res.json({ message: 'Login successful', token, user: shapeUser(user) });

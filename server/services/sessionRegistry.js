@@ -27,23 +27,33 @@ function cleanStaleSessions() {
 
 setInterval(cleanStaleSessions, 30000);
 
-function registerSession(user, token, req = {}) {
+function registerSession(user, token, req = {}, forceLogoutOthers = false) {
   cleanStaleSessions();
   const userId = user.id;
   const role = user.role;
   const ip = req.ip || (req.headers && req.headers['x-forwarded-for']) || 'unknown';
 
+  if (forceLogoutOthers) {
+    if (role === 'user') {
+      userSessions.delete(userId);
+    } else if (role === 'admin') {
+      for (const [t, s] of adminSessions.entries()) {
+        if (s.userId === userId) adminSessions.delete(t);
+      }
+    }
+  }
+
   if (role === 'user') {
     const existing = userSessions.get(userId);
-    if (existing) {
+    if (existing && !forceLogoutOthers) {
       const hasSockets = existing.socketIds && existing.socketIds.size > 0;
       const isRecent = (Date.now() - existing.lastSeen) < STALE_TIMEOUT_MS;
       if (hasSockets || isRecent) {
-        const err = new Error('CONCURRENT LOGIN BLOCKED — This bidder account is currently active on another device. Only 1 active bidder session is allowed.');
-        err.status = 403;
+        const err = new Error('This account is active on another device.');
+        err.status = 409;
+        err.canForceLogout = true;
         throw err;
       }
-      // Evict stale session
       userSessions.delete(userId);
     }
     userSessions.set(userId, {
@@ -54,16 +64,16 @@ function registerSession(user, token, req = {}) {
       ip,
     });
   } else if (role === 'admin') {
-    // Count active admin sessions
     const activeAdminCount = Array.from(adminSessions.values()).filter(s => {
       const hasSockets = s.socketIds && s.socketIds.size > 0;
       const isRecent = (Date.now() - s.lastSeen) < STALE_TIMEOUT_MS;
       return hasSockets || isRecent;
     }).length;
 
-    if (activeAdminCount >= 2 && !adminSessions.has(token)) {
-      const err = new Error('ADMIN SESSION LIMIT REACHED — Maximum 2 active admin sessions are allowed across devices. Please log out from another device first.');
-      err.status = 403;
+    if (activeAdminCount >= 2 && !adminSessions.has(token) && !forceLogoutOthers) {
+      const err = new Error('Maximum admin sessions reached across devices.');
+      err.status = 409;
+      err.canForceLogout = true;
       throw err;
     }
 

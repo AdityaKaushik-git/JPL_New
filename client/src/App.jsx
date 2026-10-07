@@ -30,21 +30,26 @@ function AuctionEntry() {
 function AppRoutes() {
   const { user } = useAuth()
   const location = useLocation()
-  const chromeless = CHROMELESS.includes(location.pathname) || (!user && location.pathname === '/')
+  const chromeless = CHROMELESS.includes(location.pathname)
   return (
     <>
       {!chromeless && <Navbar />}
       <Routes>
-        <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
-        <Route path="/register" element={<Navigate to="/login" replace />} />
-        <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        {/* Public Homepage — displayed when website link is opened */}
+        <Route path="/" element={<Landing />} />
 
-        {/* protected — requires login 1st */}
-        <Route path="/live" element={<ProtectedRoute><Live /></ProtectedRoute>} />
+        {/* Public watch live screen — NO login required to watch auction live! */}
+        <Route path="/live" element={<Live />} />
+
+        {/* Sign in */}
+        <Route path="/login" element={user ? <Navigate to={user.role === 'admin' ? '/admin/control' : '/dashboard'} replace /> : <Login />} />
+        <Route path="/register" element={<Navigate to="/login" replace />} />
+
+        {/* Protected routes — require login */}
+        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/rankings" element={<ProtectedRoute><Rankings /></ProtectedRoute>} />
         <Route path="/players/:id" element={<ProtectedRoute><PlayerProfile /></ProtectedRoute>} />
         <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
-        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="/auction" element={<ProtectedRoute><AuctionEntry /></ProtectedRoute>} />
         <Route path="/standings" element={<ProtectedRoute roles={['admin']}><Standings /></ProtectedRoute>} />
