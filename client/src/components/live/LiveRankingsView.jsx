@@ -6,7 +6,8 @@ import { formatINR, formatShort } from '../../lib/format'
 /**
  * Broadcast-quality animated Live Rankings & Final Standings View.
  * Displays the podium for top 3 teams and a full animated leaderboard.
- * No emojis used — pure SVG icons & clean typography.
+ * Perfectly scaled for mobile, tablet, laptop, and desktop viewports.
+ * No emojis — clean SVG icons & typography.
  */
 export default function LiveRankingsView({ teams = [], onSelectTeam }) {
   // Sort teams according to official tie-breaker rules:
@@ -41,12 +42,12 @@ export default function LiveRankingsView({ teams = [], onSelectTeam }) {
       {/* Header Title Banner */}
       <div className="rankings-hero-head">
         <div className="rankings-title-badge">
-          <Sparkles size={16} className="sparkle-icon" />
+          <Sparkles size={14} className="sparkle-icon" />
           <span>OFFICIAL AUCTION STANDINGS & RANKINGS</span>
-          <Sparkles size={16} className="sparkle-icon" />
+          <Sparkles size={14} className="sparkle-icon" />
         </div>
         <h1 className="rankings-main-title">
-          <Trophy size={36} className="trophy-gold" />
+          <Trophy size={32} className="trophy-gold" />
           JPL Champions & Ranking Standings
         </h1>
         <p className="rankings-subtitle">
@@ -65,10 +66,10 @@ export default function LiveRankingsView({ teams = [], onSelectTeam }) {
               style={{ '--team-color': runnerUp.color }}
             >
               <div className="podium-badge badge-silver">
-                <Medal size={18} /> RANK #2
+                <Medal size={16} /> RANK #2
               </div>
               <div className="podium-team-logo">
-                <TeamMark team={runnerUp} size={64} />
+                <TeamMark team={runnerUp} size={52} />
               </div>
               <h3 className="podium-team-name">{runnerUp.team_name}</h3>
               <p className="podium-owner">{runnerUp.owner_name}</p>
@@ -93,13 +94,13 @@ export default function LiveRankingsView({ teams = [], onSelectTeam }) {
               style={{ '--team-color': champion.color }}
             >
               <div className="champion-crown">
-                <Crown size={34} className="crown-icon" />
+                <Crown size={30} className="crown-icon" />
               </div>
               <div className="podium-badge badge-gold">
-                <Trophy size={18} /> CHAMPION #1
+                <Trophy size={16} /> CHAMPION #1
               </div>
               <div className="podium-team-logo logo-champ">
-                <TeamMark team={champion} size={80} />
+                <TeamMark team={champion} size={64} />
               </div>
               <h2 className="podium-team-name champ-name">{champion.team_name}</h2>
               <p className="podium-owner">{champion.owner_name}</p>
@@ -125,10 +126,10 @@ export default function LiveRankingsView({ teams = [], onSelectTeam }) {
               style={{ '--team-color': thirdPlace.color }}
             >
               <div className="podium-badge badge-bronze">
-                <Award size={18} /> RANK #3
+                <Award size={16} /> RANK #3
               </div>
               <div className="podium-team-logo">
-                <TeamMark team={thirdPlace} size={60} />
+                <TeamMark team={thirdPlace} size={48} />
               </div>
               <h3 className="podium-team-name">{thirdPlace.team_name}</h3>
               <p className="podium-owner">{thirdPlace.owner_name}</p>
@@ -180,11 +181,11 @@ export default function LiveRankingsView({ teams = [], onSelectTeam }) {
                     <td className="num-col rank-number-cell">
                       <span className={`rank-pill rank-pill-${rank}`}>
                         {rank === 1 ? (
-                          <Trophy size={14} className="trophy-gold" />
+                          <Trophy size={13} className="trophy-gold" />
                         ) : rank === 2 ? (
-                          <Medal size={14} />
+                          <Medal size={13} />
                         ) : rank === 3 ? (
-                          <Award size={14} />
+                          <Award size={13} />
                         ) : (
                           `#${rank}`
                         )}
@@ -192,7 +193,7 @@ export default function LiveRankingsView({ teams = [], onSelectTeam }) {
                     </td>
                     <td>
                       <span className="team-cell">
-                        <TeamMark team={t} size={30} />
+                        <TeamMark team={t} size={28} />
                         <div>
                           <b>{t.team_name}</b>
                           <span className="chip-sm muted">{t.short_name}</span>
