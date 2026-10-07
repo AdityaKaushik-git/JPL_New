@@ -118,20 +118,12 @@ function AdminOverview() {
             {showRankings ? <Eye size={16} /> : <EyeOff size={16} />}
             Live Rankings: {showRankings ? 'ON' : 'OFF'}
           </button>
-          {isEnded ? (
-            <button className="btn btn-success" onClick={() => emit('admin:startAuction')}>
-              <Play size={16} /> Start Auction
-            </button>
-          ) : (
-            <>
-              <button className="btn btn-success" onClick={() => emit('admin:startAuction')}>
-                <Play size={16} /> Start Auction
-              </button>
-              <button className="btn btn-danger" onClick={() => emit('admin:endAuction')}>
-                <Square size={16} /> End Auction
-              </button>
-            </>
-          )}
+          <button className="btn btn-success" onClick={() => emit('admin:startAuction')}>
+            <Play size={16} /> Start Auction
+          </button>
+          <button className="btn btn-danger" onClick={() => emit('admin:endAuction')} disabled={isEnded}>
+            <Square size={16} /> End Auction
+          </button>
           <Link to="/admin/control" className="btn btn-primary"><SlidersHorizontal size={16} /> Control center</Link>
           <Link to="/live" target="_blank" className="btn btn-ghost"><Radio size={16} /> Live screen</Link>
         </div>

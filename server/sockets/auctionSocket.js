@@ -796,12 +796,14 @@ module.exports = (io) => {
         });
 
         guard(socket, 'admin:startAuction', true, async () => {
-            if (activeAuction.status === 'Ended' || activeAuction.status === 'Pending') {
+            if (activeAuction.status === 'Ended' || activeAuction.status === 'Pending' || activeAuction.status === 'Paused') {
                 activeAuction.status = 'Live';
             }
             if (!activeAuction.player) {
                 const id = await nextAvailablePlayerId();
                 if (id) await startLot(id);
+            } else {
+                startTimer();
             }
             broadcastState();
             await broadcastTeams();

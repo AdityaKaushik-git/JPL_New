@@ -76,14 +76,8 @@ export default function AdminControl() {
             {showRankings ? <Eye size={15} /> : <EyeOff size={15} />}
             Live Rankings: {showRankings ? 'ON' : 'OFF'}
           </button>
-          {state.status === 'Ended' ? (
-            <button className="btn btn-success btn-sm" onClick={() => emit('admin:startAuction')}><Play size={15} /> Start Auction</button>
-          ) : (
-            <>
-              <button className="btn btn-success btn-sm" onClick={() => emit('admin:startAuction')}><Play size={15} /> Start Auction</button>
-              <button className="btn btn-danger btn-sm" onClick={() => emit('admin:endAuction')}><Square size={15} /> End Auction</button>
-            </>
-          )}
+          <button className="btn btn-success btn-sm" onClick={() => emit('admin:startAuction')}><Play size={15} /> Start Auction</button>
+          <button className="btn btn-danger btn-sm" onClick={() => emit('admin:endAuction')} disabled={state.status === 'Ended'}><Square size={15} /> End Auction</button>
           <span className={`conn conn-${connection}`}>{connection === 'online' ? <Wifi size={15} /> : <WifiOff size={15} />} {connection === 'online' ? 'Connected' : 'Reconnecting'}</span>
           <span className="chip">{stats.bidders || 0} franchises online</span>
           <Link to="/live" target="_blank" className="btn btn-ghost btn-sm"><Radio size={15} /> Open live screen</Link>
