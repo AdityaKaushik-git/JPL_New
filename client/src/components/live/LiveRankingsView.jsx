@@ -58,6 +58,38 @@ export default function LiveRankingsView({ teams = [], onSelectTeam }) {
       {/* Podium Showcase for Top 3 */}
       {rankedTeams.length > 0 && (
         <div className="podium-container">
+          {/* 1st Place (Champion) */}
+          {champion && (
+            <div
+              className="podium-card podium-1"
+              onClick={() => onSelectTeam && onSelectTeam(champion.id)}
+              style={{ '--team-color': champion.color }}
+            >
+              <div className="champion-crown">
+                <Crown size={28} className="crown-icon" />
+              </div>
+              <div className="podium-badge badge-gold">
+                <Trophy size={15} /> CHAMPION #1
+              </div>
+              <div className="podium-team-logo logo-champ">
+                <TeamMark team={champion} size={58} />
+              </div>
+              <h2 className="podium-team-name champ-name">{champion.team_name}</h2>
+              <p className="podium-owner">{champion.owner_name}</p>
+              <div className="podium-score score-champ">
+                <span className="score-val">
+                  {(Number(champion.total_player_points) || 0).toLocaleString('en-IN')}
+                </span>
+                <span className="score-lbl">Total ICC Points</span>
+              </div>
+              <div className="podium-substats">
+                <span>Purse: {formatShort(champion.remaining_purse)}</span>
+                <span>Squad: {champion.squad_count}/{champion.max_squad_size}</span>
+                <span>Bat Pts: {(Number(champion.batsmen_points) || 0).toLocaleString('en-IN')}</span>
+              </div>
+            </div>
+          )}
+
           {/* 2nd Place */}
           {runnerUp && (
             <div
@@ -66,10 +98,10 @@ export default function LiveRankingsView({ teams = [], onSelectTeam }) {
               style={{ '--team-color': runnerUp.color }}
             >
               <div className="podium-badge badge-silver">
-                <Medal size={16} /> RANK #2
+                <Medal size={15} /> RANK #2
               </div>
               <div className="podium-team-logo">
-                <TeamMark team={runnerUp} size={52} />
+                <TeamMark team={runnerUp} size={44} />
               </div>
               <h3 className="podium-team-name">{runnerUp.team_name}</h3>
               <p className="podium-owner">{runnerUp.owner_name}</p>
@@ -86,38 +118,6 @@ export default function LiveRankingsView({ teams = [], onSelectTeam }) {
             </div>
           )}
 
-          {/* 1st Place (Champion) */}
-          {champion && (
-            <div
-              className="podium-card podium-1"
-              onClick={() => onSelectTeam && onSelectTeam(champion.id)}
-              style={{ '--team-color': champion.color }}
-            >
-              <div className="champion-crown">
-                <Crown size={30} className="crown-icon" />
-              </div>
-              <div className="podium-badge badge-gold">
-                <Trophy size={16} /> CHAMPION #1
-              </div>
-              <div className="podium-team-logo logo-champ">
-                <TeamMark team={champion} size={64} />
-              </div>
-              <h2 className="podium-team-name champ-name">{champion.team_name}</h2>
-              <p className="podium-owner">{champion.owner_name}</p>
-              <div className="podium-score score-champ">
-                <span className="score-val">
-                  {(Number(champion.total_player_points) || 0).toLocaleString('en-IN')}
-                </span>
-                <span className="score-lbl">Total ICC Points</span>
-              </div>
-              <div className="podium-substats">
-                <span>Purse: {formatShort(champion.remaining_purse)}</span>
-                <span>Squad: {champion.squad_count} / {champion.max_squad_size}</span>
-                <span>Bat Pts: {(Number(champion.batsmen_points) || 0).toLocaleString('en-IN')}</span>
-              </div>
-            </div>
-          )}
-
           {/* 3rd Place */}
           {thirdPlace && (
             <div
@@ -126,10 +126,10 @@ export default function LiveRankingsView({ teams = [], onSelectTeam }) {
               style={{ '--team-color': thirdPlace.color }}
             >
               <div className="podium-badge badge-bronze">
-                <Award size={16} /> RANK #3
+                <Award size={15} /> RANK #3
               </div>
               <div className="podium-team-logo">
-                <TeamMark team={thirdPlace} size={48} />
+                <TeamMark team={thirdPlace} size={44} />
               </div>
               <h3 className="podium-team-name">{thirdPlace.team_name}</h3>
               <p className="podium-owner">{thirdPlace.owner_name}</p>
