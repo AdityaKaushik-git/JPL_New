@@ -811,7 +811,7 @@ module.exports = (io) => {
             activeAuction.status = 'Ended';
             broadcastState();
             await broadcastTeams();
-            notify(io, '🏆 The JPL Auction has ENDED! Live rankings are now active.', 'info');
+            notify(io, '🏆 Auction Ended! Live Ranking Bidders & Final Standings are now displayed to everyone.', 'info');
         });
 
         socket.on('disconnect', () => {

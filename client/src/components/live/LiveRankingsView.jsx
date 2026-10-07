@@ -42,15 +42,15 @@ export default function LiveRankingsView({ teams = [], onSelectTeam }) {
       <div className="rankings-hero-head">
         <div className="rankings-title-badge">
           <Sparkles size={18} className="sparkle-icon" />
-          <span>OFFICIAL AUCTION STANDINGS</span>
+          <span>AUCTION ENDED — RANKING BIDDERS DISPLAYED</span>
           <Sparkles size={18} className="sparkle-icon" />
         </div>
         <h1 className="rankings-main-title">
           <Trophy size={42} className="trophy-gold" />
-          JPL Championship Standings
+          JPL Champions & Ranking Bidders
         </h1>
         <p className="rankings-subtitle">
-          Final ICC T20 Player Ranking Points & Franchise Leaderboard
+          Auction Ended · Official ICC T20 Points & Final Franchise Leaderboard
         </p>
       </div>
 

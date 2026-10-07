@@ -38,7 +38,7 @@ const LiveStage = forwardRef(function LiveStage({ socket, fullscreen, dock, lead
           {leading || <Brand to="/" />}
           <div className="stage-title">
             <span className="stage-event">JPL Live Auction</span>
-            <span className="status-pill status-completed">🏆 Auction Completed</span>
+            <span className="status-pill status-completed">🏆 Auction Ended — Ranking Bidders Displayed</span>
           </div>
           <div className="stage-tools">
             <span className={`conn conn-${connection}`} title={connection === 'online' ? 'Connected' : 'Reconnecting'}>
