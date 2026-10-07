@@ -717,17 +717,19 @@ module.exports = (io) => {
 
     io.use((socket, next) => {
         const token = socket.handshake.auth && socket.handshake.auth.token;
-        if (!token) {
-            return next(new Error('Authentication required. Please log in first.'));
+        if (token) {
+            try {
+                socket.user = verifyToken(token);
+                socket.token = token;
+                sessionRegistry.touchSession(socket.user, token, socket.id);
+                return next();
+            } catch (e) {
+                socket.user = { role: 'spectator', id: null };
+                return next();
+            }
         }
-        try {
-            socket.user = verifyToken(token);
-            socket.token = token;
-            sessionRegistry.touchSession(socket.user, token, socket.id);
-            next();
-        } catch (e) {
-            return next(new Error('Session expired or invalid token. Please log in again.'));
-        }
+        socket.user = { role: 'spectator', id: null };
+        next();
     });
 
     io.on('connection', (socket) => {
