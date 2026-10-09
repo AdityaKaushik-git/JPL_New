@@ -16,25 +16,32 @@ export default function PlayerHero({ player, lot, accent, compact = false }) {
   const form = player.ranking_points - player.previous_ranking_points
   const isNew = player.current_rank === null || (player.previous_rank === null && form === 0)
   const number = lot ? lot.position : player.auction_order
+  const isForeign = player.country && player.country.trim().toLowerCase() !== 'india'
   return (
     <section className={`hero${compact ? ' hero-compact' : ''}`} style={accent ? { '--accent': accent } : undefined} aria-label={`Now on the block: ${player.name}`}>
-      <PitchBackdrop className="hero-pitch" />
-      <span className="hero-watermark" aria-hidden="true">{player.initials}</span>
+            <PitchBackdrop className="hero-pitch" />
+            <span className="hero-watermark" aria-hidden="true">{player.initials}</span>
 
-      <div className="hero-body">
-        <p className="hero-lot seq seq-1">
-          Player <b>#{pad2(number)}</b>
-          {lot && <span className="hero-lot-total"> of {lot.total}</span>}
-          {player.player_code && <span className="hero-code">{player.player_code}</span>}
-        </p>
+            <div className="hero-body">
+              <p className="hero-lot seq seq-1">
+                Player <b>#{pad2(number)}</b>
+                {lot && <span className="hero-lot-total"> of {lot.total}</span>}
+                {player.player_code && <span className="hero-code">{player.player_code}</span>}
+              </p>
 
-        <h1 className="hero-name seq seq-3">{player.name}</h1>
+              <h1 className="hero-name seq seq-3">
+                {player.name}
+                {isForeign && <span className="badge-foreign">✈ {player.country}</span>}
+                {player.is_uncapped && <span className="badge-uncapped">⭐ Uncapped</span>}
+              </h1>
 
-        <div className="hero-tags seq seq-4">
-          <span className={`role-chip role-${role.key}`}><RoleIcon role={player.playing_role} size={22} /> {role.label}</span>
-          {player.batting_style && <span className="hero-style">{player.batting_style}</span>}
-          {player.bowling_style && <span className="hero-style">{player.bowling_style}</span>}
-        </div>
+              <div className="hero-tags seq seq-4">
+                <span className={`role-chip role-${role.key}`}><RoleIcon role={player.playing_role} size={22} /> {role.label}</span>
+                {isForeign && <span className="hero-style" style={{ color: '#38bdf8', fontWeight: 600 }}>✈ Overseas ({player.country})</span>}
+                {player.is_uncapped && <span className="hero-style" style={{ color: '#fbbf24', fontWeight: 600 }}>⭐ Uncapped</span>}
+                {player.batting_style && <span className="hero-style">{player.batting_style}</span>}
+                {player.bowling_style && <span className="hero-style">{player.bowling_style}</span>}
+              </div>
 
         <div className="hero-rank seq seq-5">
           <RankBadge rank={player.current_rank} size="lg" />

@@ -63,9 +63,10 @@ export default function PlayerEditor({ player, onSaved, onCancel, notify }) {
         <Field label="Base price (₹)"><input type="number" min="1000" step="1000" value={form.base_price} onChange={set('base_price')} required /></Field>
         <Field label="Auction order" hint="Blank = end of queue"><input type="number" min="0" value={form.auction_order ?? ''} onChange={set('auction_order')} /></Field>
       </div>
-      <div className="form-row form-row-3">
+      <div className="form-row form-row-4">
         <Field label="Batting style"><input value={form.batting_style || ''} onChange={set('batting_style')} placeholder="Right-hand bat" /></Field>
         <Field label="Bowling style"><input value={form.bowling_style || ''} onChange={set('bowling_style')} placeholder="Right-arm fast" /></Field>
+        <Field label="Country"><input value={form.country || ''} onChange={set('country')} placeholder="India" /></Field>
         <Field label="Course / year"><div className="split"><input value={form.course || ''} onChange={set('course')} placeholder="BCA" /><input value={form.year || ''} onChange={set('year')} placeholder="3rd" /></div></Field>
       </div>
 

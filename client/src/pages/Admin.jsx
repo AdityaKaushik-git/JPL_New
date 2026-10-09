@@ -48,14 +48,42 @@ function PlayersTab({ notify }) {
   const { data, error, loading, reload } = useAsync(() => api.getAdminPlayers(), [])
   const [q, setQ] = useState('')
   const [role, setRole] = useState('All')
+  const [cat, setCat] = useState('All')
+  const [statusFilter, setStatusFilter] = useState('All')
+  const [sortBy, setSortBy] = useState('order')
   const [editing, setEditing] = useState(null)
   const [matchesFor, setMatchesFor] = useState(null)
   const [confirm, setConfirm] = useState(null)
   const [busy, setBusy] = useState(false)
 
-  const players = useMemo(() => (data ? data.players : [])
-    .filter(p => role === 'All' || p.playing_role === role)
-    .filter(p => !q || `${p.name} ${p.enrollment_number} ${p.player_code}`.toLowerCase().includes(q.toLowerCase())), [data, q, role])
+  const players = useMemo(() => {
+    let list = data ? data.players : []
+    if (role !== 'All') list = list.filter(p => p.playing_role === role)
+    if (statusFilter !== 'All') list = list.filter(p => p.status === statusFilter)
+    if (cat === 'Overseas') {
+      list = list.filter(p => p.country && p.country.trim().toLowerCase() !== 'india')
+    } else if (cat === 'Uncapped') {
+      list = list.filter(p => Boolean(p.is_uncapped))
+    } else if (cat === 'India') {
+      list = list.filter(p => !p.country || p.country.trim().toLowerCase() === 'india')
+    }
+    if (q.trim()) {
+      const query = q.toLowerCase()
+      list = list.filter(p =>
+        `${p.name} ${p.enrollment_number || ''} ${p.player_code || ''} ${p.country || ''}`.toLowerCase().includes(query)
+      )
+    }
+    if (sortBy === 'name') {
+      list.sort((a, b) => a.name.localeCompare(b.name))
+    } else if (sortBy === 'price') {
+      list.sort((a, b) => b.base_price - a.base_price)
+    } else if (sortBy === 'rank') {
+      list.sort((a, b) => (a.current_rank || 999) - (b.current_rank || 999))
+    } else {
+      list.sort((a, b) => (a.auction_order ?? a.id) - (b.auction_order ?? b.id))
+    }
+    return list
+  }, [data, q, role, cat, statusFilter, sortBy])
 
   async function recalc() {
     try { const r = await api.recalculateRankings(); notify(r.message, 'success'); reload() } catch (e) { notify(e.message, 'danger') }
@@ -71,10 +99,19 @@ function PlayersTab({ notify }) {
 
   return (
     <section className="panel">
-      <div className="toolbar">
-        <label className="search"><Search size={15} /><input value={q} onChange={e => setQ(e.target.value)} placeholder="Search name or ID" /></label>
-        <select value={role} onChange={e => setRole(e.target.value)} className="select-sm">
-          <option>All</option><option>Batsman</option><option>Bowler</option><option>All-Rounder</option><option>Wicket Keeper</option>
+      <div className="toolbar" style={{ flexWrap: 'wrap', gap: '.5rem' }}>
+        <label className="search"><Search size={15} /><input value={q} onChange={e => setQ(e.target.value)} placeholder="Search name, ID, country" /></label>
+        <select value={role} onChange={e => setRole(e.target.value)} className="select-sm" title="Filter by role">
+          <option value="All">All Roles</option><option>Batsman</option><option>Bowler</option><option>All-Rounder</option><option>Wicket Keeper</option>
+        </select>
+        <select value={cat} onChange={e => setCat(e.target.value)} className="select-sm" title="Filter by category">
+          <option value="All">All Categories</option><option value="Overseas">✈ Overseas</option><option value="Uncapped">⭐ Uncapped</option><option value="India">Domestic (India)</option>
+        </select>
+        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="select-sm" title="Filter by status">
+          <option value="All">All Statuses</option><option value="Available">Available</option><option value="In Auction">In Auction</option><option value="Sold">Sold</option><option value="Unsold">Unsold</option>
+        </select>
+        <select value={sortBy} onChange={e => setSortBy(e.target.value)} className="select-sm" title="Sort players">
+          <option value="order">Sort: Order</option><option value="name">Sort: Name</option><option value="price">Sort: Base Price</option><option value="rank">Sort: Rank</option>
         </select>
         <span className="spacer" />
         <button className="btn btn-ghost btn-sm" onClick={recalc}><Calculator size={15} /> Recalculate rankings</button>
@@ -90,7 +127,7 @@ function PlayersTab({ notify }) {
             {players.map(p => (
               <tr key={p.id}>
                 <td className="muted">{pad2(p.auction_order)}</td>
-                <td><span className="player-cell"><Initials initials={p.initials} size="sm" /><span><b>{p.name}</b><small className="muted">{p.player_code} · {p.enrollment_number}</small></span></span></td>
+                <td><span className="player-cell"><Initials initials={p.initials} size="sm" /><span><b>{p.name}</b> {p.country && <span className="country-badge">({p.country})</span>}<small className="muted">{p.player_code} · {p.enrollment_number}</small></span></span></td>
                 <td><span className="role-inline"><RoleIcon role={p.playing_role} size={15} /> {roleMeta(p.playing_role).short}</span></td>
                 <td className="num-col">{formatShort(p.base_price)}</td>
                 <td className="num-col">{p.current_rank ? `#${p.current_rank}` : 'NR'}</td>
@@ -150,6 +187,7 @@ function FranchisesTab({ notify }) {
   const [pw, setPw] = useState('')
   const [errors, setErrors] = useState({})
   const [busy, setBusy] = useState(false)
+  const [confirmDeleteAll, setConfirmDeleteAll] = useState(false)
 
   async function create(payload) {
     setBusy(true); setErrors({})
@@ -170,6 +208,19 @@ function FranchisesTab({ notify }) {
     e.preventDefault()
     try { await api.resetFranchisePassword(pwFor.id, pw); notify('Password updated', 'success'); setPwFor(null); setPw('') } catch (err) { notify(err.message, 'danger') }
   }
+  async function deleteAllBidders() {
+    setBusy(true)
+    try {
+      const res = await api.deleteAllBidders()
+      notify(res.message, 'success')
+      setConfirmDeleteAll(false)
+      reload()
+    } catch (e) {
+      notify(e.message, 'danger')
+    } finally {
+      setBusy(false)
+    }
+  }
 
   if (loading && !data) return <Loader />
   if (error) return <ErrorState error={error} onRetry={reload} />
@@ -180,6 +231,7 @@ function FranchisesTab({ notify }) {
       <div className="toolbar">
         <p className="muted">Every franchise starts with {formatINR(750000000)} and room for 15 players. Owners bid; they don't play.</p>
         <span className="spacer" />
+        <button className="btn btn-danger btn-sm" onClick={() => setConfirmDeleteAll(true)} disabled={!list.length || busy}><Trash2 size={15} /> Delete All Bidders</button>
         <button className="btn btn-primary btn-sm" onClick={() => { setErrors({}); setCreating(true) }}><Plus size={15} /> Create franchise</button>
       </div>
 
@@ -225,12 +277,23 @@ function FranchisesTab({ notify }) {
       </Modal>
       <Modal open={Boolean(pwFor)} title={pwFor ? `New password for ${pwFor.team_name}` : ''} onClose={() => setPwFor(null)} width={440}>
         <form className="form" onSubmit={resetPw}>
-          <label className="field"><span className="field-label">New password</span>
+          <div className="field"><span className="field-label">New password</span>
             <input type="password" value={pw} onChange={e => setPw(e.target.value)} autoComplete="new-password" required />
-            <span className="field-hint">8+ characters with upper, lower, number and symbol.</span></label>
+            <span className="field-hint">8+ characters with upper, lower, number and symbol.</span></div>
           <div className="form-actions"><button className="btn btn-primary">Update password</button></div>
         </form>
       </Modal>
+
+      <ConfirmDialog
+        open={confirmDeleteAll}
+        busy={busy}
+        title="Delete ALL Bidder Accounts?"
+        confirmLabel="Delete All Bidders"
+        tone="danger"
+        message="This action will disable and delete ALL franchise/bidder accounts from the database, release all their players, and log this activity in Auction History. This cannot be undone."
+        onCancel={() => setConfirmDeleteAll(false)}
+        onConfirm={deleteAllBidders}
+      />
     </section>
   )
 }

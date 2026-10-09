@@ -17,6 +17,7 @@ export default function ResultOverlay({ result, onDismiss }) {
   const sold = result.type === 'SOLD'
   const team = sold ? { id: result.teamId, team_name: result.teamName, short_name: result.shortName, color: result.color, logo_url: result.logoUrl } : null
 
+  const isForeign = result.country && result.country.trim().toLowerCase() !== 'india'
   return (
     <div className={`result ${sold ? 'result-sold' : 'result-unsold'}`} style={sold ? { '--team': result.color } : undefined}
       role="alert" onClick={onDismiss}>
@@ -31,7 +32,11 @@ export default function ResultOverlay({ result, onDismiss }) {
       <div className="result-body">
         <p className="result-word">{sold ? 'Sold' : 'Unsold'}</p>
         {result.lot && <p className="result-lot">Player #{pad2(result.lot.position)}</p>}
-        <h2 className="result-name">{result.playerName}</h2>
+        <h2 className="result-name">
+          {result.playerName}
+          {isForeign && <span className="badge-foreign">✈ Overseas</span>}
+          {result.is_uncapped && <span className="badge-uncapped">⭐ Uncapped</span>}
+        </h2>
         <p className="result-role"><RoleIcon role={result.role} size={20} /> {roleMeta(result.role).label}</p>
         {sold ? (
           <>

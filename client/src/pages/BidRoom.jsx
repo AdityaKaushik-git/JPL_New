@@ -1,6 +1,6 @@
-import { useMemo, useRef, useEffect } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Gavel, Trophy, Lock, PauseCircle, Wallet, ArrowLeft } from 'lucide-react'
+import { Gavel, Trophy, Lock, PauseCircle, Wallet, ArrowLeft, Ban } from 'lucide-react'
 import TeamMark from '../components/TeamMark'
 import LiveStage from '../components/live/LiveStage'
 import ToastContainer from '../components/Toast'
@@ -21,6 +21,11 @@ export default function BidRoom() {
   const { state, teams, emit } = socket
 
   const me = useMemo(() => teams.find(t => t.id === user?.id) || null, [teams, user])
+  const [notInterested, setNotInterested] = useState(false)
+
+  useEffect(() => {
+    setNotInterested(false)
+  }, [state.player?.id])
 
   useEffect(() => {
     if (me && user && (me.remaining_purse !== user.purse || me.squad_count !== user.squad_count)) {
@@ -44,9 +49,10 @@ export default function BidRoom() {
   else if (state.timeLeft <= 0) block = { icon: <Gavel size={18} />, text: 'Time is up' }
   else if (isLeading) block = { icon: <Trophy size={18} />, text: 'You hold the highest bid', tone: 'lead' }
   else if (purse < state.nextBid) block = { icon: <Wallet size={18} />, text: `Not enough purse for ${formatINR(state.nextBid)}` }
+  else if (notInterested) block = { icon: <Ban size={18} />, text: 'Not Interested' }
 
   function placeBid() {
-    if (block || !state.auctionId) return
+    if (block || notInterested || !state.auctionId) return
     emit('user:placeBid', { auctionId: state.auctionId, amount: state.nextBid })
   }
 
@@ -69,6 +75,33 @@ export default function BidRoom() {
         <b className={full ? 'text-danger' : ''}>{full ? 'Squad full' : `${squad} / ${maxSquad}`}</b>
       </div>
       <RoleSlots franchise={me} currentRole={state.player?.playing_role} compact={true} />
+      
+      <label className="not-interested-toggle" style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '8px',
+        margin: '4px 0 8px',
+        cursor: 'pointer',
+        userSelect: 'none',
+        fontSize: '0.88rem',
+        fontWeight: 600,
+        color: notInterested ? 'var(--danger)' : 'var(--chalk-2)',
+        padding: '6px 12px',
+        borderRadius: '8px',
+        background: notInterested ? 'rgba(229, 72, 77, 0.14)' : 'rgba(237, 239, 244, 0.04)',
+        border: notInterested ? '1px solid rgba(229, 72, 77, 0.4)' : '1px solid var(--line)',
+        transition: 'all 0.15s ease'
+      }}>
+        <input
+          type="checkbox"
+          checked={notInterested}
+          onChange={(e) => setNotInterested(e.target.checked)}
+          style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: 'var(--danger)' }}
+        />
+        <span>Not Interested in this Player</span>
+      </label>
+
       <button className={`bid-button${block ? ' is-blocked' : ''}${block && block.tone === 'lead' ? ' is-lead' : ''}`}
         onClick={placeBid} disabled={Boolean(block)} aria-describedby="bid-hint">
         {block ? <>{block.icon}<span>{block.text}</span></> : <><Gavel size={22} /><span>Bid {formatINR(state.nextBid)}</span></>}

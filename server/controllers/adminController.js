@@ -15,6 +15,7 @@ const {
     FRANCHISE_COLUMNS,
 } = require('../services/franchises');
 const { toRupees } = require('../utils/money');
+const { sendStartAuctionOtp, verifyStartAuctionOtp, TARGET_EMAIL } = require('../services/emailService');
 
 function sendError(res, error, label) {
     if (error && error.status) {
@@ -57,7 +58,7 @@ async function refundSale(connection, record) {
         const roleMap = { 'Batsman': 'batsmen_count', 'Bowler': 'bowlers_count', 'All-Rounder': 'allrounders_count', 'Wicket Keeper': 'keepers_count' };
         const col = roleMap[p.playing_role];
         if (col) {
-            await connection.query(`UPDATE users SET  = GREATEST( - 1, 0) WHERE id = ?`, [record.winning_user_id]);
+            await connection.query(`UPDATE users SET ${col} = GREATEST(${col} - 1, 0) WHERE id = ?`, [record.winning_user_id]);
         }
         const isForeign = p.country && p.country.trim().toLowerCase() !== 'india';
         if (isForeign) {
@@ -444,15 +445,25 @@ exports.deletePlayerMatch = async (req, res) => {
 exports.getAuctionHistory = async (req, res) => {
     try {
         const [history] = await pool.query(`
-            SELECT ar.id, p.name AS player_name, p.playing_role, u.team_name AS winner_name, u.team_short_name,
-                   ar.winning_bid, ar.status, ar.completed_at
+            SELECT ar.id,
+                   COALESCE(p.name, ar.activity_note, 'System Activity Log') AS player_name,
+                   p.playing_role,
+                   COALESCE(u.team_name, 'System Admin') AS winner_name,
+                   u.team_short_name,
+                   ar.winning_bid,
+                   ar.status,
+                   ar.activity_note,
+                   ar.completed_at
             FROM auction_results ar
-            JOIN players p ON ar.player_id = p.id
+            LEFT JOIN players p ON ar.player_id = p.id
             LEFT JOIN users u ON u.id = ar.winning_user_id
             ORDER BY ar.completed_at DESC, ar.id DESC
         `);
         res.json({
-            history: history.map(h => ({ ...h, winning_bid: h.winning_bid === null ? null : toRupees(h.winning_bid) })),
+            history: history.map(h => ({
+                ...h,
+                winning_bid: h.winning_bid === null ? null : toRupees(h.winning_bid),
+            })),
         });
     } catch (error) {
         sendError(res, error, 'GET AUCTION HISTORY');
@@ -471,21 +482,24 @@ exports.deleteAuctionHistoryRecord = async (req, res) => {
             return res.status(404).json({ message: 'History record not found' });
         }
         const record = records[0];
-        if (hub.activePlayerId() === record.player_id) {
-            await connection.rollback();
-            return res.status(409).json({ message: 'This player is on the auction block right now.' });
+        if (record.player_id) {
+            if (hub.activePlayerId() === record.player_id) {
+                await connection.rollback();
+                return res.status(409).json({ message: 'This player is on the auction block right now.' });
+            }
+            if (record.status === 'Sold') await refundSale(connection, record);
+            await connection.query("UPDATE players SET status = 'Available' WHERE id = ?", [record.player_id]);
+            if (record.auction_id) {
+                await connection.query('DELETE FROM bids WHERE auction_id = ?', [record.auction_id]);
+                await connection.query('DELETE FROM auctions WHERE id = ?', [record.auction_id]);
+            }
         }
-        if (record.status === 'Sold') await refundSale(connection, record);
-
-        await connection.query("UPDATE players SET status = 'Available' WHERE id = ?", [record.player_id]);
-        await connection.query('DELETE FROM bids WHERE auction_id = ?', [record.auction_id]);
         await connection.query('DELETE FROM auction_results WHERE id = ?', [historyId]);
-        await connection.query('DELETE FROM auctions WHERE id = ?', [record.auction_id]);
         await connection.commit();
 
         hub.notifyPlayersChanged();
         await hub.notifyTeamsChanged();
-        res.json({ message: 'Result removed. The player is back in the Available queue and any payment was refunded.' });
+        res.json({ message: 'Result removed.' });
     } catch (error) {
         await connection.rollback();
         sendError(res, error, 'DELETE AUCTION HISTORY');
@@ -497,3 +511,131 @@ exports.deleteAuctionHistoryRecord = async (req, res) => {
 exports.getAuctionState = async (req, res) => {
     res.json(hub.getState() || { status: 'Pending' });
 };
+
+exports.requestStartAuctionOtp = async (req, res) => {
+    try {
+        const result = await sendStartAuctionOtp();
+        res.json({
+            message: `OTP sent to ${TARGET_EMAIL}. Enter the code to authorize starting a fresh auction.`,
+            email: TARGET_EMAIL,
+            isSentViaSmtp: result.isSentViaSmtp,
+            devOtp: result.devOtp,
+        });
+    } catch (error) {
+        sendError(res, error, 'REQUEST START OTP');
+    }
+};
+
+exports.verifyStartAuctionOtp = async (req, res) => {
+    const { otp } = req.body || {};
+    if (!otp) return res.status(400).json({ message: 'OTP code is required.' });
+
+    const verification = verifyStartAuctionOtp(otp);
+    if (!verification.valid) {
+        return res.status(400).json({ message: verification.message });
+    }
+
+    const connection = await pool.getConnection();
+    try {
+        await connection.beginTransaction();
+
+        // 1. Release all sold / in-auction players back to Available
+        await connection.query("UPDATE players SET status = 'Available'");
+
+        // 2. Clear all previous auction rosters & history
+        await connection.query("DELETE FROM teams");
+        await connection.query("DELETE FROM bids");
+        await connection.query("DELETE FROM auctions");
+
+        // 3. Reset all bidder / franchise users to default state & starting purse
+        await connection.query(`
+            UPDATE users
+            SET purse = starting_purse,
+                total_spent = 0,
+                squad_count = 0,
+                batsmen_count = 0,
+                bowlers_count = 0,
+                allrounders_count = 0,
+                keepers_count = 0,
+                foreign_count = 0,
+                uncapped_count = 0
+            WHERE role = 'user'
+        `);
+
+        // 4. Log activity entry in auction_results
+        await connection.query(
+            "INSERT INTO auction_results (status, activity_note) VALUES ('ActivityLog', 'START AUCTION: New auction session started & all bidder purses/rosters reset via OTP verification')"
+        );
+
+        await connection.commit();
+
+        // 5. Trigger ranking recalculation & reset socket engine state
+        await recalculateRankings(pool);
+        await hub.resetAndStartAuction();
+
+        res.json({
+            message: 'OTP verified successfully! All bidder balances and rosters have been reset for a brand new auction session.',
+        });
+    } catch (error) {
+        await connection.rollback();
+        sendError(res, error, 'VERIFY START OTP');
+    } finally {
+        connection.release();
+    }
+};
+
+exports.deleteAllBidders = async (req, res) => {
+    const connection = await pool.getConnection();
+    try {
+        await connection.beginTransaction();
+
+        const [users] = await connection.query("SELECT id, team_name FROM users WHERE role = 'user'");
+        const count = users.length;
+
+        if (count === 0) {
+            await connection.rollback();
+            return res.status(400).json({ message: 'No bidder accounts exist in the database.' });
+        }
+
+        // 1. Release all players back to Available
+        await connection.query("UPDATE players SET status = 'Available'");
+
+        // 2. Safely remove foreign key references
+        await connection.query("SET FOREIGN_KEY_CHECKS = 0");
+        await connection.query("UPDATE auction_results SET winning_user_id = NULL WHERE winning_user_id IN (SELECT id FROM users WHERE role = 'user')");
+        await connection.query("UPDATE auctions SET highest_bidder_id = NULL");
+        await connection.query("DELETE FROM bids");
+        await connection.query("DELETE FROM teams");
+
+        // 3. Delete all bidder accounts from users table
+        await connection.query("DELETE FROM users WHERE role = 'user'");
+        await connection.query("SET FOREIGN_KEY_CHECKS = 1");
+
+        // 4. Log activity in auction history
+        await connection.query(
+            "INSERT INTO auction_results (status, activity_note) VALUES ('ActivityLog', ?)",
+            [`DELETE ALL BIDDERS: Disabled and deleted all ${count} bidder account(s) from database by Admin`]
+        );
+
+        await connection.commit();
+
+        const sessionRegistry = require('../services/sessionRegistry');
+        for (const u of users) {
+            sessionRegistry.removeSession(u.id);
+        }
+
+        await hub.notifyTeamsChanged();
+        hub.notifyPlayersChanged();
+
+        res.json({
+            message: `Successfully disabled and deleted all ${count} bidder account(s) from the database. Activity logged in Auction History.`,
+            count,
+        });
+    } catch (error) {
+        await connection.rollback();
+        sendError(res, error, 'DELETE ALL BIDDERS');
+    } finally {
+        connection.release();
+    }
+};
+

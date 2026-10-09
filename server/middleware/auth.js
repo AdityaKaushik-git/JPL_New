@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const sessionRegistry = require('../services/sessionRegistry');
 
 function verifyToken(token) {
     return jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
@@ -12,7 +13,12 @@ const authMiddleware = (req, res, next) => {
 
     const token = authHeader.split(' ')[1];
     try {
-        req.user = verifyToken(token);
+        const decoded = verifyToken(token);
+        if (!sessionRegistry.isSessionValid(decoded, token)) {
+            return res.status(401).json({ message: 'Session invalidated or logged in on another device.' });
+        }
+        sessionRegistry.touchSession(decoded, token);
+        req.user = decoded;
         next();
     } catch (error) {
         return res.status(401).json({ message: 'Invalid token' });
@@ -23,7 +29,16 @@ const authMiddleware = (req, res, next) => {
 const optionalAuth = (req, res, next) => {
     const authHeader = req.headers.authorization;
     if (authHeader && authHeader.startsWith('Bearer ')) {
-        try { req.user = verifyToken(authHeader.split(' ')[1]); } catch (e) { req.user = null; }
+        try {
+            const token = authHeader.split(' ')[1];
+            const decoded = verifyToken(token);
+            if (sessionRegistry.isSessionValid(decoded, token)) {
+                sessionRegistry.touchSession(decoded, token);
+                req.user = decoded;
+            } else {
+                req.user = null;
+            }
+        } catch (e) { req.user = null; }
     }
     next();
 };

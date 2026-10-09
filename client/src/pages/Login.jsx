@@ -20,20 +20,22 @@ export default function Login() {
 
   async function handleSubmit(e, force = false) {
     if (e && e.preventDefault) e.preventDefault()
+    if (loading) return
     setError('')
     setCanForceLogout(false)
     setLoading(true)
     try {
       const data = await api.login({ loginId: loginId.trim(), password, forceLogoutOthers: force })
-      login(data.token, data.user)
       const from = location.state && location.state.from
-      navigate(from || (data.user.role === 'admin' ? '/admin/control' : '/dashboard'), { replace: true })
+      login(data.token, data.user)
+      if (from) {
+        navigate(from, { replace: true })
+      }
     } catch (err) {
       setError(err.message || 'Invalid credentials')
       if (err.canForceLogout) {
         setCanForceLogout(true)
       }
-    } finally {
       setLoading(false)
     }
   }
@@ -64,11 +66,11 @@ export default function Login() {
         )}
 
         <form onSubmit={(e) => handleSubmit(e, false)} className="form">
-          <label className="field">
+          <div className="field">
             <span className="field-label">Login ID or email</span>
             <input value={loginId} onChange={e => setLoginId(e.target.value)} autoComplete="username" required autoFocus />
-          </label>
-          <label className="field">
+          </div>
+          <div className="field">
             <span className="field-label">Password</span>
             <span className="input-with-btn">
               <input type={showPw ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} autoComplete="current-password" required />
@@ -76,7 +78,7 @@ export default function Login() {
                 {showPw ? <EyeOff size={17} /> : <Eye size={17} />}
               </button>
             </span>
-          </label>
+          </div>
           <button className="btn btn-primary btn-lg btn-block" disabled={loading}>{loading ? 'Signing in…' : 'Sign in'}</button>
         </form>
         <p className="login-note">Need a franchise account? The JPL admin creates them — there is no public sign-up.</p>

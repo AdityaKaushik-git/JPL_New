@@ -88,12 +88,17 @@ export function roleBlockMessage(franchise, role) {
 
 export function canBidForeign(franchise, isForeign) {
   if (!isForeign) return true
-  return Number((franchise || {}).foreign_count || 0) < 4
+  const f = franchise || {}
+  const foreignCount = Number(f.foreign_count || 0)
+  if (foreignCount >= 4) return false
+  if (foreignCount >= 2) {
+    // 3rd & 4th foreign player fill a Batsman slot space
+    return Number(f.batsmen_count || 0) < 5
+  }
+  return true
 }
 
 export function canBidUncapped(franchise, isUncapped, squadFull) {
-  // If squad would be full after this purchase and team is short on uncapped players
-  // and the current player is NOT uncapped → block
   if (isUncapped) return true
   const uncapped = Number((franchise || {}).uncapped_count || 0)
   return !(squadFull && uncapped < 2)
@@ -101,7 +106,12 @@ export function canBidUncapped(franchise, isUncapped, squadFull) {
 
 export function foreignBlockMessage(franchise, isForeign) {
   if (!franchise || !isForeign) return null
-  if (!canBidForeign(franchise, isForeign)) return 'FOREIGN LIMIT — max 4 overseas players'
+  const f = franchise || {}
+  const foreignCount = Number(f.foreign_count || 0)
+  if (foreignCount >= 4) return 'FOREIGN LIMIT — max 4 overseas players per squad'
+  if (foreignCount >= 2 && Number(f.batsmen_count || 0) >= 5) {
+    return 'BATSMAN SLOT FULL — 3rd/4th foreign player fills Batsman slot space'
+  }
   return null
 }
 

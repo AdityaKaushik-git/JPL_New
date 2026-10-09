@@ -294,12 +294,12 @@ module.exports = (io) => {
     }
 
     function isLotOpen() {
-        return ['Live', 'Paused', 'Processing'].includes(activeAuction.status);
+        return Boolean(activeAuction.player && activeAuction.auctionId && ['Live', 'Paused', 'Processing'].includes(activeAuction.status));
     }
 
     // ---- start a lot ----------------------------------------------------------
     async function startLot(playerId) {
-        if (isLotOpen()) {
+        if (activeAuction.player && ['Live', 'Paused', 'Processing'].includes(activeAuction.status)) {
             if (activeAuction.highestBidder) {
                 throw new AuctionError('Finish the current player (SOLD or UNSOLD) before starting another.', 'warning');
             }
@@ -362,7 +362,7 @@ module.exports = (io) => {
 
         const auctionId = Number(data && data.auctionId);
         const clientAmount = Number(data && data.amount);
-        if (!Number.isInteger(auctionId) || !Number.isFinite(clientAmount)) {
+        if (!Number.isInteger(auctionId)) {
             throw new AuctionError('Invalid bid.');
         }
         if (activeAuction.status !== 'Live' || activeAuction.auctionId !== auctionId) {
@@ -373,11 +373,19 @@ module.exports = (io) => {
             throw new AuctionError('You already hold the highest bid.', 'warning');
         }
 
-        // The amount is decided by the server. The client's value is only used to
-        // detect a stale button press (someone else bid first).
+        // Determine server's required next bid
         const amount = nextBid();
-        if (toRupees(clientAmount) !== amount) {
-            throw new AuctionError(`The bid has moved. Next bid is ${formatINR(amount)}.`, 'warning');
+
+        // Smooth bidding validation:
+        // Accept bid if client sent exact nextBid OR if client intended to bid during this live lot and purse/rules permit nextBid.
+        // Reject only if clientAmount is drastically out of sync (more than 3 steps behind current bid).
+        if (Number.isFinite(clientAmount) && clientAmount > 0) {
+            const clientRupees = toRupees(clientAmount);
+            const currentRupees = activeAuction.currentBid;
+            const minAcceptableClientBid = Math.max(0, currentRupees - (getIncrement(currentRupees) * 3));
+            if (clientRupees < minAcceptableClientBid) {
+                throw new AuctionError(`The bid has moved. Next bid is ${formatINR(amount)}.`, 'warning');
+            }
         }
 
         const connection = await pool.getConnection();
@@ -389,7 +397,7 @@ module.exports = (io) => {
             const [users] = await connection.query(
                 `SELECT id, role, status, purse, squad_count, max_squad_size,
                         batsmen_count, bowlers_count, allrounders_count, keepers_count,
-                        foreign_count, uncapped_count,
+                        foreign_count, uncapped_count, team_name, team_short_name, team_color, logo_url,
                         (SELECT COUNT(*) FROM teams t WHERE t.user_id = users.id) AS roster
                  FROM users WHERE id = ? FOR UPDATE`, [user.id]
             );
@@ -402,23 +410,33 @@ module.exports = (io) => {
                 throw new AuctionError(`SQUAD FULL — ${squad} / ${f.max_squad_size}. You cannot bid on more players.`);
             }
 
-            // Role slot validation
-            const playerRole = activeAuction.player && activeAuction.player.playing_role;
-            if (playerRole) {
+            const playerRole = activeAuction.player ? activeAuction.player.playing_role : null;
+
+            // Foreign player cap & 3rd/4th foreign player Batsman slot space mapping
+            const isForeign = activeAuction.player && activeAuction.player.country &&
+                activeAuction.player.country.trim().toLowerCase() !== 'india';
+            const isUncapped = activeAuction.player && Boolean(activeAuction.player.is_uncapped);
+
+            if (isForeign) {
+                const foreignCount = Number(f.foreign_count || 0);
+                if (foreignCount >= MAX_FOREIGN_PLAYERS) {
+                    throw new AuctionError(`FOREIGN CAP REACHED — maximum ${MAX_FOREIGN_PLAYERS} overseas players per squad.`);
+                }
+                if (foreignCount >= 2) {
+                    // 3rd and 4th foreign player fill a Batsman slot space
+                    if (Number(f.batsmen_count || 0) >= MAX_BATSMEN) {
+                        throw new AuctionError(`BATSMAN SLOT FULL — 3rd and 4th foreign players fill a Batsman slot space (${MAX_BATSMEN}/${MAX_BATSMEN} full).`);
+                    }
+                } else if (playerRole) {
+                    const roleErr = checkRoleSlot(playerRole, f);
+                    if (roleErr) throw new AuctionError(roleErr);
+                }
+            } else if (playerRole) {
                 const roleErr = checkRoleSlot(playerRole, f);
                 if (roleErr) throw new AuctionError(roleErr);
             }
 
-            // Foreign player cap
-            const isForeign = activeAuction.player && activeAuction.player.country &&
-                activeAuction.player.country.trim().toLowerCase() !== 'india';
-            if (isForeign && Number(f.foreign_count || 0) >= MAX_FOREIGN_PLAYERS) {
-                throw new AuctionError(`FOREIGN CAP REACHED — maximum ${MAX_FOREIGN_PLAYERS} overseas players per squad.`);
-            }
-
-            // Uncapped minimum requirement lookahead:
-            // If buying a capped player, verify remaining squad slots after this purchase
-            // are sufficient to fulfill the MIN_UNCAPPED_PLAYERS requirement.
+            // Uncapped minimum requirement lookahead
             const uncappedNow = Number(f.uncapped_count || 0);
             const playerUncapped = activeAuction.player && Boolean(activeAuction.player.is_uncapped);
             if (!playerUncapped && uncappedNow < MIN_UNCAPPED_PLAYERS) {
@@ -444,7 +462,13 @@ module.exports = (io) => {
             await connection.query('INSERT INTO bids (auction_id, user_id, bid_amount) VALUES (?, ?, ?)', [auctionId, user.id, amount]);
             await connection.query('UPDATE auctions SET current_bid = ?, highest_bidder_id = ? WHERE id = ?', [amount, user.id, auctionId]);
 
-            team = await loadTeam(connection, user.id);
+            team = {
+                id: f.id,
+                team_name: f.team_name,
+                short_name: f.team_short_name || 'BID',
+                color: f.team_color || '#C8102E',
+                logo_url: f.logo_url
+            };
             await connection.commit();
         } catch (err) {
             await connection.rollback();
@@ -489,7 +513,7 @@ module.exports = (io) => {
      * forceUnsold lets the admin mark a player UNSOLD even when bids exist.
      */
     async function finalize({ forceUnsold = false } = {}) {
-        if (!activeAuction.auctionId || !['Live', 'Paused'].includes(activeAuction.status)) {
+        if (!activeAuction.player || !activeAuction.auctionId || !['Live', 'Paused'].includes(activeAuction.status)) {
             throw new AuctionError('There is no open player to close.', 'warning');
         }
         stopTimer();
@@ -534,8 +558,18 @@ module.exports = (io) => {
                 throw new AuctionError(`Cannot sell: ${a.highestBidder.team_name} already has ${squad} / ${f.max_squad_size} players.`);
             }
 
+            const isForeign = activeAuction.player && activeAuction.player.country &&
+                activeAuction.player.country.trim().toLowerCase() !== 'india';
+            const isUncapped = activeAuction.player && Boolean(activeAuction.player.is_uncapped);
+
+            // If foreign player and foreign_count >= 2, fill Batsman slot space
+            let roleCol = roleCountColumn(playerRole);
+            if (isForeign && Number(f.foreign_count || 0) >= 2) {
+                roleCol = 'batsmen_count';
+            }
+
             // Role slot re-check at sale time (concurrent protection)
-            const roleErr = checkRoleSlot(playerRole, f);
+            const roleErr = checkRoleSlot(roleCol === 'batsmen_count' ? 'Batsman' : playerRole, f);
             if (roleErr) throw new AuctionError(`Cannot sell: ${roleErr}`);
 
             if (toRupees(f.purse) < amount) {
@@ -552,10 +586,20 @@ module.exports = (io) => {
             );
 
             // Increment role count atomically
-            const roleCol = roleCountColumn(playerRole);
             if (roleCol) {
                 await connection.query(
                     `UPDATE users SET ${roleCol} = ${roleCol} + 1 WHERE id = ?`, [bidderId]
+                );
+            }
+
+            if (isForeign) {
+                await connection.query(
+                    `UPDATE users SET foreign_count = foreign_count + 1 WHERE id = ?`, [bidderId]
+                );
+            }
+            if (isUncapped) {
+                await connection.query(
+                    `UPDATE users SET uncapped_count = uncapped_count + 1 WHERE id = ?`, [bidderId]
                 );
             }
 
@@ -608,11 +652,16 @@ module.exports = (io) => {
 
     async function markCurrentUnsold() {
         const a = activeAuction;
+        if (!a.player || !a.auctionId) return;
+
         const connection = await pool.getConnection();
         try {
             await connection.beginTransaction();
             const [auctions] = await connection.query('SELECT status FROM auctions WHERE id = ? FOR UPDATE', [a.auctionId]);
-            if (!auctions.length || auctions[0].status === 'Completed') throw new AuctionError('This player has already been closed.');
+            if (!auctions.length || auctions[0].status === 'Completed') {
+                await connection.commit();
+                return;
+            }
             await connection.query(
                 "INSERT INTO auction_results (auction_id, player_id, status) VALUES (?, ?, 'Unsold')", [a.auctionId, a.player.id]
             );
@@ -806,12 +855,20 @@ module.exports = (io) => {
             if (activeAuction.status === 'Ended' || activeAuction.status === 'Pending' || activeAuction.status === 'Paused') {
                 activeAuction.status = 'Live';
             }
-            if (activeAuction.player) {
+            if (activeAuction.player && activeAuction.status !== 'Completed') {
                 startTimer();
+                notify(io, 'The JPL Auction has officially STARTED!', 'success');
+            } else {
+                const id = await nextAvailablePlayerId();
+                if (id) {
+                    await startLot(id);
+                    notify(io, 'The JPL Auction has officially STARTED!', 'success');
+                } else {
+                    notify(io, 'The JPL Auction started, but no available players remain.', 'info');
+                }
             }
             broadcastState();
             await broadcastTeams();
-            notify(io, 'The JPL Auction has officially STARTED!', 'success');
         });
 
         guard(socket, 'admin:endAuction', true, async () => {
@@ -837,10 +894,31 @@ module.exports = (io) => {
         });
     });
 
+    async function resetAndStartAuction() {
+        stopTimer();
+        activeAuction = emptyAuction();
+        showLiveRankings = false;
+        notify(io, 'Auction reset by Admin. Starting fresh session…', 'warning');
+        broadcastState();
+        await broadcastTeams();
+
+        const id = await nextAvailablePlayerId();
+        if (id) {
+            await startLot(id);
+            notify(io, 'The JPL Auction has officially STARTED!', 'success');
+        } else {
+            notify(io, 'The JPL Auction started, but no available players remain in the queue.', 'info');
+        }
+        broadcastState();
+        await broadcastTeams();
+        hub.notifyPlayersChanged();
+    }
+
     const engine = {
         broadcastTeams,
         getState: getSanitizedState,
         getActivePlayerId: () => (isLotOpen() && activeAuction.player ? activeAuction.player.id : null),
+        resetAndStartAuction,
     };
     hub.register(io, engine);
     restore().then(() => broadcastState());

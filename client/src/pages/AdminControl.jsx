@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Play, Pause, SkipForward, CheckCircle2, XCircle, RotateCcw, Radio, Wifi, WifiOff, Search, Square, Eye, EyeOff } from 'lucide-react'
 import ToastContainer from '../components/Toast'
-import { ConfirmDialog } from '../components/Modal'
+import Modal, { ConfirmDialog } from '../components/Modal'
 import FranchiseModal from '../components/FranchiseModal'
 import { useToast } from '../hooks/useToast'
 import { useAuctionSocket } from '../hooks/useAuctionSocket'
@@ -27,14 +27,95 @@ export default function AdminControl() {
   const { state, teams, connection, emit, stats } = socket
   const [confirm, setConfirm] = useState(null)
   const [query, setQuery] = useState('')
+  const [roleFilter, setRoleFilter] = useState('All')
+  const [catFilter, setCatFilter] = useState('All')
+  const [sortBy, setSortBy] = useState('order')
   const [selectedFranchiseId, setSelectedFranchiseId] = useState(null)
 
+  const [showOtpModal, setShowOtpModal] = useState(false)
+  const [otpInput, setOtpInput] = useState('')
+  const [otpLoading, setOtpLoading] = useState(false)
+  const [otpError, setOtpError] = useState('')
+  const [otpEmail, setOtpEmail] = useState('')
+
+  async function handleStartAuctionClick() {
+    setOtpLoading(true)
+    setOtpError('')
+    try {
+      const res = await api.requestStartOtp()
+      setOtpEmail(res.email || 'adityakaushik1200@gmail.com')
+      setOtpInput(res.devOtp || '')
+      setShowOtpModal(true)
+      if (res.devOtp) {
+        addToast(`OTP generated: ${res.devOtp} (Sent to ${res.email})`, 'info')
+      } else {
+        addToast(`OTP code sent to ${res.email || 'adityakaushik1200@gmail.com'}`, 'info')
+      }
+    } catch (err) {
+      addToast(err.message || 'Failed to send OTP', 'danger')
+    } finally {
+      setOtpLoading(false)
+    }
+  }
+
+  async function handleVerifyOtpSubmit(e) {
+    if (e) e.preventDefault()
+    if (!otpInput.trim() || otpInput.trim().length !== 6) {
+      setOtpError('Please enter the 6-digit OTP code.')
+      return
+    }
+    setOtpLoading(true)
+    setOtpError('')
+    try {
+      const res = await api.verifyStartOtp(otpInput.trim())
+      addToast(res.message || 'Auction started and reset successfully!', 'success')
+      setShowOtpModal(false)
+      setOtpInput('')
+      reloadPlayers()
+      emit('user:join')
+    } catch (err) {
+      setOtpError(err.message || 'Invalid OTP code')
+    } finally {
+      setOtpLoading(false)
+    }
+  }
+
   const all = players.data ? players.data.players : []
-  const queue = useMemo(() => all.filter(p => p.status === 'Available')
-    .filter(p => !query || p.name.toLowerCase().includes(query.toLowerCase())), [all, query])
+  const queue = useMemo(() => {
+    let list = all.filter(p => p.status === 'Available')
+    if (query.trim()) {
+      const q = query.toLowerCase()
+      list = list.filter(p =>
+        (p.name && p.name.toLowerCase().includes(q)) ||
+        (p.player_code && p.player_code.toLowerCase().includes(q)) ||
+        (p.country && p.country.toLowerCase().includes(q)) ||
+        (p.enrollment_number && p.enrollment_number.toLowerCase().includes(q))
+      )
+    }
+    if (roleFilter !== 'All') {
+      list = list.filter(p => p.playing_role === roleFilter)
+    }
+    if (catFilter === 'Overseas') {
+      list = list.filter(p => p.country && p.country.trim().toLowerCase() !== 'india')
+    } else if (catFilter === 'Uncapped') {
+      list = list.filter(p => Boolean(p.is_uncapped))
+    }
+    if (sortBy === 'name') {
+      list.sort((a, b) => a.name.localeCompare(b.name))
+    } else if (sortBy === 'price') {
+      list.sort((a, b) => b.base_price - a.base_price)
+    } else if (sortBy === 'rank') {
+      list.sort((a, b) => (a.current_rank || 999) - (b.current_rank || 999))
+    } else {
+      list.sort((a, b) => (a.auction_order ?? a.id) - (b.auction_order ?? b.id))
+    }
+    return list
+  }, [all, query, roleFilter, catFilter, sortBy])
   const unsold = all.filter(p => p.status === 'Unsold')
-  const open = ['Live', 'Paused'].includes(state.status)
   const p = state.player
+  const hasActiveLot = Boolean(p && state.auctionId && ['Live', 'Paused'].includes(state.status))
+  const open = hasActiveLot
+  const hasBidsOnCurrentLot = Boolean(hasActiveLot && state.highestBidder && state.highestBidder.id)
   const showRankings = Boolean(state.showLiveRankings)
 
   function ask(action) {
@@ -76,7 +157,7 @@ export default function AdminControl() {
             {showRankings ? <Eye size={15} /> : <EyeOff size={15} />}
             Live Rankings: {showRankings ? 'ON' : 'OFF'}
           </button>
-          <button className="btn btn-success btn-sm" onClick={() => emit('admin:startAuction')}><Play size={15} /> Start Auction</button>
+          <button className="btn btn-success btn-sm" onClick={handleStartAuctionClick} disabled={otpLoading}><Play size={15} /> {otpLoading ? 'Sending OTP…' : 'Start Auction'}</button>
           <button className="btn btn-danger btn-sm" onClick={() => emit('admin:endAuction')} disabled={state.status === 'Ended'}><Square size={15} /> End Auction</button>
           <span className={`conn conn-${connection}`}>{connection === 'online' ? <Wifi size={15} /> : <WifiOff size={15} />} {connection === 'online' ? 'Connected' : 'Reconnecting'}</span>
           <span className="chip">{stats.bidders || 0} franchises online</span>
@@ -99,7 +180,7 @@ export default function AdminControl() {
                 <Initials initials={p.initials} size="xl" accent={state.highestBidder?.color} />
                 <div>
                   <p className="muted">Player #{pad2(state.lot?.position)} of {state.lot?.total}</p>
-                  <h3 className="lot-name">{p.name}</h3>
+                  <h3 className="lot-name">{p.name} {p.country && <span className="country-badge">({p.country})</span>}</h3>
                   <p className="lot-role"><RoleIcon role={p.playing_role} size={16} /> {roleMeta(p.playing_role).label}</p>
                 </div>
                 <RankBadge rank={p.current_rank} />
@@ -124,7 +205,7 @@ export default function AdminControl() {
           )}
 
           <div className="control-buttons">
-            <button className="btn btn-primary btn-lg" onClick={() => emit('admin:nextPlayer')} disabled={!queue.length || (open && Boolean(state.highestBidder))}>
+            <button className="btn btn-primary btn-lg" onClick={() => emit('admin:nextPlayer')} disabled={!queue.length || hasBidsOnCurrentLot}>
               <SkipForward size={18} /> Next player
             </button>
             {state.status === 'Live' && <button className="btn btn-ghost btn-lg" onClick={() => emit('admin:pauseAuction')}><Pause size={18} /> Pause</button>}
@@ -140,9 +221,34 @@ export default function AdminControl() {
         </section>
 
         <section className="panel control-queue">
-          <div className="panel-head">
-            <h2>Player queue <span className="count">{queue.length}</span></h2>
-            <label className="search"><Search size={15} /><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Find a player" /></label>
+          <div className="panel-head" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '.6rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '.5rem', flexWrap: 'wrap' }}>
+              <h2>Player queue <span className="count">{queue.length}</span></h2>
+              <label className="search" style={{ flex: 1, minWidth: '160px', maxWidth: '240px' }}>
+                <Search size={15} />
+                <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search name/country/code" />
+              </label>
+            </div>
+            <div style={{ display: 'flex', gap: '.4rem', flexWrap: 'wrap' }}>
+              <select value={roleFilter} onChange={e => setRoleFilter(e.target.value)} className="select-sm" title="Filter by role">
+                <option value="All">All Roles</option>
+                <option value="Batsman">Batsmen</option>
+                <option value="Bowler">Bowlers</option>
+                <option value="All-Rounder">All-Rounders</option>
+                <option value="Wicket Keeper">Keepers</option>
+              </select>
+              <select value={catFilter} onChange={e => setCatFilter(e.target.value)} className="select-sm" title="Filter by category">
+                <option value="All">All Categories</option>
+                <option value="Overseas">✈ Overseas</option>
+                <option value="Uncapped">⭐ Uncapped</option>
+              </select>
+              <select value={sortBy} onChange={e => setSortBy(e.target.value)} className="select-sm" title="Sort queue">
+                <option value="order">Queue Order</option>
+                <option value="name">Name (A-Z)</option>
+                <option value="price">Base Price</option>
+                <option value="rank">Rank</option>
+              </select>
+            </div>
           </div>
           <ul className="queue-list">
             {queue.map(q => (
@@ -150,10 +256,10 @@ export default function AdminControl() {
                 <span className="queue-no">{pad2(q.auction_order)}</span>
                 <Initials initials={q.initials} size="sm" />
                 <div className="queue-text">
-                  <b>{q.name}</b>
+                  <b>{q.name} {q.country && <span className="country-badge">({q.country})</span>}</b>
                   <small><RoleIcon role={q.playing_role} size={13} /> {roleMeta(q.playing_role).short} · {formatShort(q.base_price)} · {q.current_rank ? `#${q.current_rank}` : 'NR'}</small>
                 </div>
-                <button className="btn btn-ghost btn-sm" disabled={open && Boolean(state.highestBidder)} onClick={() => emit('admin:startPlayer', { playerId: q.id })}><Play size={14} /> Start</button>
+                <button className="btn btn-ghost btn-sm" disabled={hasBidsOnCurrentLot} onClick={() => emit('admin:startPlayer', { playerId: q.id })}><Play size={14} /> Start</button>
               </li>
             ))}
             {!queue.length && <li className="muted queue-empty">{players.loading ? 'Loading players…' : 'No Available players.'}</li>}
@@ -166,7 +272,7 @@ export default function AdminControl() {
                 {unsold.map(u => (
                   <li key={u.id}>
                     <Initials initials={u.initials} size="sm" />
-                    <div className="queue-text"><b>{u.name}</b><small>{roleMeta(u.playing_role).label}</small></div>
+                    <div className="queue-text"><b>{u.name} {u.country && <span className="country-badge">({u.country})</span>}</b><small>{roleMeta(u.playing_role).label}</small></div>
                     <button className="btn btn-ghost btn-sm" onClick={() => emit('admin:reAuction', { playerId: u.id })}><RotateCcw size={14} /> Re-auction</button>
                   </li>
                 ))}
@@ -192,6 +298,56 @@ export default function AdminControl() {
           </table>
         </section>
       </div>
+
+      <Modal
+        open={showOtpModal}
+        title="🔒 Verify OTP to Start Auction"
+        onClose={() => !otpLoading && setShowOtpModal(false)}
+        width={480}
+      >
+        <form onSubmit={handleVerifyOtpSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.92rem', lineHeight: '1.5' }}>
+            A 6-digit authorization OTP code has been sent to <b>{otpEmail || 'adityakaushik1200@gmail.com'}</b>.
+            Verifying this code will release all sold/bidded players and reset all franchise balances back to starting purse for a fresh auction.
+          </p>
+          {otpError && (
+            <div className="chip chip-danger" style={{ padding: '0.6rem 1rem', borderRadius: '6px', textAlign: 'center' }}>
+              {otpError}
+            </div>
+          )}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+            <label style={{ fontSize: '0.85rem', fontWeight: 600 }}>Enter 6-Digit Verification OTP</label>
+            <input
+              type="text"
+              maxLength={6}
+              value={otpInput}
+              onChange={e => setOtpInput(e.target.value.replace(/\D/g, ''))}
+              placeholder="123456"
+              style={{
+                fontSize: '1.5rem',
+                letterSpacing: '0.5rem',
+                textAlign: 'center',
+                padding: '0.6rem',
+                fontWeight: 'bold',
+                borderRadius: '8px',
+                border: '1px solid var(--border-color)',
+                background: 'var(--bg-input)',
+                color: 'var(--text-color)',
+              }}
+              autoFocus
+            />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0.5rem' }}>
+            <button type="button" className="btn btn-ghost" onClick={() => setShowOtpModal(false)} disabled={otpLoading}>
+              Cancel
+            </button>
+            <button type="submit" className="btn btn-success" disabled={otpLoading || otpInput.length !== 6}>
+              {otpLoading ? 'Verifying OTP…' : 'Verify & Start Auction'}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
       <FranchiseModal franchiseId={selectedFranchiseId} onClose={() => setSelectedFranchiseId(null)} />
     </div>
   )

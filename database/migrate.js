@@ -337,7 +337,6 @@ async function main() {
             }
         }
 
-        await db.query('DELETE FROM schema_migrations WHERE name = ?', ['006_jpl2026_rules']);
         await dataMigrations(db);
         await ensureAdmin(db);
 

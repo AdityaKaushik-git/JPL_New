@@ -10,24 +10,34 @@ import { formatINR, formatShort } from '../../lib/format'
  * No emojis — clean SVG icons & typography.
  */
 export default function LiveRankingsView({ teams = [], onSelectTeam }) {
-  // Sort teams according to official tie-breaker rules:
+  // Sort active teams according to official tie-breaker rules:
   // 1. Total ICC Ranking Points (descending)
   // 2. Remaining Purse (descending)
   // 3. Batsmen Ranking Points (descending)
+  // 4. Squad Count (descending)
+  // 5. Team Name (alphabetical)
   const rankedTeams = useMemo(() => {
-    return [...teams].sort((a, b) => {
-      const ptsA = Number(a.total_player_points || 0)
-      const ptsB = Number(b.total_player_points || 0)
-      if (ptsB !== ptsA) return ptsB - ptsA
+    return [...teams]
+      .filter(t => t && t.status !== 'disabled')
+      .sort((a, b) => {
+        const ptsA = Number(a.total_player_points || 0)
+        const ptsB = Number(b.total_player_points || 0)
+        if (ptsB !== ptsA) return ptsB - ptsA
 
-      const purseA = Number(a.remaining_purse || 0)
-      const purseB = Number(b.remaining_purse || 0)
-      if (purseB !== purseA) return purseB - purseA
+        const purseA = Number(a.remaining_purse || 0)
+        const purseB = Number(b.remaining_purse || 0)
+        if (purseB !== purseA) return purseB - purseA
 
-      const batA = Number(a.batsmen_points || 0)
-      const batB = Number(b.batsmen_points || 0)
-      return batB - batA
-    })
+        const batA = Number(a.batsmen_points || 0)
+        const batB = Number(b.batsmen_points || 0)
+        if (batB !== batA) return batB - batA
+
+        const squadA = Number(a.squad_count || 0)
+        const squadB = Number(b.squad_count || 0)
+        if (squadB !== squadA) return squadB - squadA
+
+        return (a.team_name || '').localeCompare(b.team_name || '')
+      })
   }, [teams])
 
   const champion = rankedTeams[0]

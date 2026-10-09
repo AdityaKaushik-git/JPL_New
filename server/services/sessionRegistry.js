@@ -27,11 +27,12 @@ function cleanStaleSessions() {
 
 setInterval(cleanStaleSessions, 30000);
 
-function registerSession(user, token, req = {}, forceLogoutOthers = false) {
+function registerSession(user, token, req = {}, forceLogoutOthers = false, deviceId = null) {
   cleanStaleSessions();
   const userId = user.id;
   const role = user.role;
   const ip = req.ip || (req.headers && req.headers['x-forwarded-for']) || 'unknown';
+  const reqDeviceId = deviceId || (req.body && req.body.deviceId) || (req.headers && req.headers['x-device-id']) || null;
 
   if (forceLogoutOthers) {
     if (role === 'user') {
@@ -46,24 +47,37 @@ function registerSession(user, token, req = {}, forceLogoutOthers = false) {
   if (role === 'user') {
     const existing = userSessions.get(userId);
     if (existing && !forceLogoutOthers) {
-      const hasSockets = existing.socketIds && existing.socketIds.size > 0;
-      const isRecent = (Date.now() - existing.lastSeen) < STALE_TIMEOUT_MS;
-      if (hasSockets || isRecent) {
-        const err = new Error('This account is active on another device.');
-        err.status = 409;
-        err.canForceLogout = true;
-        throw err;
+      // Treat as same device if deviceId matches OR if deviceId is omitted/untracked
+      const isSameDevice = !reqDeviceId || !existing.deviceId || (reqDeviceId === existing.deviceId);
+
+      if (!isSameDevice) {
+        const hasSockets = existing.socketIds && existing.socketIds.size > 0;
+        const isRecent = (Date.now() - existing.lastSeen) < STALE_TIMEOUT_MS;
+        if (hasSockets || isRecent) {
+          const err = new Error('This account is active on another device.');
+          err.status = 409;
+          err.canForceLogout = true;
+          throw err;
+        }
       }
       userSessions.delete(userId);
     }
     userSessions.set(userId, {
       token,
       userId,
+      deviceId: reqDeviceId,
       socketIds: new Set(),
       lastSeen: Date.now(),
       ip,
     });
   } else if (role === 'admin') {
+    // Delete previous session for the same admin user on this device or untracked device
+    for (const [t, s] of adminSessions.entries()) {
+      if (s.userId === userId && (!reqDeviceId || !s.deviceId || s.deviceId === reqDeviceId)) {
+        adminSessions.delete(t);
+      }
+    }
+
     const activeAdminCount = Array.from(adminSessions.values()).filter(s => {
       const hasSockets = s.socketIds && s.socketIds.size > 0;
       const isRecent = (Date.now() - s.lastSeen) < STALE_TIMEOUT_MS;
@@ -80,6 +94,7 @@ function registerSession(user, token, req = {}, forceLogoutOthers = false) {
     adminSessions.set(token, {
       token,
       userId,
+      deviceId: reqDeviceId,
       socketIds: new Set(),
       lastSeen: Date.now(),
       ip,

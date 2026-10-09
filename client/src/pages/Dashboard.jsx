@@ -76,7 +76,7 @@ function OwnerDashboard() {
         {data.recentBids.length ? (
           <ul className="simple-list">
             {data.recentBids.map((b, i) => (
-              <li key={i}><span>{b.player_name}</span><b>{formatINR(b.bid_amount)}</b><span className={`status-tag st-${b.status.toLowerCase()}`}>{b.status}</span></li>
+              <li key={i}><span>{b.player_name}{b.country ? ` (${b.country})` : ''}</span><b>{formatINR(b.bid_amount)}</b><span className={`status-tag st-${b.status.toLowerCase()}`}>{b.status}</span></li>
             ))}
           </ul>
         ) : <p className="muted">You haven't bid yet.</p>}
@@ -169,7 +169,7 @@ function PlayerHome() {
       <section className="panel player-home">
         <Initials initials={p.initials} size="xl" accent={p.team?.color} />
         <div>
-          <h1>{p.name}</h1>
+          <h1>{p.name} {p.country && <span className="country-badge">({p.country})</span>}</h1>
           <p className="role-inline"><RoleIcon role={p.playing_role} size={16} /> {roleMeta(p.playing_role).label} · <span className={`status-tag st-${p.status.replace(' ', '-').toLowerCase()}`}>{p.status}</span></p>
         </div>
         <RankBadge rank={p.current_rank} size="lg" />

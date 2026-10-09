@@ -7,27 +7,54 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
 
-  // Every time the site is reloaded or opened in a tab, wipe persistent tokens
-  // to strictly force mandatory re-authentication.
-  useEffect(() => {
+  const clearSession = useCallback(() => {
     localStorage.removeItem('jpl_token')
     localStorage.removeItem('jpl_user')
     sessionStorage.removeItem('jpl_token')
     sessionStorage.removeItem('jpl_user')
     setUser(null)
-    setLoading(false)
   }, [])
 
   const logout = useCallback(() => {
     api.logout().catch(() => {})
-    localStorage.removeItem('jpl_token')
-    localStorage.removeItem('jpl_user')
-    sessionStorage.removeItem('jpl_token')
-    sessionStorage.removeItem('jpl_user')
-    setUser(null)
-  }, [])
+    clearSession()
+  }, [clearSession])
+
+  useEffect(() => {
+    const token = localStorage.getItem('jpl_token') || sessionStorage.getItem('jpl_token')
+    if (token) {
+      api.getMe()
+        .then((data) => {
+          if (data && data.user) {
+            setUser(data.user)
+            localStorage.setItem('jpl_user', JSON.stringify(data.user))
+            sessionStorage.setItem('jpl_user', JSON.stringify(data.user))
+          } else {
+            clearSession()
+          }
+        })
+        .catch(() => {
+          clearSession()
+        })
+        .finally(() => {
+          setLoading(false)
+        })
+    } else {
+      setLoading(false)
+    }
+  }, [clearSession])
+
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      logout()
+    }
+    window.addEventListener('jpl:unauthorized', handleUnauthorized)
+    return () => window.removeEventListener('jpl:unauthorized', handleUnauthorized)
+  }, [logout])
 
   function login(token, userData) {
+    localStorage.setItem('jpl_token', token)
+    localStorage.setItem('jpl_user', JSON.stringify(userData))
     sessionStorage.setItem('jpl_token', token)
     sessionStorage.setItem('jpl_user', JSON.stringify(userData))
     setUser(userData)
@@ -36,6 +63,7 @@ export function AuthProvider({ children }) {
   const updateUser = useCallback((data) => {
     setUser(prev => {
       const updated = { ...(prev || {}), ...data }
+      localStorage.setItem('jpl_user', JSON.stringify(updated))
       sessionStorage.setItem('jpl_user', JSON.stringify(updated))
       return updated
     })

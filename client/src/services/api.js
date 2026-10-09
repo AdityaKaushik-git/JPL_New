@@ -1,9 +1,19 @@
 const BASE = '/api'
 
+export function getDeviceId() {
+  let id = localStorage.getItem('jpl_device_id')
+  if (!id) {
+    id = 'dev_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36)
+    localStorage.setItem('jpl_device_id', id)
+  }
+  return id
+}
+
 function getHeaders() {
   const token = sessionStorage.getItem('jpl_token') || localStorage.getItem('jpl_token')
   return {
     'Content-Type': 'application/json',
+    'X-Device-Id': getDeviceId(),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   }
 }
@@ -18,9 +28,13 @@ async function request(path, options = {}) {
   let data = {}
   try { data = await res.json() } catch (e) { data = {} }
   if (!res.ok) {
+    if (res.status === 401 && path !== '/auth/login') {
+      window.dispatchEvent(new Event('jpl:unauthorized'))
+    }
     const err = new Error(data.message || `Request failed (${res.status})`)
     err.status = res.status
     err.errors = data.errors
+    err.canForceLogout = Boolean(data.canForceLogout)
     throw err
   }
   return data
@@ -30,7 +44,7 @@ const json = (method, body) => ({ method, body: JSON.stringify(body || {}) })
 
 export const api = {
   // auth — there is no public registration
-  login: (body) => request('/auth/login', json('POST', body)),
+  login: (body) => request('/auth/login', json('POST', { deviceId: getDeviceId(), ...body })),
   logout: () => request('/auth/logout', json('POST')),
   getMe: () => request('/auth/me'),
 
@@ -58,6 +72,7 @@ export const api = {
   getAdminUsers: () => request('/admin/users'),
   getAdminFranchises: () => request('/admin/franchises'),
   createFranchise: (body) => request('/admin/franchises', json('POST', body)),
+  deleteAllBidders: () => request('/admin/franchises/all', { method: 'DELETE' }),
   updateFranchise: (id, body) => request(`/admin/franchises/${id}`, json('PUT', body)),
   setFranchiseStatus: (id, status) => request(`/admin/franchises/${id}/status`, json('PATCH', { status })),
   resetFranchisePassword: (id, password) => request(`/admin/franchises/${id}/password`, json('PATCH', { password })),
@@ -71,4 +86,6 @@ export const api = {
   recalculateRankings: () => request('/admin/rankings/recalculate', json('POST')),
   getAuctionHistory: () => request('/admin/auction-history'),
   deleteAuctionHistory: (id) => request(`/admin/auction-history/${id}`, { method: 'DELETE' }),
+  requestStartOtp: () => request('/admin/auction/request-start-otp', json('POST')),
+  verifyStartOtp: (otp) => request('/admin/auction/verify-start-otp', json('POST', { otp })),
 }

@@ -22,8 +22,8 @@ const MAX_FOREIGN_PLAYERS  = 4;  // max overseas players per squad
 const MIN_UNCAPPED_PLAYERS = 2;  // min uncapped players per squad
 
 // Timer (seconds). The server owns the clock; clients only display it.
-const INITIAL_TIMER_SECONDS = clampInt(process.env.AUCTION_INITIAL_SECONDS, 60, 5, 600);
-const BID_RESET_SECONDS = clampInt(process.env.AUCTION_BID_RESET_SECONDS, 15, 3, 120);
+const INITIAL_TIMER_SECONDS = clampInt(process.env.AUCTION_INITIAL_SECONDS, 30, 5, 600);
+const BID_RESET_SECONDS = clampInt(process.env.AUCTION_BID_RESET_SECONDS, 10, 3, 120);
 
 // When the timer reaches zero the server closes the lot automatically
 // (SOLD to the highest bidder, otherwise UNSOLD). Set AUCTION_AUTO_FINALIZE=false

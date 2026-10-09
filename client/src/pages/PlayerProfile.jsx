@@ -50,7 +50,7 @@ export default function PlayerProfile() {
 
         <div className="profile-hero-body" style={{ gridColumn: '2' }}>
           <p className="hero-lot">Player <b>#{pad2(p.auction_order)}</b> <span className="hero-code">{p.player_code}</span></p>
-          <h1 className="profile-name">{p.name}</h1>
+          <h1 className="profile-name">{p.name} {p.country && <span className="country-badge">({p.country})</span>}</h1>
           <div className="hero-tags">
             {p.country && <span className="chip" style={{ fontSize: '0.9rem', fontWeight: 600, background: 'rgba(255,255,255,0.1)' }}>{p.country}</span>}
             <span className={`role-chip role-${role.key}`}><RoleIcon role={p.playing_role} size={20} /> {role.label}</span>

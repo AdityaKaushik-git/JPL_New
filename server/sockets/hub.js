@@ -32,4 +32,11 @@ function getState() {
     return hub.engine ? hub.engine.getState() : null;
 }
 
-module.exports = { register, notifyTeamsChanged, notifyPlayersChanged, activePlayerId, getState };
+/** Triggers a complete reset of the auction engine state and starts the first lot. */
+async function resetAndStartAuction() {
+    if (hub.engine && hub.engine.resetAndStartAuction) {
+        await hub.engine.resetAndStartAuction();
+    }
+}
+
+module.exports = { register, notifyTeamsChanged, notifyPlayersChanged, activePlayerId, getState, resetAndStartAuction };

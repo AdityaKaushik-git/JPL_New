@@ -89,7 +89,8 @@ function validateFranchiseInput(body, { requirePassword = true } = {}) {
 
 async function listFranchises(db) {
     const [rows] = await db.query(
-        `SELECT ${FRANCHISE_COLUMNS} FROM users WHERE role = 'user' ORDER BY team_name, id`
+        `SELECT ${FRANCHISE_COLUMNS} FROM users WHERE role = 'user'
+         ORDER BY total_player_points DESC, purse DESC, batsmen_points DESC, squad_count DESC, team_name ASC, id ASC`
     );
     return rows.map(publicFranchise);
 }

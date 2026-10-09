@@ -8,10 +8,13 @@ router.use(authMiddleware, adminMiddleware);
 router.get('/stats', adminController.getStats);
 router.get('/users', adminController.getUsers);
 router.get('/auction/state', adminController.getAuctionState);
+router.post('/auction/request-start-otp', adminController.requestStartAuctionOtp);
+router.post('/auction/verify-start-otp', adminController.verifyStartAuctionOtp);
 
 // Franchises (team owners). Purse and squad limits are fixed by the server.
 router.get('/franchises', adminController.getFranchises);
 router.post('/franchises', adminController.createFranchise);
+router.delete('/franchises/all', adminController.deleteAllBidders);
 router.put('/franchises/:id', adminController.updateFranchise);
 router.patch('/franchises/:id/status', adminController.setFranchiseStatus);
 router.patch('/franchises/:id/password', adminController.resetFranchisePassword);

@@ -65,8 +65,9 @@ exports.login = async (req, res) => {
 
         // Enforce strict active session limits with force logout option
         const forceLogoutOthers = Boolean(req.body && req.body.forceLogoutOthers);
+        const deviceId = (req.body && req.body.deviceId) || (req.headers && req.headers['x-device-id']) || null;
         try {
-            sessionRegistry.registerSession(user, token, req, forceLogoutOthers);
+            sessionRegistry.registerSession(user, token, req, forceLogoutOthers, deviceId);
         } catch (sessionErr) {
             return res.status(sessionErr.status || 403).json({
                 message: sessionErr.message,
