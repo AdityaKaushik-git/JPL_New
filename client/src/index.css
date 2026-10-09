@@ -368,7 +368,7 @@ input, select, textarea { font: inherit; }
 .hero-name {
   font-family: var(--font-display); font-weight: 900; text-transform: uppercase;
   font-size: clamp(3rem, 6.4vw, 8rem); line-height: .88; letter-spacing: .005em;
-  max-width: 14ch; text-wrap: balance;
+  max-width: 14ch; text-wrap: balance; word-break: break-word; overflow-wrap: break-word;
 }
 .hero-country-badge {
   display: inline-flex;
@@ -800,6 +800,7 @@ input, select, textarea { font: inherit; }
 .form { display: flex; flex-direction: column; gap: 1rem; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 .form-row-3 { grid-template-columns: repeat(3, 1fr); }
+.form-row-4 { grid-template-columns: repeat(4, 1fr); }
 .field { display: flex; flex-direction: column; gap: .35rem; min-width: 0; }
 .field-label { font-size: .84rem; font-weight: 600; color: var(--chalk-2); }
 .field input, .field select, .inline-form input, .matchlog-add input {
@@ -882,7 +883,7 @@ input, select, textarea { font: inherit; }
 }
 
 @media (max-width: 1100px) {
-  .topnav { position: fixed; inset: 58px 0 auto 0; flex-direction: column; background: var(--night-2); border-bottom: 1px solid var(--line); padding: .6rem; display: none; }
+  .topnav { position: fixed; inset: 58px 0 auto 0; flex-direction: column; background: var(--night-2); border-bottom: 1px solid var(--line); padding: .6rem; display: none; z-index: 60; max-height: calc(100dvh - 60px); overflow-y: auto; box-shadow: var(--shadow); }
   .topnav.open { display: flex; }
   .hamburger { display: inline-grid; }
   .brand-sub { display: none; }
@@ -890,6 +891,13 @@ input, select, textarea { font: inherit; }
   .profile-grid { grid-template-columns: 1fr; }
   .profile-hero { grid-template-columns: 1fr; }
   .profile-auction { border-left: 0; border-top: 1px solid var(--line); }
+}
+
+/* iOS focus auto-zoom prevention for screens <= 768px */
+@media (max-width: 768px) {
+  input, select, textarea, .field input, .field select, .search input {
+    font-size: 16px !important;
+  }
 }
 
 /* Tablet & mobile broadcast: re-flow instead of shrinking */
@@ -923,9 +931,10 @@ input, select, textarea { font: inherit; }
   .hero-watermark { font-size: 70vw; }
   .team-chip { flex-basis: 150px; }
   .bid-dock { grid-template-columns: 1fr 1fr; gap: .6rem; }
-  .bid-dock .bid-button { grid-column: 1 / -1; height: 58px; }
+  .bid-dock .bid-button, .bid-dock .role-slots, .bid-dock .not-interested-toggle { grid-column: 1 / -1; height: auto; }
+  .bid-dock .bid-button { height: 58px; }
   .bid-dock-hint { display: none; }
-  .form-row, .form-row-3 { grid-template-columns: 1fr; }
+  .form-row, .form-row-3, .form-row-4 { grid-template-columns: 1fr; }
   .assigned dl { grid-template-columns: 1fr 1fr; }
   .podium { grid-template-columns: 1fr; }
   .purse-panel { grid-template-columns: 1fr; gap: 1rem; }
