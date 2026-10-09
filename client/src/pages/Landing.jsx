@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
-import { Radio, ListOrdered, ArrowRight, Calendar, Clock, MapPin, Building2, Shield, Coins, Gavel, Trophy, Layers, Globe, UserCheck, CheckCircle2 } from 'lucide-react'
+import { Radio, ListOrdered, ArrowRight, Calendar, Clock, MapPin, Building2, Shield, Coins, Gavel, Trophy, Layers, CheckCircle2 } from 'lucide-react'
 import PitchBackdrop from '../components/PitchBackdrop'
+import RoleIcon from '../components/RoleIcon'
 import { useAsync } from '../hooks/useAsync'
 import { api } from '../services/api'
 import { formatINR } from '../lib/format'
@@ -106,19 +107,19 @@ export default function Landing() {
               <span className="checklist-title">Required Squad Composition (15 Total)</span>
               <div className="squad-roles-grid">
                 <div className="squad-role-item">
-                  <span className="role-lbl">🏏 Batsmen</span>
+                  <span className="role-lbl"><RoleIcon role="bat" size={13} /> Batsmen</span>
                   <b className="role-cap">5 Players</b>
                 </div>
                 <div className="squad-role-item">
-                  <span className="role-lbl">⚾ Bowlers</span>
+                  <span className="role-lbl"><RoleIcon role="bowl" size={13} /> Bowlers</span>
                   <b className="role-cap">5 Players</b>
                 </div>
                 <div className="squad-role-item">
-                  <span className="role-lbl">🧤 Keepers</span>
+                  <span className="role-lbl"><RoleIcon role="wk" size={13} /> Keepers</span>
                   <b className="role-cap">2 Players</b>
                 </div>
                 <div className="squad-role-item">
-                  <span className="role-lbl">⚡ All-Rounders</span>
+                  <span className="role-lbl"><RoleIcon role="ar" size={13} /> All-Rounders</span>
                   <b className="role-cap">3 Players</b>
                 </div>
               </div>
@@ -207,7 +208,7 @@ export default function Landing() {
               <h3>4. Winner & Tie-Breaker Criteria</h3>
             </div>
             <div className="winner-rule-box">
-              <span className="winner-label">🏆 Overall Champion</span>
+              <span className="winner-label"><Trophy size={16} /> Overall Champion</span>
               <p>The team with the <b>highest total ICC T20 ranking points</b> aggregated across its final 15-player squad.</p>
             </div>
             <div className="tiebreaker-list">

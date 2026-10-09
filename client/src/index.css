@@ -887,7 +887,7 @@ input, select, textarea { font: inherit; }
   border: 1px solid rgba(242, 193, 78, .3); font-size: .9rem; line-height: 1.45;
 }
 .winner-label {
-  display: block; font-family: var(--font-display); font-size: 1.1rem; font-weight: 800; color: var(--gold); margin-bottom: .25rem;
+  display: flex; align-items: center; gap: .4rem; font-family: var(--font-display); font-size: 1.1rem; font-weight: 800; color: var(--gold); margin-bottom: .25rem;
 }
 .tiebreaker-list {
   display: flex; flex-direction: column; gap: .6rem; margin-top: .2rem;
