@@ -2,6 +2,7 @@
  * LeaderPanel — shows the current JPL leader and WHY they are leading.
  */
 import { useAuth } from '../../contexts/AuthContext'
+import { Trophy } from 'lucide-react'
 import TeamMark from '../TeamMark'
 import { formatINR, formatShort } from '../../lib/format'
 
@@ -25,7 +26,7 @@ export default function LeaderPanel({ teams }) {
   return (
     <div className="leader-panel" style={{ '--team': leader.color }}>
       <div className="leader-panel-header">
-        <span className="leader-crown">🏆</span>
+        <Trophy size={16} className="trophy-gold" />
         <span className="leader-label">CURRENT LEADER</span>
       </div>
       <div className="leader-body">

@@ -31,14 +31,14 @@ export default function PlayerHero({ player, lot, accent, compact = false }) {
 
               <h1 className="hero-name seq seq-3">
                 {player.name}
-                {isForeign && <span className="badge-foreign">✈ {player.country}</span>}
-                {player.is_uncapped && <span className="badge-uncapped">⭐ Uncapped</span>}
+                {isForeign && <span className="badge-foreign">{player.country}</span>}
+                {player.is_uncapped && <span className="badge-uncapped">Uncapped</span>}
               </h1>
 
               <div className="hero-tags seq seq-4">
                 <span className={`role-chip role-${role.key}`}><RoleIcon role={player.playing_role} size={22} /> {role.label}</span>
-                {isForeign && <span className="hero-style" style={{ color: '#38bdf8', fontWeight: 600 }}>✈ Overseas ({player.country})</span>}
-                {player.is_uncapped && <span className="hero-style" style={{ color: '#fbbf24', fontWeight: 600 }}>⭐ Uncapped</span>}
+                {isForeign && <span className="hero-style" style={{ color: '#38bdf8', fontWeight: 600 }}>Overseas ({player.country})</span>}
+                {player.is_uncapped && <span className="hero-style" style={{ color: '#fbbf24', fontWeight: 600 }}>Uncapped</span>}
                 {player.batting_style && <span className="hero-style">{player.batting_style}</span>}
                 {player.bowling_style && <span className="hero-style">{player.bowling_style}</span>}
               </div>

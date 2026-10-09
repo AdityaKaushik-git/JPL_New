@@ -17,8 +17,8 @@ export default function PlayerCard({ player, accent, priceLabel = 'Purchased', p
       </div>
       <h3 className="player-card-name">
         {player.name}
-        {isForeign && <span className="badge-foreign">✈ Overseas</span>}
-        {player.is_uncapped && <span className="badge-uncapped">⭐ Uncapped</span>}
+        {isForeign && <span className="badge-foreign">Overseas</span>}
+        {player.is_uncapped && <span className="badge-uncapped">Uncapped</span>}
       </h3>
       <p className="player-card-role"><RoleIcon role={player.playing_role} size={16} /> {role.label}</p>
       <div className="player-card-meta">

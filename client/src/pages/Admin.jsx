@@ -105,7 +105,7 @@ function PlayersTab({ notify }) {
           <option value="All">All Roles</option><option>Batsman</option><option>Bowler</option><option>All-Rounder</option><option>Wicket Keeper</option>
         </select>
         <select value={cat} onChange={e => setCat(e.target.value)} className="select-sm" title="Filter by category">
-          <option value="All">All Categories</option><option value="Overseas">✈ Overseas</option><option value="Uncapped">⭐ Uncapped</option><option value="India">Domestic (India)</option>
+          <option value="All">All Categories</option><option value="Overseas">Overseas</option><option value="Uncapped">Uncapped</option><option value="India">Domestic (India)</option>
         </select>
         <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="select-sm" title="Filter by status">
           <option value="All">All Statuses</option><option value="Available">Available</option><option value="In Auction">In Auction</option><option value="Sold">Sold</option><option value="Unsold">Unsold</option>

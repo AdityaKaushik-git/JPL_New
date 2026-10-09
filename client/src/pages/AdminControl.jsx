@@ -239,8 +239,8 @@ export default function AdminControl() {
               </select>
               <select value={catFilter} onChange={e => setCatFilter(e.target.value)} className="select-sm" title="Filter by category">
                 <option value="All">All Categories</option>
-                <option value="Overseas">✈ Overseas</option>
-                <option value="Uncapped">⭐ Uncapped</option>
+                <option value="Overseas">Overseas</option>
+                <option value="Uncapped">Uncapped</option>
               </select>
               <select value={sortBy} onChange={e => setSortBy(e.target.value)} className="select-sm" title="Sort queue">
                 <option value="order">Queue Order</option>

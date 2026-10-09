@@ -34,8 +34,8 @@ export default function ResultOverlay({ result, onDismiss }) {
         {result.lot && <p className="result-lot">Player #{pad2(result.lot.position)}</p>}
         <h2 className="result-name">
           {result.playerName}
-          {isForeign && <span className="badge-foreign">✈ Overseas</span>}
-          {result.is_uncapped && <span className="badge-uncapped">⭐ Uncapped</span>}
+          {isForeign && <span className="badge-foreign">Overseas</span>}
+          {result.is_uncapped && <span className="badge-uncapped">Uncapped</span>}
         </h2>
         <p className="result-role"><RoleIcon role={result.role} size={20} /> {roleMeta(result.role).label}</p>
         {sold ? (
