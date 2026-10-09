@@ -1,5 +1,6 @@
 import { useParams, Link } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
+import { useAuth } from '../contexts/AuthContext'
 import { useAsync } from '../hooks/useAsync'
 import { api } from '../services/api'
 import { Loader, ErrorState } from '../components/States'
@@ -26,6 +27,7 @@ function priceTierLabel(points) {
 
 export default function PlayerProfile() {
   const { id } = useParams()
+  const { user } = useAuth()
   const { data, error, loading, reload } = useAsync(() => api.getPlayer(id), [id])
 
   if (loading && !data) return <Loader full />
@@ -35,10 +37,13 @@ export default function PlayerProfile() {
   const role = roleMeta(p.playing_role)
   const accent = p.team ? p.team.color : undefined
   const movement = p.previous_rank && p.current_rank ? p.previous_rank - p.current_rank : 0
+  const isBidder = user?.role === 'user'
 
   return (
     <div className="page profile">
-      <Link to="/rankings" className="back-link"><ArrowLeft size={16} /> Rankings</Link>
+      <Link to={isBidder ? '/dashboard' : '/rankings'} className="back-link">
+        <ArrowLeft size={16} /> {isBidder ? 'Dashboard' : 'Rankings'}
+      </Link>
 
       <section className="profile-hero" style={accent ? { '--accent': accent } : undefined}>
         <PitchBackdrop className="hero-pitch" />

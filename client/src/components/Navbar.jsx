@@ -25,7 +25,6 @@ const LINKS = {
     { to: '/auction', label: 'Bid room' },
     { to: '/my-team', label: 'Squad' },
     { to: '/my-bids', label: 'My bids' },
-    { to: '/rankings', label: 'Rankings' },
   ],
   player: [
     { to: '/dashboard', label: 'My card' },

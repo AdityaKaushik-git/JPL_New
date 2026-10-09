@@ -47,7 +47,7 @@ function AppRoutes() {
 
         {/* Protected routes — require login */}
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-        <Route path="/rankings" element={<ProtectedRoute><Rankings /></ProtectedRoute>} />
+        <Route path="/rankings" element={<ProtectedRoute roles={['admin', 'player']}><Rankings /></ProtectedRoute>} />
         <Route path="/players/:id" element={<ProtectedRoute><PlayerProfile /></ProtectedRoute>} />
         <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
