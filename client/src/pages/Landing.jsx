@@ -191,7 +191,7 @@ export default function Landing() {
             </div>
             <ul className="rule-list">
               <li><span>Category Sets:</span> <b>Rank 1–10, 11–20, 21–30...</b></li>
-              <li><span>Sequential Order:</span> <b>Bat → Bowl → WK → All-Rounders</b></li>
+              <li><span>Sequential Order:</span> <b>Batsmen → Bowlers → Keepers → All-Rounders</b></li>
               <li><span>Unsold Players:</span> <b>Marked Unsold if no bids</b></li>
               <li><span>Final Unsold Round:</span> <b>Returned for final re-bids</b></li>
             </ul>

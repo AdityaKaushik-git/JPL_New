@@ -36,14 +36,14 @@ export function initialsOf(name) {
 }
 
 export const ROLE_META = {
-  'Batsman': { label: 'Batter', short: 'BAT', key: 'batter' },
+  'Batsman': { label: 'Batsman', short: 'BAT', key: 'batsman' },
   'Bowler': { label: 'Bowler', short: 'BOWL', key: 'bowler' },
   'All-Rounder': { label: 'All-rounder', short: 'AR', key: 'allrounder' },
   'Wicket Keeper': { label: 'Wicketkeeper', short: 'WK', key: 'keeper' },
 }
 
 export function roleMeta(role) {
-  return ROLE_META[role] || { label: role || 'Player', short: '—', key: 'batter' }
+  return ROLE_META[role] || { label: role || 'Player', short: '—', key: 'batsman' }
 }
 
 export function signed(n) {

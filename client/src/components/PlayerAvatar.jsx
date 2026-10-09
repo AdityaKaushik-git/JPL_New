@@ -18,6 +18,7 @@ const SIZES = {
 
 // Role accent colours (kept here so they are co-located with the component)
 const ROLE_COLORS = {
+  batsman:    '#f2c14e',
   batter:     '#f2c14e',
   bowler:     '#4ecbf2',
   allrounder: '#a78bfa',

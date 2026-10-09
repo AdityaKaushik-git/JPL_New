@@ -10,7 +10,7 @@ import { pad2, roleMeta } from '../lib/format'
 
 const CATEGORIES = [
   { id: 'overall', label: 'Overall' },
-  { id: 'batters', label: 'Batters' },
+  { id: 'batters', label: 'Batsmen' },
   { id: 'bowlers', label: 'Bowlers' },
   { id: 'all-rounders', label: 'All-rounders' },
   { id: 'wicketkeepers', label: 'Wicketkeepers' },
