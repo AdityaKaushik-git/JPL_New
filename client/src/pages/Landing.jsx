@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Radio, ListOrdered, ArrowRight, Calendar, Clock, MapPin, Building2, Shield, Coins, Gavel } from 'lucide-react'
+import { Radio, ListOrdered, ArrowRight, Calendar, Clock, MapPin, Building2, Shield, Coins, Gavel, Trophy, Layers, Globe, UserCheck, CheckCircle2 } from 'lucide-react'
 import PitchBackdrop from '../components/PitchBackdrop'
 import { useAsync } from '../hooks/useAsync'
 import { api } from '../services/api'
@@ -80,68 +80,146 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Official Rules & Format Section */}
+      {/* Official Rules & Guidelines Section */}
       <section className="landing-rules-section">
         <div className="landing-rules-head">
-          <span className="label">Official Event Rules</span>
-          <h2>JPL Auction Guidelines & Format</h2>
+          <span className="label">Official Tournament Regulations</span>
+          <h2>JPL Cricket Auction Rules & Guidelines</h2>
           <p className="muted">Official rules for participating franchises in the JCC Premiere League Auction.</p>
         </div>
 
         <div className="rules-grid">
-          {/* Card 1: Budget & Team Size */}
-          <div className="rule-card landing-fade-up delay-1">
+          {/* Card 1: Team Purse & Squad Checklist */}
+          <div className="rule-card rule-card-highlight landing-fade-up delay-1">
             <div className="rule-card-header">
               <Coins className="rule-icon" size={22} />
-              <h3>Budget & Franchise Structure</h3>
+              <h3>1. Team Purse & Squad Checklist</h3>
             </div>
             <ul className="rule-list">
-              <li><span>Franchise Budget:</span> <b>₹75 Crore</b></li>
-              <li><span>Team Size:</span> <b>4 Students</b> per team</li>
-              <li><span>Bidding Mode:</span> <b>On-Spot Bidding in Lakhs</b></li>
-              <li><span>Auctioneer:</span> <b>Official JCC Quick Auction</b></li>
+              <li><span>Virtual Purse Budget:</span> <b>₹75 Crore</b></li>
+              <li><span>Squad Capacity:</span> <b>Exactly 15 Players</b></li>
+              <li><span>Team Size:</span> <b>4 Students</b> per franchise</li>
+              <li><span>Foreign Players Cap:</span> <b>Max 4 Foreign Players</b></li>
+              <li><span>Uncapped Players Requirement:</span> <b>Min 2 Uncapped Players</b></li>
             </ul>
-          </div>
-
-          {/* Card 2: Squad Composition */}
-          <div className="rule-card rule-card-highlight landing-fade-up delay-2">
-            <div className="rule-card-header">
-              <Shield className="rule-icon" size={22} />
-              <h3>Squad Composition (Max 15)</h3>
-            </div>
-            <p className="rule-subtext">Each team can have up to 15 players:</p>
-            <div className="squad-roles-grid">
-              <div className="squad-role-item">
-                <span className="role-lbl">Batsmen</span>
-                <b className="role-cap">Max 5</b>
-              </div>
-              <div className="squad-role-item">
-                <span className="role-lbl">Bowlers</span>
-                <b className="role-cap">Max 5</b>
-              </div>
-              <div className="squad-role-item">
-                <span className="role-lbl">Wicketkeepers</span>
-                <b className="role-cap">Max 2</b>
-              </div>
-              <div className="squad-role-item">
-                <span className="role-lbl">All-Rounders</span>
-                <b className="role-cap">Max 3</b>
+            <div className="rule-checklist-box">
+              <span className="checklist-title">Required Squad Composition (15 Total)</span>
+              <div className="squad-roles-grid">
+                <div className="squad-role-item">
+                  <span className="role-lbl">🏏 Batsmen</span>
+                  <b className="role-cap">5 Players</b>
+                </div>
+                <div className="squad-role-item">
+                  <span className="role-lbl">⚾ Bowlers</span>
+                  <b className="role-cap">5 Players</b>
+                </div>
+                <div className="squad-role-item">
+                  <span className="role-lbl">🧤 Keepers</span>
+                  <b className="role-cap">2 Players</b>
+                </div>
+                <div className="squad-role-item">
+                  <span className="role-lbl">⚡ All-Rounders</span>
+                  <b className="role-cap">3 Players</b>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Card 3: Live Bidding System */}
-          <div className="rule-card landing-fade-up delay-3">
+          {/* Card 2: Bidding Increments Table */}
+          <div className="rule-card landing-fade-up delay-2">
             <div className="rule-card-header">
               <Gavel className="rule-icon" size={22} />
-              <h3>Live Bidding Engine</h3>
+              <h3>2. Bidding Increment Ladder</h3>
+            </div>
+            <p className="rule-subtext">Minimum required bid increase per price range:</p>
+            <div className="table-scroll increment-table-wrap">
+              <table className="table rule-table">
+                <thead>
+                  <tr>
+                    <th>Current Bid Range</th>
+                    <th>Min Increase</th>
+                    <th>Example Step</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>₹10 Lakh – ₹50 Lakh</td>
+                    <td><b className="gold-text">₹5 Lakh</b></td>
+                    <td>₹10L → ₹15L → ₹20L</td>
+                  </tr>
+                  <tr>
+                    <td>₹50 Lakh – ₹1 Crore</td>
+                    <td><b className="gold-text">₹10 Lakh</b></td>
+                    <td>₹50L → ₹60L → ₹70L</td>
+                  </tr>
+                  <tr>
+                    <td>₹1 Crore – ₹2 Crore</td>
+                    <td><b className="gold-text">₹25 Lakh</b></td>
+                    <td>₹1.00Cr → ₹1.25Cr</td>
+                  </tr>
+                  <tr>
+                    <td>₹2 Crore – ₹5 Crore</td>
+                    <td><b className="gold-text">₹50 Lakh</b></td>
+                    <td>₹2.00Cr → ₹2.50Cr</td>
+                  </tr>
+                  <tr>
+                    <td>₹5 Crore – ₹10 Crore</td>
+                    <td><b className="gold-text">₹1 Crore</b></td>
+                    <td>₹5Cr → ₹6Cr → ₹7Cr</td>
+                  </tr>
+                  <tr>
+                    <td>₹10 Crore – ₹20 Crore</td>
+                    <td><b className="gold-text">₹2 Crore</b></td>
+                    <td>₹10Cr → ₹12Cr → ₹14Cr</td>
+                  </tr>
+                  <tr>
+                    <td>Above ₹20 Crore</td>
+                    <td><b className="gold-text">₹5 Crore</b></td>
+                    <td>₹20Cr → ₹25Cr → ₹30Cr</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Card 3: Auction Set System & Unsold Round */}
+          <div className="rule-card landing-fade-up delay-3">
+            <div className="rule-card-header">
+              <Layers className="rule-icon" size={22} />
+              <h3>3. Auction Set System & Unsold Rules</h3>
             </div>
             <ul className="rule-list">
-              <li><span>Real-time Sync:</span> <b>WebSocket Digital Paddles</b></li>
-              <li><span>Purse Floor:</span> <b>Automatic Minimum Base Reservation</b></li>
-              <li><span>Live Broadcast:</span> <b>Auditorium Stage Screen Sync</b></li>
-              <li><span>Record Tracking:</span> <b>Instant Contract & Squad Assignment</b></li>
+              <li><span>Category Sets:</span> <b>Rank 1–10, 11–20, 21–30...</b></li>
+              <li><span>Sequential Order:</span> <b>Bat → Bowl → WK → All-Rounders</b></li>
+              <li><span>Unsold Players:</span> <b>Marked Unsold if no bids</b></li>
+              <li><span>Final Unsold Round:</span> <b>Returned for final re-bids</b></li>
             </ul>
+            <div className="rule-note-box">
+              <CheckCircle2 size={16} className="text-turf" />
+              <span>Bidding requires valid purse floor balance, remaining role slots, max 4 foreign cap, and min 2 uncapped slots.</span>
+            </div>
+          </div>
+
+          {/* Card 4: Winner & Tie-Breaker Criteria */}
+          <div className="rule-card landing-fade-up delay-4">
+            <div className="rule-card-header">
+              <Trophy className="rule-icon" size={22} />
+              <h3>4. Winner & Tie-Breaker Criteria</h3>
+            </div>
+            <div className="winner-rule-box">
+              <span className="winner-label">🏆 Overall Champion</span>
+              <p>The team with the <b>highest total ICC T20 ranking points</b> aggregated across its final 15-player squad.</p>
+            </div>
+            <div className="tiebreaker-list">
+              <div className="tb-item">
+                <span className="tb-tag">Tie-Breaker 1</span>
+                <span>Team with the <b>higher remaining purse</b> is declared winner.</span>
+              </div>
+              <div className="tb-item">
+                <span className="tb-tag">Tie-Breaker 2</span>
+                <span>If purse is equal, comparing total <b>ICC ranking points of Batsmen</b>.</span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
