@@ -4,3 +4,5 @@ client/dist/
 .env
 npm-debug.log*
 .DS_Store
+scratch/
+

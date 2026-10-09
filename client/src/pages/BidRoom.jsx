@@ -35,14 +35,18 @@ export default function BidRoom() {
 
   const purse = me ? me.remaining_purse : Number(user?.purse || 0)
   const squad = me ? me.squad_count : Number(user?.squad_count || 0)
-  const maxSquad = me ? me.max_squad_size : Number(user?.max_squad_size || 12)
-  const isLeading = state.highestBidder && state.highestBidder.id === user?.id
+  const maxSquad = me ? me.max_squad_size : Number(user?.max_squad_size || 15)
+  const isLeading = Boolean(state.highestBidder && (state.highestBidder.isYou || String(state.highestBidder.id) === String(user?.id)))
   const full = squad >= maxSquad
+  const isForeign = Boolean(state.player?.country && state.player.country.trim().toLowerCase() !== 'india')
+  const isUncapped = Boolean(state.player?.is_uncapped)
 
   let block = null
   if (me && me.status === 'disabled') block = { icon: <Lock size={18} />, text: 'Your franchise is disabled' }
   else if (full) block = { icon: <Lock size={18} />, text: `Squad full — ${squad} / ${maxSquad}` }
   else if (state.player && me && !canBidForRole(me, state.player.playing_role)) block = { icon: <Lock size={18} />, text: roleBlockMessage(me, state.player.playing_role) }
+  else if (state.player && me && !canBidForeign(me, isForeign)) block = { icon: <Lock size={18} />, text: foreignBlockMessage(me, isForeign) }
+  else if (state.player && me && !canBidUncapped(me, isUncapped, full)) block = { icon: <Lock size={18} />, text: uncappedBlockMessage(me, isUncapped, full) }
   else if (!state.player || state.status === 'Completed' || state.status === 'Pending') block = { icon: <Gavel size={18} />, text: 'Waiting for the next player' }
   else if (state.status === 'Paused') block = { icon: <PauseCircle size={18} />, text: 'Auction paused' }
   else if (state.status === 'Processing') block = { icon: <Gavel size={18} />, text: 'Closing this player' }

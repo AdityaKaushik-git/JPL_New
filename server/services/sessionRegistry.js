@@ -147,12 +147,35 @@ function socketDisconnected(user, token, socketId) {
 }
 
 function isSessionValid(user, token) {
-  if (!user) return false;
+  if (!user || !user.id) return false;
   if (user.role === 'user') {
     const session = userSessions.get(user.id);
-    return Boolean(session && session.token === token);
+    if (session) {
+      return session.token === token;
+    }
+    // Auto-restore session for this valid JWT token if no conflicting session exists
+    userSessions.set(user.id, {
+      token,
+      userId: user.id,
+      socketIds: new Set(),
+      lastSeen: Date.now(),
+      ip: 'auto-restored',
+    });
+    return true;
   } else if (user.role === 'admin') {
-    return adminSessions.has(token);
+    if (!token) return false;
+    if (adminSessions.has(token)) return true;
+    if (adminSessions.size < 2) {
+      adminSessions.set(token, {
+        token,
+        userId: user.id,
+        socketIds: new Set(),
+        lastSeen: Date.now(),
+        ip: 'auto-restored',
+      });
+      return true;
+    }
+    return false;
   }
   return true;
 }

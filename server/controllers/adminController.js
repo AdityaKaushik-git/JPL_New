@@ -542,10 +542,13 @@ exports.verifyStartAuctionOtp = async (req, res) => {
         // 1. Release all sold / in-auction players back to Available
         await connection.query("UPDATE players SET status = 'Available'");
 
-        // 2. Clear all previous auction rosters & history
+        // 2. Clear all previous auction rosters & history safely with FK checks disabled
+        await connection.query("SET FOREIGN_KEY_CHECKS = 0");
         await connection.query("DELETE FROM teams");
         await connection.query("DELETE FROM bids");
+        await connection.query("DELETE FROM auction_results");
         await connection.query("DELETE FROM auctions");
+        await connection.query("SET FOREIGN_KEY_CHECKS = 1");
 
         // 3. Reset all bidder / franchise users to default state & starting purse
         await connection.query(`
@@ -568,7 +571,14 @@ exports.verifyStartAuctionOtp = async (req, res) => {
         );
 
         await connection.commit();
+    } catch (error) {
+        await connection.rollback();
+        return sendError(res, error, 'VERIFY START OTP');
+    } finally {
+        connection.release();
+    }
 
+    try {
         // 5. Trigger ranking recalculation & reset socket engine state
         await recalculateRankings(pool);
         await hub.resetAndStartAuction();
@@ -577,10 +587,7 @@ exports.verifyStartAuctionOtp = async (req, res) => {
             message: 'OTP verified successfully! All bidder balances and rosters have been reset for a brand new auction session.',
         });
     } catch (error) {
-        await connection.rollback();
         sendError(res, error, 'VERIFY START OTP');
-    } finally {
-        connection.release();
     }
 };
 

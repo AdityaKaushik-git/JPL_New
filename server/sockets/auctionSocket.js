@@ -45,7 +45,7 @@ const {
     MIN_UNCAPPED_PLAYERS,
 } = require('../config/auction');
 const { toRupees, formatINR } = require('../utils/money');
-const { publicPlayer, publicFranchise } = require('../services/serializers');
+const { publicPlayer, publicFranchise, logoUrl } = require('../services/serializers');
 const { listFranchises, FRANCHISE_COLUMNS } = require('../services/franchises');
 
 const BID_HISTORY_LIMIT = 30;
@@ -397,7 +397,7 @@ module.exports = (io) => {
             const [users] = await connection.query(
                 `SELECT id, role, status, purse, squad_count, max_squad_size,
                         batsmen_count, bowlers_count, allrounders_count, keepers_count,
-                        foreign_count, uncapped_count, team_name, team_short_name, team_color, logo_url,
+                        foreign_count, uncapped_count, team_name, team_short_name, team_color, logo, updated_at,
                         (SELECT COUNT(*) FROM teams t WHERE t.user_id = users.id) AS roster
                  FROM users WHERE id = ? FOR UPDATE`, [user.id]
             );
@@ -467,7 +467,7 @@ module.exports = (io) => {
                 team_name: f.team_name,
                 short_name: f.team_short_name || 'BID',
                 color: f.team_color || '#C8102E',
-                logo_url: f.logo_url
+                logo_url: logoUrl(f)
             };
             await connection.commit();
         } catch (err) {
@@ -773,10 +773,13 @@ module.exports = (io) => {
         const token = socket.handshake.auth && socket.handshake.auth.token;
         if (token) {
             try {
-                socket.user = verifyToken(token);
-                socket.token = token;
-                sessionRegistry.touchSession(socket.user, token, socket.id);
-                return next();
+                const user = verifyToken(token);
+                if (sessionRegistry.isSessionValid(user, token)) {
+                    socket.user = user;
+                    socket.token = token;
+                    sessionRegistry.touchSession(user, token, socket.id);
+                    return next();
+                }
             } catch (e) {
                 socket.user = { role: 'spectator', id: null };
                 return next();

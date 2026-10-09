@@ -26,7 +26,7 @@ function shapeUser(u) {
         purse: toRupees(u.purse),
         total_spent: toRupees(u.total_spent),
         squad_count: Number(u.squad_count) || 0,
-        max_squad_size: Number(u.max_squad_size) || 12,
+        max_squad_size: Number(u.max_squad_size) || 15,
         status: u.status,
     };
 }
