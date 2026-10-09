@@ -767,74 +767,22 @@ input, select, textarea { font: inherit; }
 
 /* Landing */
 .landing { min-height: 100vh; display: flex; flex-direction: column; }
-.landing-hero { position: relative; overflow: hidden; min-height: 70vh; display: flex; align-items: center; padding: 4rem clamp(1.25rem, 6vw, 6rem); border-bottom: 1px solid var(--line); }
+.landing-hero { position: relative; overflow: hidden; min-height: 75vh; display: flex; align-items: center; padding: 3rem clamp(1.25rem, 6vw, 6rem); border-bottom: 1px solid var(--line); }
 .landing-mark { position: absolute; right: -3vw; bottom: -6vw; font-family: var(--font-display); font-weight: 900; font-size: clamp(14rem, 36vw, 40rem); line-height: .8; color: transparent; -webkit-text-stroke: 2px rgba(244, 233, 216, .08); pointer-events: none; }
-.landing-copy { position: relative; max-width: 44rem; display: flex; flex-direction: column; gap: 1.2rem; z-index: 2; }
-.landing-badge {
-  display: inline-flex; align-items: center; gap: .5rem; padding: .35rem .85rem; border-radius: 999px;
-  background: rgba(244, 233, 216, .08); border: 1px solid rgba(244, 233, 216, .2); color: var(--seam);
-  font-weight: 700; font-size: .82rem; letter-spacing: .08em; text-transform: uppercase; width: fit-content;
-}
-.pulse-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 10px var(--gold); animation: livePulse 1.6s ease-in-out infinite; }
+.landing-copy { position: relative; max-width: 42rem; display: flex; flex-direction: column; gap: 1.2rem; z-index: 2; }
 .landing-kicker { font-weight: 700; color: var(--seam); letter-spacing: .06em; }
 .landing-copy h1 { font-size: clamp(3.2rem, 8vw, 7.5rem); line-height: .88; text-transform: uppercase; font-weight: 900; }
 .landing-lede { font-size: 1.15rem; color: var(--chalk-2); max-width: 36rem; line-height: 1.5; }
 .landing-cta { display: flex; gap: .7rem; flex-wrap: wrap; margin-top: .4rem; }
 .now-playing { display: inline-flex; align-items: center; gap: .5rem; align-self: flex-start; padding: .5rem .9rem; border-radius: 999px; background: var(--leather); color: #fff; font-weight: 600; margin-top: .5rem; }
 
-.landing-stats-bar {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;
-  padding: 2rem clamp(1.25rem, 6vw, 6rem); background: rgba(15, 26, 46, .6); border-bottom: 1px solid var(--line);
-}
-.landing-stat-item { display: flex; align-items: center; gap: 1rem; }
-.stat-icon-wrap {
-  display: grid; place-items: center; width: 46px; height: 46px; border-radius: 12px;
-  background: rgba(237, 239, 244, .06); border: 1px solid var(--line-2); color: var(--gold); flex-shrink: 0;
-}
-.landing-stat-item b { display: block; font-family: var(--font-display); font-size: 1.45rem; font-weight: 800; color: #fff; line-height: 1.1; }
-.landing-stat-item span { font-size: .82rem; color: var(--chalk-3); }
-
-.landing-section { padding: 3.5rem clamp(1.25rem, 6vw, 6rem); border-bottom: 1px solid var(--line); }
-.landing-section-alt { background: rgba(10, 18, 32, .5); }
-.landing-section-head { margin-bottom: 2.2rem; }
-.landing-section-head h2 { font-family: var(--font-display); font-size: clamp(2rem, 3.8vw, 3rem); font-weight: 800; text-transform: uppercase; margin-top: .2rem; }
-
-.landing-franchise-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.2rem; }
-.landing-franchise-card {
-  --team: var(--chalk-3); display: flex; align-items: center; gap: 1rem; padding: 1.1rem 1.3rem; border-radius: var(--r-lg);
-  background: linear-gradient(145deg, color-mix(in srgb, var(--team) 16%, var(--night-3)), var(--night-2) 75%);
-  border: 1px solid var(--line); border-left: 4px solid var(--team); transition: transform .2s var(--ease), border-color .2s;
-}
-.landing-franchise-card:hover { transform: translateY(-2px); border-color: var(--line-2); }
-.landing-franchise-info { flex: 1; min-width: 0; }
-.landing-franchise-info h3 { font-family: var(--font-display); font-size: 1.35rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.landing-franchise-meta { display: flex; flex-direction: column; align-items: flex-end; gap: .2rem; font-size: .82rem; }
-.gold-text { font-family: var(--font-display); font-weight: 800; color: var(--gold); font-size: 1.1rem; }
-.squad-tag { color: var(--chalk-3); font-size: .78rem; }
-
-.landing-steps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem; }
-.landing-step-card {
-  position: relative; padding: 1.8rem 1.5rem; border-radius: var(--r-lg); background: var(--night-2);
-  border: 1px solid var(--line); display: flex; flex-direction: column; gap: .8rem; transition: transform .2s var(--ease);
-}
-.landing-step-card:hover { transform: translateY(-3px); border-color: var(--line-2); }
-.step-num { position: absolute; top: 1rem; right: 1.2rem; font-family: var(--font-display); font-weight: 900; font-size: 2.2rem; color: rgba(237, 239, 244, .08); }
-.step-icon { color: var(--leather-2); }
-.landing-step-card h3 { font-family: var(--font-display); font-size: 1.4rem; font-weight: 800; }
-.landing-step-card p { color: var(--chalk-2); font-size: .92rem; line-height: 1.5; }
-
-.landing-features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.2rem; }
-.feature-card { display: flex; gap: .9rem; padding: 1.2rem; border-radius: var(--r); background: rgba(237, 239, 244, .025); border: 1px solid var(--line); }
-.feature-icon { color: var(--turf); flex-shrink: 0; margin-top: .15rem; }
-.feature-card h4 { font-family: var(--font-display); font-size: 1.15rem; font-weight: 800; margin-bottom: .25rem; }
-.feature-card p { font-size: .86rem; color: var(--chalk-3); line-height: 1.45; }
-
 .landing-links { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: var(--line); }
-.landing-link { display: flex; flex-direction: column; gap: .4rem; padding: 2rem clamp(1.25rem, 3vw, 3rem); background: var(--night); }
+.landing-link { display: flex; flex-direction: column; gap: .4rem; padding: 2.2rem clamp(1.25rem, 3vw, 3rem); background: var(--night); transition: background .2s; }
 .landing-link:hover { background: var(--night-2); }
 .landing-link b { font-family: var(--font-display); font-size: 1.7rem; font-weight: 800; }
 .landing-link span { color: var(--chalk-3); }
 .landing-link svg { color: var(--leather-2); }
+
 .landing-foot { margin-top: auto; padding: 1.8rem 1.5rem; text-align: center; border-top: 1px solid var(--line); background: var(--night-2); }
 .landing-foot-inner { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; max-width: 1200px; margin: 0 auto; }
 .landing-foot-brand { font-size: .9rem; color: var(--chalk-3); }
