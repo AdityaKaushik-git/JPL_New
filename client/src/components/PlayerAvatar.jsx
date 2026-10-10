@@ -32,7 +32,7 @@ export default function PlayerAvatar({ player, size = 'md', className = '' }) {
   const { outer, fontSize } = SIZES[size] || SIZES.md
   const role   = roleMeta(player.playing_role)
   const accent = player.team?.color || ROLE_COLORS[role.key] || '#f2c14e'
-  const photoUrl = player.image_url || player.image
+  const photoUrl = player.image_url || player.image || (player.id ? `/api/players/${player.id}/photo` : null)
 
   return (
     <span
@@ -63,6 +63,7 @@ export default function PlayerAvatar({ player, size = 'md', className = '' }) {
         <img
           src={photoUrl}
           alt={player.name}
+          referrerPolicy="no-referrer"
           onError={() => setImgError(true)}
           style={{
             width: '100%',

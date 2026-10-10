@@ -114,3 +114,49 @@ exports.getPlayerById = async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 };
+
+exports.getPlayerPhoto = async (req, res) => {
+    try {
+        const id = Number(req.params.id);
+        if (!Number.isInteger(id) || id <= 0) return res.status(400).send('Invalid player ID');
+
+        const [players] = await pool.query('SELECT name, image_url FROM players WHERE id = ?', [id]);
+        if (!players.length) return res.status(404).send('Player not found');
+
+        const p = players[0];
+        let photoUrl = p.image_url;
+
+        if (!photoUrl) {
+            photoUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&size=500&background=1a1f2e&color=f2c14e&bold=true`;
+        }
+
+        try {
+            const resp = await fetch(photoUrl, {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+                    'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8'
+                }
+            });
+
+            if (resp.ok) {
+                const contentType = resp.headers.get('content-type') || 'image/jpeg';
+                const buffer = Buffer.from(await resp.arrayBuffer());
+                res.setHeader('Content-Type', contentType);
+                res.setHeader('Cache-Control', 'public, max-age=86400');
+                return res.send(buffer);
+            }
+        } catch (err) {
+            console.error(`Error proxying photo for player ${id}:`, err.message);
+        }
+
+        // Fallback to UI Avatars
+        const fallbackResp = await fetch(`https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&size=500&background=1a1f2e&color=f2c14e&bold=true`);
+        const fallbackBuffer = Buffer.from(await fallbackResp.arrayBuffer());
+        res.setHeader('Content-Type', 'image/png');
+        res.setHeader('Cache-Control', 'public, max-age=86400');
+        return res.send(fallbackBuffer);
+    } catch (error) {
+        console.error('GET PLAYER PHOTO PROXY ERROR:', error.message);
+        res.status(500).send('Server error');
+    }
+};

@@ -26,11 +26,12 @@ function publicPlayer(p, extra = {}) {
         bowling_style: p.bowling_style || null,
         course: p.course,
         year: p.year,
-        // Country & image (new fields — safe if columns don't exist yet)
+        // Country & image (proxied via /api/players/:id/photo for reliable 100% loading)
         country: p.country || null,
         country_code: p.country_code || null,
         is_uncapped: p.is_uncapped !== undefined ? Boolean(Number(p.is_uncapped)) : false,
-        image_url: p.image_url || null,
+        image_url: p.id ? `/api/players/${p.id}/photo` : (p.image_url || null),
+        raw_image_url: p.image_url || null,
         image_source: p.image_source || null,
         base_price_auto: p.base_price_auto !== undefined ? Boolean(Number(p.base_price_auto)) : true,
         base_price: toRupees(p.base_price),
