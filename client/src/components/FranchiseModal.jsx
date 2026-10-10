@@ -34,7 +34,7 @@ export default function FranchiseModal({ franchiseId, onClose }) {
         <ErrorState error={error} />
       ) : (
         <div className="franchise-modal-content">
-          {// Header}
+          {/* Header*/}
           <div className="fmodal-head" style={{ '--accent': f.color || 'var(--night-4)' }}>
             <div className="fmodal-cell">
               <TeamMark team={f} size={64} />
@@ -53,7 +53,7 @@ export default function FranchiseModal({ franchiseId, onClose }) {
             </div>
           </div>
 
-          {// Quick Stats Grid}
+          {/* Quick Stats Grid*/}
           <div className="fmodal-stats-grid">
             <div className="fmodal-stat">
               <span className="muted" style={{ fontSize: '.8rem' }}>Remaining Purse</span>
@@ -77,13 +77,13 @@ export default function FranchiseModal({ franchiseId, onClose }) {
             </div>
           </div>
 
-          {// Squad Composition Slots}
+          {/* Squad Composition Slots*/}
           <div className="fmodal-section">
             <h4 className="fmodal-section-title">Squad Composition Requirements</h4>
             <RoleSlots franchise={f} />
           </div>
 
-          {// Roster Display}
+          {/* Roster Display*/}
           <div className="fmodal-section">
             <h4 className="fmodal-section-title">Purchased Squad Roster ({squad.length})</h4>
             {!squad.length ? (

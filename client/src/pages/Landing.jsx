@@ -14,7 +14,7 @@ export default function Landing() {
 
   return (
     <div className="landing">
-      {// Hero Section}
+      {/* Hero Section*/}
       <section className="landing-hero">
         <PitchBackdrop className="hero-pitch" />
         <div className="hero-glow-orb orb-1" />
@@ -49,7 +49,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {// Event Details Bar}
+      {/* Event Details Bar*/}
       <section className="landing-event-bar">
         <div className="event-detail-card landing-fade-up delay-1">
           <Calendar className="event-icon" size={24} />
@@ -81,7 +81,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {// Official Rules & Guidelines Section}
+      {/* Official Rules & Guidelines Section*/}
       <section className="landing-rules-section">
         <div className="landing-rules-head">
           <span className="label">Official Tournament Regulations</span>
@@ -90,7 +90,7 @@ export default function Landing() {
         </div>
 
         <div className="rules-grid">
-          {// Card 1: Team Purse & Squad Checklist}
+          {/* Card 1: Team Purse & Squad Checklist*/}
           <div className="rule-card rule-card-highlight landing-fade-up delay-1">
             <div className="rule-card-header">
               <Coins className="rule-icon" size={22} />
@@ -126,7 +126,7 @@ export default function Landing() {
             </div>
           </div>
 
-          {// Card 2: Bidding Increments Table}
+          {/* Card 2: Bidding Increments Table*/}
           <div className="rule-card landing-fade-up delay-2">
             <div className="rule-card-header">
               <Gavel className="rule-icon" size={22} />
@@ -183,7 +183,7 @@ export default function Landing() {
             </div>
           </div>
 
-          {// Card 3: Auction Set System & Unsold Round}
+          {/* Card 3: Auction Set System & Unsold Round*/}
           <div className="rule-card landing-fade-up delay-3">
             <div className="rule-card-header">
               <Layers className="rule-icon" size={22} />
@@ -201,7 +201,7 @@ export default function Landing() {
             </div>
           </div>
 
-          {// Card 4: Winner & Tie-Breaker Criteria}
+          {/* Card 4: Winner & Tie-Breaker Criteria*/}
           <div className="rule-card landing-fade-up delay-4">
             <div className="rule-card-header">
               <Trophy className="rule-icon" size={22} />
@@ -225,7 +225,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {// Direct Quick Links}
+      {/* Direct Quick Links*/}
       <section className="landing-links">
         <Link to="/live" className="landing-link landing-fade-up delay-1">
           <Radio size={24} />
@@ -239,7 +239,7 @@ export default function Landing() {
         </Link>
       </section>
 
-      {// Footer with Creator Credits}
+      {/* Footer with Creator Credits*/}
       <footer className="landing-foot">
         <div className="landing-foot-inner">
           <span className="landing-foot-brand">
