@@ -443,13 +443,13 @@ module.exports = (io) => {
 
             // Uncapped minimum requirement lookahead
             const uncappedNow = Number(f.uncapped_count || 0);
-            const playerUncapped = activeAuction.player && Boolean(activeAuction.player.is_uncapped);
+            const playerUncapped = activeAuction.player && Boolean(activeAuction.player.is_uncapped) && activeAuction.player.country && activeAuction.player.country.trim().toLowerCase() === 'india';
             if (!playerUncapped && uncappedNow < MIN_UNCAPPED_PLAYERS) {
                 const uncappedNeeded = MIN_UNCAPPED_PLAYERS - uncappedNow;
                 const remainingSlotsAfterThis = Number(f.max_squad_size) - (squad + 1);
                 if (remainingSlotsAfterThis < uncappedNeeded) {
                     throw new AuctionError(
-                        `UNCAPPED REQUIREMENT — you need at least ${MIN_UNCAPPED_PLAYERS} uncapped players. You must buy ${uncappedNeeded} more uncapped player(s) with your remaining ${Number(f.max_squad_size) - squad} slot(s).`
+                        `UNCAPPED REQUIREMENT — you need at least ${MIN_UNCAPPED_PLAYERS} Uncapped Indian players. You must buy ${uncappedNeeded} more Uncapped Indian player(s) with your remaining ${Number(f.max_squad_size) - squad} slot(s).`
                     );
                 }
             }
@@ -565,7 +565,7 @@ module.exports = (io) => {
 
             const isForeign = activeAuction.player && activeAuction.player.country &&
                 activeAuction.player.country.trim().toLowerCase() !== 'india';
-            const isUncapped = activeAuction.player && Boolean(activeAuction.player.is_uncapped);
+            const isUncapped = activeAuction.player && Boolean(activeAuction.player.is_uncapped) && activeAuction.player.country && activeAuction.player.country.trim().toLowerCase() === 'india';
 
             // If foreign player and foreign_count >= 2, fill Batsman slot space
             let roleCol = roleCountColumn(playerRole);

@@ -13,7 +13,7 @@ const SLOTS = [
 
 const INFO_SLOTS = [
   { key: 'foreign_count',  max: 4, label: 'Foreign', short: 'FOR', title: 'Overseas players (max 4)' },
-  { key: 'uncapped_count', max: 2, label: 'Uncapped', short: 'UNC', title: 'Uncapped players (min 2)', isMin: true },
+  { key: 'uncapped_count', max: 2, label: 'Uncapped Indian', short: 'UNC', title: 'Uncapped Indian players (min 2)', isMin: true },
 ]
 
 export default function RoleSlots({ franchise, currentRole = null, compact = false }) {
@@ -119,7 +119,7 @@ export function uncappedBlockMessage(franchise, isUncapped, squadFull) {
   if (!franchise || isUncapped) return null
   if (!canBidUncapped(franchise, isUncapped, squadFull)) {
     const needed = 2 - Number(franchise.uncapped_count || 0)
-    return `UNCAPPED REQUIRED — need ${needed} more uncapped player(s)`
+    return `UNCAPPED INDIAN REQUIRED — need ${needed} more Uncapped Indian player(s)`
   }
   return null
 }

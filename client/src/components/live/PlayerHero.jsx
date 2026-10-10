@@ -18,7 +18,7 @@ export default function PlayerHero({ player, lot, accent, compact = false }) {
   const isNew = player.current_rank === null || (player.previous_rank === null && form === 0)
   const number = lot ? lot.position : player.auction_order
   const isForeign = player.country && player.country.trim().toLowerCase() !== 'india'
-  const photoUrl = player.id ? `/api/players/${player.id}/photo` : (player.image_url || player.image)
+  const photoUrl = player.id ? `/api/players/${player.id}/photo?v=2` : (player.image_url || player.image)
 
   return (
     <section className={`hero${compact ? ' hero-compact' : ''}`} style={accent ? { '--accent': accent } : undefined} aria-label={`Now on the block: ${player.name}`}>

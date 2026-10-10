@@ -34,7 +34,7 @@ export default function BidRoom() {
   const isLeading = Boolean(state.highestBidder && (state.highestBidder.isYou || String(state.highestBidder.id) === String(user?.id)))
   const full = squad >= maxSquad
   const isForeign = Boolean(state.player?.country && state.player.country.trim().toLowerCase() !== 'india')
-  const isUncapped = Boolean(state.player?.is_uncapped)
+  const isUncapped = Boolean(state.player?.is_uncapped) && state.player?.country && state.player.country.trim().toLowerCase() === 'india'
 
   const isOptedOut = Boolean(state.isOptedOut)
 
