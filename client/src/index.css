@@ -596,7 +596,7 @@ input, select, textarea { font: inherit; }
 
 /* Owner bid dock */
 .bid-dock {
-  display: grid; grid-template-columns: auto auto minmax(0, 1fr) auto auto; align-items: center; gap: 1.2rem;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem;
   padding: .7rem .9rem; border-radius: 18px; background: var(--night-3); border: 1px solid var(--line-2);
   position: relative;
 }
@@ -999,6 +999,25 @@ input, select, textarea { font: inherit; }
 .empty p { max-width: 42ch; }
 .empty-icon { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; background: rgba(237, 239, 244, .05); color: var(--chalk-2); }
 
+/* ---------- Role Slots ---------- */
+.role-slots { display: flex; flex-wrap: wrap; gap: .4rem; }
+.role-slots-compact { gap: .25rem; }
+.role-slot {
+  display: inline-flex; align-items: center; gap: .35rem; padding: .3rem .6rem;
+  border-radius: var(--r-sm); background: rgba(10, 18, 32, .4); border: 1px solid var(--line);
+  font-size: .85rem; color: var(--chalk-2);
+}
+.role-slot.is-full { border-color: rgba(229, 72, 77, .3); background: rgba(229, 72, 77, .08); color: var(--danger); }
+.role-slot.is-current { border-color: var(--leather); background: rgba(200, 16, 46, .1); color: #fff; }
+.role-slot-label { font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
+.role-slot-count { font-family: var(--font-display); font-weight: 800; font-size: 1.1rem; margin-left: .2rem; }
+.role-slot-max { font-size: .75rem; color: var(--chalk-3); margin-left: .1rem; }
+.role-slot-full-badge { font-size: .65rem; font-weight: 800; letter-spacing: .1em; background: var(--danger); color: #fff; padding: .1rem .3rem; border-radius: 3px; margin-left: .3rem; }
+.role-slot-info { background: rgba(242, 193, 78, .05); border-color: rgba(242, 193, 78, .2); color: var(--gold); }
+.role-slot-info.is-warn { border-color: rgba(229, 72, 77, .4); background: rgba(229, 72, 77, .12); color: var(--danger); }
+.role-slot-info.is-full { border-color: rgba(10, 18, 32, .5); background: rgba(10, 18, 32, .8); color: var(--chalk-3); }
+
+
 /* ==========================================================================
    Responsive
    ========================================================================== */
@@ -1059,8 +1078,9 @@ input, select, textarea { font: inherit; }
   .hero-stats .stat-tile:nth-child(n+5) { display: none; }
   .hero-watermark { font-size: 70vw; }
   .team-chip { flex-basis: 150px; }
-  .bid-dock { grid-template-columns: 1fr 1fr; gap: .6rem; }
-  .bid-dock .bid-button, .bid-dock .role-slots, .bid-dock .not-interested-toggle, .bid-dock .not-interested-btn { grid-column: 1 / -1; height: auto; }
+  .bid-dock { flex-direction: column; align-items: stretch; gap: .8rem; }
+  .bid-dock-stat { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line-2); padding-bottom: 0.5rem; }
+  .bid-dock .bid-button, .bid-dock .role-slots, .bid-dock .not-interested-btn { width: 100%; }
   .bid-dock .bid-button { height: 58px; }
   .bid-dock-hint { display: none; }
   .form-row, .form-row-3, .form-row-4 { grid-template-columns: 1fr; }
