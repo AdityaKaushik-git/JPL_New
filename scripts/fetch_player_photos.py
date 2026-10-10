@@ -55,32 +55,8 @@ def search_wikimedia_cricketer(name):
         pass
     return None, None
 
-def search_bing_cricket_photo(name):
-    try:
-        query = f'"{name}" cricket player headshot'
-        url = f"https://www.bing.com/images/search?q={quote(query)}"
-        res = requests.get(url, headers=headers, timeout=2.5)
-        murls = re.findall(r'murl&quot;:&quot;(https?://[^&]+\.(?:jpg|png|jpeg|webp))&quot;', res.text, re.IGNORECASE)
-        
-        for u in murls:
-            u_lower = u.lower()
-            if any(dom in u_lower for dom in CRICKET_DOMAINS):
-                if not any(bad in u_lower for bad in BAD_KEYWORDS):
-                    return u, "Cricket Site"
-                    
-        for u in murls:
-            u_lower = u.lower()
-            if any(good in u_lower for good in ['cricket', 'player', 'headshot', 'profile', 'ipl', 'getty', 'sport']):
-                if not any(bad in u_lower for bad in BAD_KEYWORDS):
-                    return u, "Cricket Search"
-    except Exception:
-        pass
-    return None, None
-
 def fetch_photo_for_player(name):
     url, src = search_wikimedia_cricketer(name)
-    if not url:
-        url, src = search_bing_cricket_photo(name)
     if not url:
         url = f"https://ui-avatars.com/api/?name={quote(name)}&size=500&background=1a1f2e&color=f2c14e&bold=true"
         src = "UI Avatars"

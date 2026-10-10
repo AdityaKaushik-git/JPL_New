@@ -596,7 +596,7 @@ input, select, textarea { font: inherit; }
 
 /* Owner bid dock */
 .bid-dock {
-  display: grid; grid-template-columns: auto auto minmax(0, 1fr); align-items: center; gap: 1.2rem;
+  display: grid; grid-template-columns: auto auto minmax(0, 1fr) auto auto; align-items: center; gap: 1.2rem;
   padding: .7rem .9rem; border-radius: 18px; background: var(--night-3); border: 1px solid var(--line-2);
   position: relative;
 }
@@ -1060,7 +1060,7 @@ input, select, textarea { font: inherit; }
   .hero-watermark { font-size: 70vw; }
   .team-chip { flex-basis: 150px; }
   .bid-dock { grid-template-columns: 1fr 1fr; gap: .6rem; }
-  .bid-dock .bid-button, .bid-dock .role-slots, .bid-dock .not-interested-toggle { grid-column: 1 / -1; height: auto; }
+  .bid-dock .bid-button, .bid-dock .role-slots, .bid-dock .not-interested-toggle, .bid-dock .not-interested-btn { grid-column: 1 / -1; height: auto; }
   .bid-dock .bid-button { height: 58px; }
   .bid-dock-hint { display: none; }
   .form-row, .form-row-3, .form-row-4 { grid-template-columns: 1fr; }

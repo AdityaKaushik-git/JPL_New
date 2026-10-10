@@ -21,11 +21,6 @@ export default function BidRoom() {
   const { state, teams, emit } = socket
 
   const me = useMemo(() => teams.find(t => t.id === user?.id) || null, [teams, user])
-  const [notInterested, setNotInterested] = useState(false)
-
-  useEffect(() => {
-    setNotInterested(false)
-  }, [state.player?.id])
 
   useEffect(() => {
     if (me && user && (me.remaining_purse !== user.purse || me.squad_count !== user.squad_count)) {
@@ -41,6 +36,8 @@ export default function BidRoom() {
   const isForeign = Boolean(state.player?.country && state.player.country.trim().toLowerCase() !== 'india')
   const isUncapped = Boolean(state.player?.is_uncapped)
 
+  const isOptedOut = Boolean(state.isOptedOut)
+
   let block = null
   if (me && me.status === 'disabled') block = { icon: <Lock size={18} />, text: 'Your franchise is disabled' }
   else if (full) block = { icon: <Lock size={18} />, text: `Squad full — ${squad} / ${maxSquad}` }
@@ -53,10 +50,10 @@ export default function BidRoom() {
   else if (state.timeLeft <= 0) block = { icon: <Gavel size={18} />, text: 'Time is up' }
   else if (isLeading) block = { icon: <Trophy size={18} />, text: 'You hold the highest bid', tone: 'lead' }
   else if (purse < state.nextBid) block = { icon: <Wallet size={18} />, text: `Not enough purse for ${formatINR(state.nextBid)}` }
-  else if (notInterested) block = { icon: <Ban size={18} />, text: 'Not Interested' }
+  else if (isOptedOut) block = { icon: <Ban size={18} />, text: 'Not Interested' }
 
   function placeBid() {
-    if (block || notInterested || !state.auctionId) return
+    if (block || isOptedOut || !state.auctionId) return
     emit('user:placeBid', { auctionId: state.auctionId, amount: state.nextBid })
   }
 
@@ -80,31 +77,29 @@ export default function BidRoom() {
       </div>
       <RoleSlots franchise={me} currentRole={state.player?.playing_role} compact={true} />
       
-      <label className="not-interested-toggle" style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '8px',
-        margin: '4px 0 8px',
-        cursor: 'pointer',
-        userSelect: 'none',
-        fontSize: '0.88rem',
-        fontWeight: 600,
-        color: notInterested ? 'var(--danger)' : 'var(--chalk-2)',
-        padding: '6px 12px',
-        borderRadius: '8px',
-        background: notInterested ? 'rgba(229, 72, 77, 0.14)' : 'rgba(237, 239, 244, 0.04)',
-        border: notInterested ? '1px solid rgba(229, 72, 77, 0.4)' : '1px solid var(--line)',
-        transition: 'all 0.15s ease'
-      }}>
-        <input
-          type="checkbox"
-          checked={notInterested}
-          onChange={(e) => setNotInterested(e.target.checked)}
-          style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: 'var(--danger)' }}
-        />
-        <span>Not Interested in this Player</span>
-      </label>
+      <button 
+        className="not-interested-btn"
+        onClick={() => emit('user:optOut')}
+        disabled={isOptedOut || !state.player || state.status !== 'Live'}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '8px',
+          cursor: isOptedOut ? 'not-allowed' : 'pointer',
+          userSelect: 'none',
+          fontSize: '0.88rem',
+          fontWeight: 600,
+          color: isOptedOut ? 'var(--danger)' : 'var(--chalk-2)',
+          padding: '8px 16px',
+          borderRadius: '8px',
+          background: isOptedOut ? 'rgba(229, 72, 77, 0.14)' : 'rgba(237, 239, 244, 0.04)',
+          border: isOptedOut ? '1px solid rgba(229, 72, 77, 0.4)' : '1px solid var(--line)',
+          transition: 'all 0.15s ease'
+        }}>
+        <Ban size={16} />
+        <span>{isOptedOut ? 'Opted Out' : 'Not Interested'}</span>
+      </button>
 
       <button className={`bid-button${block ? ' is-blocked' : ''}${block && block.tone === 'lead' ? ' is-lead' : ''}`}
         onClick={placeBid} disabled={Boolean(block)} aria-describedby="bid-hint">

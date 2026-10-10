@@ -18,7 +18,7 @@ export default function PlayerHero({ player, lot, accent, compact = false }) {
   const isNew = player.current_rank === null || (player.previous_rank === null && form === 0)
   const number = lot ? lot.position : player.auction_order
   const isForeign = player.country && player.country.trim().toLowerCase() !== 'india'
-  const photoUrl = player.image_url || player.image || (player.id ? `/api/players/${player.id}/photo` : null)
+  const photoUrl = player.id ? `/api/players/${player.id}/photo` : (player.image_url || player.image)
 
   return (
     <section className={`hero${compact ? ' hero-compact' : ''}`} style={accent ? { '--accent': accent } : undefined} aria-label={`Now on the block: ${player.name}`}>
@@ -27,10 +27,10 @@ export default function PlayerHero({ player, lot, accent, compact = false }) {
       {photoUrl && !imgError ? (
         <div className="hero-photo-container seq seq-2" style={{
           position: 'absolute',
-          right: '3rem',
-          top: '2rem',
-          width: compact ? '6rem' : '10rem',
-          height: compact ? '6rem' : '10rem',
+          right: compact ? '1.5rem' : '3rem',
+          top: compact ? '1rem' : '2rem',
+          width: compact ? '5rem' : 'min(25vw, 12rem)',
+          aspectRatio: '1/1',
           borderRadius: '50%',
           border: '3px solid var(--accent, var(--gold))',
           boxShadow: '0 0 25px rgba(242, 193, 78, 0.3)',

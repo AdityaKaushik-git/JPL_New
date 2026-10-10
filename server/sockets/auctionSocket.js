@@ -103,6 +103,7 @@ function emptyAuction() {
         bidCount: 0,
         result: null, // { type: 'SOLD'|'UNSOLD', ... }
         timerInterval: null,
+        optOuts: new Set(),
     };
 }
 
@@ -215,6 +216,7 @@ module.exports = (io) => {
             nextBid: a.status === 'Completed' ? 0 : nextBid(),
             increment: getIncrement(a.currentBid),
             result: sanitizedResult,
+            isOptedOut: Boolean(a.optOuts && a.optOuts.has(userId)),
             serverTime: Date.now(),
         };
     }
@@ -371,6 +373,9 @@ module.exports = (io) => {
         if (activeAuction.timeLeft <= 0) throw new AuctionError('Time is up for this player.', 'warning');
         if (activeAuction.highestBidder && activeAuction.highestBidder.id === user.id) {
             throw new AuctionError('You already hold the highest bid.', 'warning');
+        }
+        if (activeAuction.optOuts && activeAuction.optOuts.has(user.id)) {
+            throw new AuctionError('You have opted out of this round.', 'warning');
         }
 
         // Determine server's required next bid
@@ -798,6 +803,15 @@ module.exports = (io) => {
         socket.on('user:join', () => sendSnapshot(socket));
 
         guard(socket, 'user:placeBid', false, (data) => placeBid(socket, data));
+
+        guard(socket, 'user:optOut', false, () => {
+            if (activeAuction.status === 'Live' && socket.user && socket.user.role === 'user') {
+                if (activeAuction.optOuts) {
+                    activeAuction.optOuts.add(socket.user.id);
+                    socket.emit('auction:stateUpdate', getSanitizedState(socket.user));
+                }
+            }
+        });
 
         guard(socket, 'admin:startPlayer', true, async ({ playerId }) => {
             const id = Number(playerId);
