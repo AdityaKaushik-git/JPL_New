@@ -14,7 +14,7 @@ const NUM_KEYS = NUM.flatMap(([, f]) => f.map(([k]) => k))
 
 export const EMPTY_PLAYER = {
   name: '', enrollment_number: '', playing_role: 'Batsman', batting_style: '', bowling_style: '', course: '', year: '',
-  base_price: 500000, auction_order: '', highest_score: '', best_bowling: '', country: '', is_uncapped: false,
+  base_price: 500000, auction_order: '', highest_score: '', best_bowling: '', country: '', is_uncapped: false, image_url: '',
   ...Object.fromEntries(NUM_KEYS.map(k => [k, 0])),
 }
 
@@ -67,7 +67,7 @@ export default function PlayerEditor({ player, onSaved, onCancel, notify }) {
         <Field label="Batting style"><input value={form.batting_style || ''} onChange={set('batting_style')} placeholder="Right-hand bat" /></Field>
         <Field label="Bowling style"><input value={form.bowling_style || ''} onChange={set('bowling_style')} placeholder="Right-arm fast" /></Field>
         <Field label="Country"><input value={form.country || ''} onChange={set('country')} placeholder="India" /></Field>
-        <Field label="Course / year"><div className="split"><input value={form.course || ''} onChange={set('course')} placeholder="BCA" /><input value={form.year || ''} onChange={set('year')} placeholder="3rd" /></div></Field>
+        <Field label="Photo URL"><input value={form.image_url || ''} onChange={set('image_url')} placeholder="https://..." /></Field>
       </div>
 
       {NUM.map(([group, fields]) => (

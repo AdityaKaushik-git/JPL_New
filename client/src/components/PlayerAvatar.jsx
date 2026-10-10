@@ -1,11 +1,12 @@
 /**
- * PlayerAvatar — displays a player''s monogram tile with role colour accent.
+ * PlayerAvatar — displays a player's photo or monogram tile with role colour accent.
  *
  * Props:
- *   player    - player object with at least { name, initials, playing_role, team? }
+ *   player    - player object with at least { name, initials, playing_role, team?, image_url? }
  *   size      - "sm" | "md" | "lg" | "hero"  (default "md")
  *   className - extra CSS class
  */
+import { useState } from 'react'
 import Initials from './Initials'
 import { roleMeta } from '../lib/format'
 
@@ -27,9 +28,11 @@ const ROLE_COLORS = {
 
 export default function PlayerAvatar({ player, size = 'md', className = '' }) {
   if (!player) return null
+  const [imgError, setImgError] = useState(false)
   const { outer, fontSize } = SIZES[size] || SIZES.md
   const role   = roleMeta(player.playing_role)
   const accent = player.team?.color || ROLE_COLORS[role.key] || '#f2c14e'
+  const photoUrl = player.image_url || player.image
 
   return (
     <span
@@ -50,15 +53,31 @@ export default function PlayerAvatar({ player, size = 'md', className = '' }) {
         letterSpacing:  '-0.02em',
         color:          '#fff',
         userSelect:     'none',
+        overflow:       'hidden',
+        position:       'relative',
       }}
       aria-label={player.name}
       title={player.name}
     >
-      <Initials
-        name={player.name}
-        initials={player.initials}
-        size={size}
-      />
+      {photoUrl && !imgError ? (
+        <img
+          src={photoUrl}
+          alt={player.name}
+          onError={() => setImgError(true)}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            borderRadius: '50%',
+          }}
+        />
+      ) : (
+        <Initials
+          name={player.name}
+          initials={player.initials}
+          size={size}
+        />
+      )}
     </span>
   )
 }

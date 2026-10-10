@@ -1,10 +1,9 @@
 import { Link } from 'react-router-dom'
-import Initials from './Initials'
+import PlayerAvatar from './PlayerAvatar'
 import RoleIcon from './RoleIcon'
 import RankBadge from './RankBadge'
 import { formatINR, roleMeta } from '../lib/format'
 
-/** Squad card — no photograph; the initials are the portrait. */
 export default function PlayerCard({ player, accent, priceLabel = 'Purchased', price }) {
   const role = roleMeta(player.playing_role)
   const isForeign = player.country && player.country.trim().toLowerCase() !== 'india'
@@ -12,7 +11,7 @@ export default function PlayerCard({ player, accent, priceLabel = 'Purchased', p
     <Link to={`/players/${player.id}`} className="player-card" style={accent ? { '--accent': accent } : undefined}>
       <span className="player-card-mono" aria-hidden="true">{player.initials}</span>
       <div className="player-card-top">
-        <Initials initials={player.initials} size="lg" accent={accent} />
+        <PlayerAvatar player={player} size="lg" />
         <RankBadge rank={player.current_rank} size="sm" />
       </div>
       <h3 className="player-card-name">
