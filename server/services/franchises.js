@@ -1,8 +1,4 @@
-/**
- * Franchise (team owner) accounts.
- * Franchises are stored in `users` with role = 'user'. Only the admin creates them,
- * and the purse / squad limits are always assigned here — never taken from input.
- */
+// Franchise (team owner) accounts.
 const bcrypt = require('bcrypt');
 const { publicFranchise } = require('./serializers');
 const { STARTING_PURSE, MAX_SQUAD_SIZE } = require('../config/auction');
@@ -43,7 +39,7 @@ function validateLogo(logo) {
     return { value: s };
 }
 
-/** Validates admin input for a new franchise. Returns { values, errors }. */
+// Validates admin input for a new franchise.
 function validateFranchiseInput(body, { requirePassword = true } = {}) {
     body = body || {};
     const errors = {};
@@ -102,10 +98,7 @@ async function getFranchise(db, id) {
     return rows.length ? publicFranchise(rows[0]) : null;
 }
 
-/**
- * Creates a franchise. Starting purse (₹50 Cr), remaining purse, spend, squad count and
- * squad limit are fixed by the server. Throws { status, message, errors }.
- */
+// Creates a franchise.
 async function createFranchise(db, body) {
     const { values, errors } = validateFranchiseInput(body, { requirePassword: true });
     if (Object.keys(errors).length) {

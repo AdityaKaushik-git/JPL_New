@@ -3,12 +3,7 @@ import { Trophy, Award, Medal, Crown, Sparkles } from 'lucide-react'
 import TeamMark from '../TeamMark'
 import { formatINR, formatShort } from '../../lib/format'
 
-/**
- * Broadcast-quality animated Live Rankings & Final Standings View.
- * Displays the podium for top 3 teams and a full animated leaderboard.
- * Perfectly scaled for mobile, tablet, laptop, and desktop viewports.
- * No emojis — clean SVG icons & typography.
- */
+// Broadcast-quality animated Live Rankings & Final Standings View.
 export default function LiveRankingsView({ teams = [], onSelectTeam }) {
   // Sort active teams according to official tie-breaker rules:
   // 1. Total ICC Ranking Points (descending)
@@ -46,10 +41,10 @@ export default function LiveRankingsView({ teams = [], onSelectTeam }) {
 
   return (
     <div className="live-rankings-wrapper">
-      {/* Background ambient animation glow */}
+      {// Background ambient animation glow}
       <div className="rankings-ambient-glow" />
 
-      {/* Header Title Banner */}
+      {// Header Title Banner}
       <div className="rankings-hero-head">
         <div className="rankings-title-badge">
           <Sparkles size={14} className="sparkle-icon" />
@@ -65,10 +60,10 @@ export default function LiveRankingsView({ teams = [], onSelectTeam }) {
         </p>
       </div>
 
-      {/* Podium Showcase for Top 3 */}
+      {// Podium Showcase for Top 3}
       {rankedTeams.length > 0 && (
         <div className="podium-container">
-          {/* 1st Place (Champion) */}
+          {// 1st Place (Champion)}
           {champion && (
             <div
               className="podium-card podium-1"
@@ -100,7 +95,7 @@ export default function LiveRankingsView({ teams = [], onSelectTeam }) {
             </div>
           )}
 
-          {/* 2nd Place */}
+          {// 2nd Place}
           {runnerUp && (
             <div
               className="podium-card podium-2"
@@ -128,7 +123,7 @@ export default function LiveRankingsView({ teams = [], onSelectTeam }) {
             </div>
           )}
 
-          {/* 3rd Place */}
+          {// 3rd Place}
           {thirdPlace && (
             <div
               className="podium-card podium-3"
@@ -158,7 +153,7 @@ export default function LiveRankingsView({ teams = [], onSelectTeam }) {
         </div>
       )}
 
-      {/* Full Leaderboard Table */}
+      {// Full Leaderboard Table}
       <div className="rankings-table-card">
         <div className="table-card-head">
           <h3>Full Franchise Standings ({rankedTeams.length})</h3>

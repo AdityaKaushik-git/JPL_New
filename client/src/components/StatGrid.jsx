@@ -1,4 +1,4 @@
-/** Compact statistic tiles. items: [{ label, value, hint, emphasis }] */
+// Compact statistic tiles.
 export default function StatGrid({ items, className = '', size = 'md' }) {
   return (
     <dl className={`stat-grid stat-grid-${size} ${className}`}>
@@ -13,7 +13,7 @@ export default function StatGrid({ items, className = '', size = 'md' }) {
   )
 }
 
-/** The six most telling numbers for a role, used on the live screen and cards. */
+// The six most telling numbers for a role, used on the live screen and cards.
 export function keyStatsFor(p) {
   if (!p) return []
   const avg = (v) => (Number(v) ? Number(v).toFixed(2) : '—')

@@ -1,7 +1,4 @@
-/**
- * RoleSlots - displays squad composition with slot availability.
- * Used in BidRoom (bid dock), MyTeam, and AdminControl.
- */
+// RoleSlots - displays squad composition with slot availability.
 import RoleIcon from './RoleIcon'
 
 const SLOTS = [

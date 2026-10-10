@@ -1,7 +1,4 @@
-/**
- * Shapes database rows into API payloads.
- * Public payloads never include login credentials, enrollment numbers or contact data.
- */
+// Shapes database rows into API payloads.
 const { toRupees } = require('../utils/money');
 
 const n = (v) => (v === null || v === undefined ? null : Number(v));
@@ -77,7 +74,7 @@ function publicPlayer(p, extra = {}) {
     };
 }
 
-/** Admin payload: public data plus the internal identifiers admins manage. */
+// Admin payload: public data plus the internal identifiers admins manage.
 function adminPlayer(p) {
     return publicPlayer(p, {
         enrollment_number: p.enrollment_number,

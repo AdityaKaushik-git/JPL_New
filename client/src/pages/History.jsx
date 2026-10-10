@@ -7,7 +7,7 @@ import TeamMark from '../components/TeamMark'
 import RoleIcon from '../components/RoleIcon'
 import { formatINR, dateTime, roleMeta } from '../lib/format'
 
-/** Public auction history — every SOLD and UNSOLD result. */
+// Public auction history — every SOLD and UNSOLD result.
 export default function History() {
   const { data, error, loading, reload } = useAsync(() => api.getHistory(), [])
   if (loading && !data) return <Loader full />

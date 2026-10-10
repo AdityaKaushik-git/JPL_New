@@ -4,7 +4,7 @@ import TeamMark from '../TeamMark'
 import RoleIcon from '../RoleIcon'
 import { formatINR, pad2, roleMeta } from '../../lib/format'
 
-/** Full-screen SOLD / UNSOLD moment. Particles exist only while this is on screen. */
+// Full-screen SOLD / UNSOLD moment.
 export default function ResultOverlay({ result, onDismiss }) {
   const particles = useMemo(() => Array.from({ length: 22 }, (_, i) => ({
     left: (i * 37) % 100,

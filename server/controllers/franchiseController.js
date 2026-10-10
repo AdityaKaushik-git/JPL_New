@@ -1,7 +1,4 @@
-/**
- * Public franchise data: team strip, standings and squads.
- * Purses and squad counts are read-only here; they change only through the auction engine.
- */
+// Public franchise data: team strip, standings and squads.
 const pool = require('../config/db');
 const { listFranchises, getFranchise } = require('../services/franchises');
 const { publicPlayer } = require('../services/serializers');

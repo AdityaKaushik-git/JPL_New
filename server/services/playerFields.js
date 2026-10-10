@@ -1,9 +1,4 @@
-/**
- * Whitelist + validation for admin-managed player data.
- * Only these fields can ever be written from an API request.
- * Derived stats (averages, strike rates, economy) and ranking fields are
- * computed by services/ranking.js and are never accepted from the client.
- */
+// Whitelist + validation for admin-managed player data.
 const { parseMoney } = require('../utils/money');
 
 const ROLES = ['Batsman', 'Bowler', 'All-Rounder', 'Wicket Keeper'];
@@ -47,12 +42,7 @@ const INT_FIELDS = {
     form_points:      [0, 100],
 };
 
-/**
- * Validates a player payload.
- * @param {object} body     request body
- * @param {boolean} partial when true, only fields present are validated (update)
- * @returns {{ values: object, errors: string[] }}
- */
+// Validates a player payload.
 function validatePlayer(body, partial = false) {
     const values = {};
     const errors = [];

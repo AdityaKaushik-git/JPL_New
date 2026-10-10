@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { readableOn } from '../lib/format'
 
-/** Team logo (franchise logos are allowed — player photos are not), else a short-name tile. */
+// Team logo (franchise logos are allowed — player photos are not), else a short-name tile.
 export default function TeamMark({ team, size = 40, className = '' }) {
   const [broken, setBroken] = useState(false)
   if (!team) return null

@@ -11,7 +11,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { formatINR, formatShort } from '../lib/format'
 import RoleSlots, { canBidForRole, roleBlockMessage, canBidForeign, foreignBlockMessage, canBidUncapped, uncappedBlockMessage } from '../components/RoleSlots'
 
-/** Franchise owner's bid room: the broadcast plus a bid dock. The server re-validates everything. */
+// Franchise owner's bid room: the broadcast plus a bid dock.
 export default function BidRoom() {
   const { user, updateUser } = useAuth()
   const { toasts, addToast, removeToast } = useToast()

@@ -1,8 +1,4 @@
-/**
- * The one currency formatter for the whole client.
- * formatINR(180000000) → "₹18,00,00,000"   (Indian digit grouping)
- * formatShort(17400000) → "₹1.74 Cr"       (compact, for strips and tight spaces)
- */
+// The one currency formatter for the whole client.
 export function formatINR(value) {
   const n = Math.round(Number(value) || 0)
   return '₹' + n.toLocaleString('en-IN')

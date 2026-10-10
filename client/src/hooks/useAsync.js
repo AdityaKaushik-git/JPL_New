@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-/** Runs an async loader and tracks { data, error, loading }. `reload` re-runs it. */
+// Runs an async loader and tracks { data, error, loading }.
 export function useAsync(loader, deps = []) {
   const [data, setData] = useState(null)
   const [error, setError] = useState(null)

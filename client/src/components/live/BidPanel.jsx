@@ -5,7 +5,7 @@ import TeamMark from '../TeamMark'
 import TimerRing from './TimerRing'
 import { formatINR } from '../../lib/format'
 
-/** Current bid, current bidder, next bid and the timer — the second and third biggest things on screen. */
+// Current bid, current bidder, next bid and the timer — the second and third biggest things on screen.
 export default function BidPanel({ state, onSelectTeam }) {
   const { user } = useAuth()
   const isAdmin = user?.role === 'admin'

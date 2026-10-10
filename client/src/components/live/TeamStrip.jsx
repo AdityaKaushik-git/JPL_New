@@ -3,7 +3,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import TeamMark from '../TeamMark'
 import { formatShort } from '../../lib/format'
 
-/** Bottom strip: every franchise's purse and squad, with a subtle pulse when that team bids. */
+// Bottom strip: every franchise's purse and squad, with a subtle pulse when that team bids.
 export default function TeamStrip({ teams, pulse, leaderId, onSelectTeam }) {
   const { user } = useAuth()
   const isAdmin = user?.role === 'admin'

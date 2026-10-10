@@ -35,17 +35,17 @@ function AppRoutes() {
     <>
       {!chromeless && <Navbar />}
       <Routes>
-        {/* Public Homepage — displayed when website link is opened */}
+        {// Public Homepage — displayed when website link is opened}
         <Route path="/" element={<Landing />} />
 
-        {/* Public watch live screen — NO login required to watch auction live! */}
+        {// Public watch live screen — NO login required to watch auction live!}
         <Route path="/live" element={<Live />} />
 
-        {/* Sign in */}
+        {// Sign in}
         <Route path="/login" element={user ? <Navigate to={user.role === 'admin' ? '/admin/control' : '/dashboard'} replace /> : <Login />} />
         <Route path="/register" element={<Navigate to="/login" replace />} />
 
-        {/* Protected routes — require login */}
+        {// Protected routes — require login}
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/rankings" element={<ProtectedRoute roles={['admin', 'player']}><Rankings /></ProtectedRoute>} />
         <Route path="/players/:id" element={<ProtectedRoute><PlayerProfile /></ProtectedRoute>} />

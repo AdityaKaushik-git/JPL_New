@@ -1,7 +1,4 @@
-/**
- * Public, read-only player data for spectators, franchise owners and the live screen.
- * Never exposes enrollment numbers or contact details.
- */
+// Public, read-only player data for spectators, franchise owners and the live screen.
 const pool = require('../config/db');
 const { publicPlayer } = require('../services/serializers');
 const { ROLE_CATEGORY } = require('../services/ranking');
@@ -134,7 +131,7 @@ exports.getPlayerPhoto = async (req, res) => {
             const resp = await fetch(photoUrl, {
                 headers: {
                     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-                    'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8'
+                    'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image// ,*;q=0.8'
                 }
             });
 

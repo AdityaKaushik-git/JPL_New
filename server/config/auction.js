@@ -1,9 +1,4 @@
-/**
- * JPL 2026 auction rules — the single source of truth for business constants.
- *
- * Money is handled in whole rupees on the server. MySQL stores it as DECIMAL,
- * and every value that crosses the wire is re-validated here before use.
- */
+// JPL 2026 auction rules — the single source of truth for business constants.
 
 // ₹75,00,00,000 — assigned by the server to every franchise the admin creates.
 const STARTING_PURSE = 750000000;
@@ -34,17 +29,7 @@ const AUTO_FINALIZE = String(process.env.AUCTION_AUTO_FINALIZE || 'true').toLowe
 // (purely informational for clients; the admin still presses NEXT PLAYER).
 const RESULT_HOLD_MS = 6000;
 
-/**
- * Bid increment ladder (JPL 2026 rules).
- *
- *   current bid ≥ ₹20 Cr (200,000,000)         → +₹5,00,000  (₹5 Cr)
- *   ₹10 Cr – ₹19.99 Cr (100,000,000–199,999,999) → +₹2,00,000  (₹2 Cr)
- *   ₹5 Cr  – ₹9.99 Cr  (50,000,000–99,999,999)  → +₹1,00,000  (₹1 Cr)
- *   ₹2 Cr  – ₹4.99 Cr  (20,000,000–49,999,999)  → +₹50,000   (₹50 L)
- *   ₹1 Cr  – ₹1.99 Cr  (10,000,000–19,999,999)  → +₹25,000   (₹25 L)
- *   ₹50 L  – ₹99.99 L  (5,000,000–9,999,999)    → +₹10,000   (₹10 L)
- *   ₹10 L  – ₹49.99 L  (1,000,000–4,999,999)    → +₹5,000    (₹5 L)
- */
+// Bid increment ladder (JPL 2026 rules).
 function getIncrement(currentBid) {
     const cb = Number(currentBid) || 0;
     if (cb >= 200000000) return 50000000;   // ≥ ₹20 Cr  → +₹5 Cr

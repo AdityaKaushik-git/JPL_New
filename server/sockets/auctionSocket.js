@@ -1,31 +1,4 @@
-/**
- * JPL live auction engine (Socket.IO).
- *
- * The server is the only source of truth. Clients send intents
- * ("place a bid", "sell"), never values that the server trusts:
- *   - the bid amount is recomputed from the server's own state
- *   - purse, squad count, role counts and franchise status are read from MySQL under row locks
- *   - every state-changing handler runs through one serial queue, so two bids
- *     that arrive in the same millisecond are processed one after the other
- *
- * Client → server events (unchanged names from the original app, plus admin:nextPlayer):
- *   user:join, user:placeBid, admin:startPlayer, admin:nextPlayer, admin:pauseAuction,
- *   admin:resumeAuction, admin:sellPlayer, admin:markUnsold, admin:reAuction
- *
- * Server → client events:
- *   auction:stateUpdate, auction:timer, auction:notification, auction:bidPlaced,
- *   auction:sold, auction:unsold, auction:playerReset, teams:update, purse:update,
- *   players:changed, live:stats
- *
- * Role-slot enforcement (NEW):
- *   Each team has hard limits: 5 Batsmen, 5 Bowlers, 3 All-Rounders, 2 Wicket-Keepers,
- *   4 max foreign players, 2 min uncapped players.
- *   These limits are checked at both bid time AND sale time (inside DB transactions).
- *   The relevant columns on `users` are:
- *     batsmen_count, bowlers_count, allrounders_count, keepers_count,
- *     foreign_count, uncapped_count
- *   and are incremented atomically in sellCurrent().
- */
+// JPL live auction engine (Socket.
 const pool = require('../config/db');
 const { verifyToken } = require('../middleware/auth');
 const sessionRegistry = require('../services/sessionRegistry');
@@ -513,10 +486,7 @@ module.exports = (io) => {
     }
 
     // ---- closing a lot ---------------------------------------------------------
-    /**
-     * Closes the current lot. With a highest bidder it is SOLD, otherwise UNSOLD.
-     * forceUnsold lets the admin mark a player UNSOLD even when bids exist.
-     */
+    // Closes the current lot.
     async function finalize({ forceUnsold = false } = {}) {
         if (!activeAuction.player || !activeAuction.auctionId || !['Live', 'Paused'].includes(activeAuction.status)) {
             throw new AuctionError('There is no open player to close.', 'warning');

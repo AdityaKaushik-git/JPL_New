@@ -3,7 +3,7 @@ import LiveStage from '../components/live/LiveStage'
 import { useAuctionSocket } from '../hooks/useAuctionSocket'
 import { useFullscreen } from '../hooks/useFullscreen'
 
-/** Public spectator / projector screen. Read-only: no bidding, no controls. */
+// Public spectator / projector screen.
 export default function Live() {
   const socket = useAuctionSocket()
   const stageRef = useRef(null)

@@ -1,4 +1,4 @@
-/** Small dependency-free SVG charts for profiles. */
+// Small dependency-free SVG charts for profiles.
 
 export function LineChart({ points, height = 180, label, valueKey = 'y', format = (v) => v }) {
   if (!points || points.length < 2) {

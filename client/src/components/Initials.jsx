@@ -1,6 +1,6 @@
 import { initialsOf } from '../lib/format'
 
-/** Player identity without a photograph: a monogram tile. */
+// Player identity without a photograph: a monogram tile.
 export default function Initials({ name, initials, size = 'md', accent, className = '' }) {
   const text = initials || initialsOf(name)
   return (

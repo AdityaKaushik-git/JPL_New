@@ -1,4 +1,4 @@
-/** Rank movement: ▲2 (climbed), ▼1 (dropped), – (no change / new). */
+// Rank movement: ▲2 (climbed), ▼1 (dropped), – (no change / new).
 export default function Movement({ value, className = '' }) {
   const v = Math.round(Number(value) || 0)
   if (v > 0) return <span className={`move move-up ${className}`} aria-label={`Up ${v}`}>▲{v}</span>

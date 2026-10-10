@@ -8,7 +8,7 @@ import PlayerCard from '../components/PlayerCard'
 import FranchiseModal from '../components/FranchiseModal'
 import { formatINR, formatShort } from '../lib/format'
 
-/** Public franchise table with squads. */
+// Public franchise table with squads.
 export default function Standings() {
   const { data, error, loading, reload } = useAsync(() => api.getStandings(), [])
   const { teams: socketTeams } = useAuctionSocket()

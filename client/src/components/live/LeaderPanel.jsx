@@ -1,6 +1,4 @@
-/**
- * LeaderPanel — shows the current JPL leader and WHY they are leading.
- */
+// LeaderPanel — shows the current JPL leader and WHY they are leading.
 import { useAuth } from '../../contexts/AuthContext'
 import { Trophy } from 'lucide-react'
 import TeamMark from '../TeamMark'

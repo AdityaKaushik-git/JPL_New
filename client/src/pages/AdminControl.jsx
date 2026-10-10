@@ -17,7 +17,7 @@ import BidFeed from '../components/live/BidFeed'
 import AnimatedNumber from '../components/AnimatedNumber'
 import { formatINR, formatShort, pad2, roleMeta } from '../lib/format'
 
-/** Auction Control Center — the auctioneer's console. */
+// Auction Control Center — the auctioneer's console.
 export default function AdminControl() {
   const { toasts, addToast, removeToast } = useToast()
   const players = useAsync(() => api.getAdminPlayers(), [])

@@ -1,7 +1,4 @@
-/**
- * Cricket role glyphs drawn as tiny inline SVGs (no extra dependency —
- * lucide has no cricket-specific icons). They inherit `currentColor`.
- */
+// Cricket role glyphs drawn as tiny inline SVGs (no extra dependency —
 const common = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round' }
 
 function Bat() {

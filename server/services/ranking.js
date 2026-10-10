@@ -1,96 +1,4 @@
-/**
- * ============================================================================
- *  JPL PLAYER RANKING — original rating model for the JCC Cricket Sports Meet
- * ============================================================================
- *
- *  Inspired by the idea of professional cricket rankings, but NOT an official
- *  ICC ranking and NOT the ICC formula. Every number below is JPL's own and is
- *  deliberately simple so anyone can audit it.
- *
- *  All component scores are on a 0–1000 scale. A player's final points are a
- *  weighted blend of components for their playing role, then adjusted for
- *  experience (small samples are pulled down) and match impact.
- *
- *  Helper curves
- *  -------------
- *    sat(x, k)          = 1000 × (1 − e^(−x / k))     saturating volume curve:
- *                                                      rewards more runs/wickets,
- *                                                      with diminishing returns.
- *    lin(x, lo, hi)     = 1000 × clamp((x − lo)/(hi − lo), 0, 1)
- *    inv(x, best, worst)= 1000 × clamp((worst − x)/(worst − best), 0, 1)
- *                                                      for "lower is better" stats.
- *
- *  BATTING score (B)
- *  -----------------
- *    runs        sat(runs, 400)                          weight 0.30
- *    average     lin(batting_average, 0, 50)             weight 0.20
- *    strike rate lin(strike_rate, 80, 180)               weight 0.20
- *    milestones  lin(fifties + 2 × hundreds, 0, 6)       weight 0.10
- *    form        form_points × 10   (form_points 0–100)  weight 0.20
- *
- *  BOWLING score (W)
- *  -----------------
- *    wickets     sat(wickets, 20)                        weight 0.25
- *    average     inv(bowling_average, 10, 40)            weight 0.15
- *    economy     inv(economy, 5, 11)                     weight 0.15
- *    strike rate inv(bowling_strike_rate, 10, 30)        weight 0.10
- *    wkts/match  lin(wickets / matches, 0, 2.5)          weight 0.10
- *    hauls       lin(3w + 2 × 4w + 3 × 5w hauls, 0, 6)    weight 0.05
- *    form        form_points × 10                        weight 0.20
- *    (average / economy / strike-rate components are 0 until the player has
- *     bowled at least 6 balls, so a single cheap over cannot top the table.)
- *
- *  ALL-ROUNDER score (AR)
- *    AR = √(B × W)  — geometric mean. It rewards genuine balance: a player who
- *    is excellent at one skill and poor at the other scores lower than one who
- *    is solid at both.
- *
- *  WICKETKEEPER score (WK)
- *    keeping   = sat(catches + 1.5 × stumpings, 12)
- *    WK        = 0.65 × B + 0.35 × keeping
- *
- *  Final points
- *  ------------
- *    base        = role score (Batsman → B, Bowler → W,
- *                  All-Rounder → AR, Wicket Keeper → WK)
- *    experience  = 0.55 + 0.45 × min(1, matches / 6)
- *                  (a player with 6+ matches gets full credit)
- *    impact      = min(60, 15 × player_of_match)
- *    points      = round(base × experience + impact), capped at 1000
- *
- *  Players with 0 matches are UNRANKED (points 0, rank NULL).
- *
- *  Ranks
- *  -----
- *    current_rank         position among all ranked players (overall)
- *    category_rank        position among ranked players with the same role
- *    Ties are broken by: points, then form_points, then matches, then name.
- *
- *  Movement
- *  --------
- *    When a player's rank changes, previous_rank keeps the old value.
- *    When a player's points change, previous_ranking_points keeps the old value.
- *    movement = previous_rank − current_rank   (positive = climbed)
- *    form     = ranking_points − previous_ranking_points
- *    A player's first ranking sets previous_ranking_points = ranking_points
- *    (form 0), because there is no earlier rating to compare against.
- *    Every change is also written to ranking_history for the profile chart.
- *
- *  Base Price Formula
- *  ------------------
- *    Points ≥ 900  → ₹4,00,00,000
- *    800–899       → ₹3,00,00,000
- *    700–799       → ₹2,00,00,000
- *    600–699       → ₹1,50,00,000
- *    500–599       → ₹1,00,00,000
- *    400–499       → ₹50,00,000
- *    300–399       → ₹25,00,000
- *    200–299       → ₹10,00,000
- *    100–199       → ₹5,00,000
- *    1–99          → ₹2,00,000
- *    0 (unranked)  → ₹1,00,000
- * ============================================================================
- */
+// ============================================================================
 
 const ROLE_CATEGORY = {
     'Batsman': 'BATTERS',
@@ -105,7 +13,7 @@ const sat = (x, k) => 1000 * (1 - Math.exp(-Math.max(0, x) / k));
 const lin = (x, lo, hi) => 1000 * clamp((x - lo) / (hi - lo), 0, 1);
 const inv = (x, best, worst) => 1000 * clamp((worst - x) / (worst - best), 0, 1);
 
-/** Derived statistics computed from raw counts. Returns rounded numbers. */
+// Derived statistics computed from raw counts.
 function deriveStats(p) {
     const innings = num(p.innings);
     const notOuts = num(p.not_outs);
@@ -163,7 +71,7 @@ function keepingScore(p) {
     return sat(num(p.catches) + 1.5 * num(p.stumpings), 12);
 }
 
-/** Returns { points, batting, bowling, allround, keeping } for one player. */
+// Returns { points, batting, bowling, allround, keeping } for one player.
 function computePoints(p) {
     const matches = num(p.matches);
     const B = battingScore(p);
@@ -198,21 +106,7 @@ function computePoints(p) {
     };
 }
 
-/**
- * Auto base price from JPL ranking points (transparent, documented formula).
- *
- * Points ≥ 900  → ₹4,00,00,000  (₹4 Cr)
- * 800–899       → ₹3,00,00,000  (₹3 Cr)
- * 700–799       → ₹2,00,00,000  (₹2 Cr)
- * 600–699       → ₹1,50,00,000  (₹1.5 Cr)
- * 500–599       → ₹1,00,00,000  (₹1 Cr)
- * 400–499       → ₹50,00,000    (₹50 L)
- * 300–399       → ₹25,00,000    (₹25 L)
- * 200–299       → ₹10,00,000    (₹10 L)
- * 100–199       → ₹5,00,000     (₹5 L)
- * 1–99          → ₹2,00,000     (₹2 L)
- * 0 (unranked)  → ₹1,00,000     (₹1 L minimum)
- */
+// Auto base price from JPL ranking points (transparent, documented formula).
 function basePriceFromPoints(points) {
     const p = Math.round(Number(points) || 0);
     if (p >= 900) return 40000000; // ₹4 Cr
@@ -235,13 +129,7 @@ function sortForRank(a, b) {
         || String(a.name).localeCompare(String(b.name));
 }
 
-/**
- * Recomputes derived stats, points and ranks for every player inside one
- * transaction and records history rows for anything that changed.
- * Accepts an optional existing connection (already in a transaction).
- *
- * Also auto-updates base_price for players where base_price_auto = 1.
- */
+// Recomputes derived stats, points and ranks for every player inside one
 async function recalculateRankings(pool, existingConnection = null) {
     const connection = existingConnection || await pool.getConnection();
     const ownTransaction = !existingConnection;

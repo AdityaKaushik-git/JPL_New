@@ -6,7 +6,7 @@ import { api } from '../services/api'
 import Brand from '../components/Brand'
 import PitchBackdrop from '../components/PitchBackdrop'
 
-/** Sign in only. Franchise accounts are issued by the JPL admin. */
+// Sign in only.
 export default function Login() {
   const [loginId, setLoginId] = useState('')
   const [password, setPassword] = useState('')

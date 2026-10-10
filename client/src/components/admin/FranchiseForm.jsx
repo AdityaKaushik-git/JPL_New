@@ -14,10 +14,7 @@ const MAX_LOGO_BYTES = 280 * 1024
 
 export const EMPTY_FRANCHISE = { team_name: '', short_name: '', owner_name: '', login_id: '', password: '', color: '#C8102E', logo: '' }
 
-/**
- * Admin franchise form. There is deliberately no purse or squad field:
- * the server assigns ₹18,00,00,000 and 12 players to every new franchise.
- */
+// Admin franchise form.
 export default function FranchiseForm({ initial = EMPTY_FRANCHISE, mode = 'create', errors = {}, busy, onSubmit, onCancel }) {
   const [form, setForm] = useState({ ...EMPTY_FRANCHISE, ...initial })
   const [localErr, setLocalErr] = useState({})

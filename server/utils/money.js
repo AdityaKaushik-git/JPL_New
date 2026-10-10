@@ -1,7 +1,4 @@
-/**
- * Money helpers. All server-side money is whole rupees.
- * DECIMAL values arrive from mysql2 as strings; always pass them through toRupees().
- */
+// Money helpers.
 
 function toRupees(value) {
     const n = Number(value);
@@ -9,7 +6,7 @@ function toRupees(value) {
     return Math.round(n);
 }
 
-/** Parses a user-supplied money value. Returns null when it is not a positive whole amount. */
+// Parses a user-supplied money value.
 function parseMoney(value, { min = 1, max = 1000000000 } = {}) {
     if (value === null || value === undefined || value === '') return null;
     const n = Number(String(value).replace(/[,₹\s]/g, ''));
@@ -18,7 +15,7 @@ function parseMoney(value, { min = 1, max = 1000000000 } = {}) {
     return n;
 }
 
-/** ₹18,00,00,000 style (Indian digit grouping). */
+// ₹18,00,00,000 style (Indian digit grouping).
 function formatINR(value) {
     return '₹' + toRupees(value).toLocaleString('en-IN');
 }

@@ -6,10 +6,7 @@ const EMPTY_STATE = {
   timeLeft: 0, timerTotal: 60, bidHistory: [], bidCount: 0, nextBid: 0, increment: 0, result: null,
 }
 
-/**
- * One Socket.IO connection per page. The server is authoritative; this hook only
- * mirrors what it broadcasts and exposes `emit` for intents.
- */
+// One Socket.
 export function useAuctionSocket({ onNotify, onPlayersChanged } = {}) {
   const [state, setState] = useState(EMPTY_STATE)
   const [teams, setTeams] = useState([])

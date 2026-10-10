@@ -1,8 +1,4 @@
-/**
- * SessionRegistry — Strict enforcement of active session limits across devices.
- *   - Franchise Bidders (role 'user'): Exactly 1 active session allowed per account.
- *   - Admin (role 'admin'): Maximum 2 active sessions allowed across all devices.
- */
+// SessionRegistry — Strict enforcement of active session limits across devices.
 
 const userSessions = new Map();  // userId -> { token, socketIds: Set, lastSeen, ip }
 const adminSessions = new Map(); // token -> { userId, socketIds: Set, lastSeen, ip }

@@ -5,9 +5,7 @@ const TARGET_EMAIL = 'adityakaushik1200@gmail.com';
 let activeOtp = null;
 let otpExpiresAt = null;
 
-/**
- * Generates a 6-digit numeric OTP and sends it to adityakaushik1200@gmail.com
- */
+// Generates a 6-digit numeric OTP and sends it to adityakaushik1200@gmail.
 async function sendStartAuctionOtp() {
     const code = String(Math.floor(100000 + Math.random() * 900000));
     activeOtp = code;
@@ -65,9 +63,7 @@ async function sendStartAuctionOtp() {
     return { success: true, email: TARGET_EMAIL, isSentViaSmtp, devOtp: !isSentViaSmtp ? code : undefined };
 }
 
-/**
- * Verifies the submitted OTP against the active OTP
- */
+// Verifies the submitted OTP against the active OTP
 function verifyStartAuctionOtp(inputCode) {
     if (!activeOtp || !otpExpiresAt) {
         return { valid: false, message: 'No active OTP found. Please click Start Auction again.' };

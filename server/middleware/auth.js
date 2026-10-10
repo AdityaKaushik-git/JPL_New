@@ -25,7 +25,7 @@ const authMiddleware = (req, res, next) => {
     }
 };
 
-/** Attaches req.user when a valid token is present, but never rejects. */
+// Attaches req.
 const optionalAuth = (req, res, next) => {
     const authHeader = req.headers.authorization;
     if (authHeader && authHeader.startsWith('Bearer ')) {

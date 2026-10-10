@@ -6,10 +6,7 @@ import StatGrid, { keyStatsFor } from '../StatGrid'
 import { FormDelta } from '../Movement'
 import { formatINR, pad2, roleMeta } from '../../lib/format'
 
-/**
- * The centre of the broadcast: displays player photo if available (or initials watermark),
- * along with player stats, auction lot details and pricing.
- */
+// The centre of the broadcast: displays player photo if available (or initials watermark),
 export default function PlayerHero({ player, lot, accent, compact = false }) {
   if (!player) return null
   const [imgError, setImgError] = useState(false)

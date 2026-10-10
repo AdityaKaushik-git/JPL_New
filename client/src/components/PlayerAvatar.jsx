@@ -1,11 +1,4 @@
-/**
- * PlayerAvatar — displays a player's photo or monogram tile with role colour accent.
- *
- * Props:
- *   player    - player object with at least { name, initials, playing_role, team?, image_url? }
- *   size      - "sm" | "md" | "lg" | "hero"  (default "md")
- *   className - extra CSS class
- */
+// PlayerAvatar — displays a player's photo or monogram tile with role colour accent.
 import { useState } from 'react'
 import Initials from './Initials'
 import { roleMeta } from '../lib/format'

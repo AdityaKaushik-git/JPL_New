@@ -18,7 +18,7 @@ export const EMPTY_PLAYER = {
   ...Object.fromEntries(NUM_KEYS.map(k => [k, 0])),
 }
 
-/** Admin player editor. Averages, strike rates, economy and ranks are computed by the server. */
+// Admin player editor.
 export default function PlayerEditor({ player, onSaved, onCancel, notify }) {
   const editing = Boolean(player && player.id)
   const [form, setForm] = useState(() => {
@@ -91,7 +91,7 @@ export default function PlayerEditor({ player, onSaved, onCancel, notify }) {
   )
 }
 
-/** Per-match log for the profile's match history. */
+// Per-match log for the profile's match history.
 export function MatchLog({ player, matches, onChange, notify }) {
   const blank = { match_label: '', match_date: '', runs: 0, balls_faced: 0, wickets: 0, balls_bowled: 0, runs_conceded: 0, catches: 0, stumpings: 0 }
   const [m, setM] = useState(blank)

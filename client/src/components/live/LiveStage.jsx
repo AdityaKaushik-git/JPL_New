@@ -20,10 +20,7 @@ const STATUS_LABEL = {
   Ended: 'Auction Ended',
 }
 
-/**
- * Broadcast composition shared by the public /live screen and the owner bid room.
- * `dock` renders below the stage (the owner's bid controls).
- */
+// Broadcast composition shared by the public /live screen and the owner bid room.
 const LiveStage = forwardRef(function LiveStage({ socket, fullscreen, dock, leading }, ref) {
   const { state, teams, stats, connection, overlay, pulse, dismissOverlay } = socket
   const { player, status, lot, result } = state

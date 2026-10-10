@@ -1,6 +1,6 @@
 import { pad2 } from '../../lib/format'
 
-/** Server-driven countdown. The ring shows time left of the current window. */
+// Server-driven countdown.
 export default function TimerRing({ timeLeft, total, status, size = 'lg' }) {
   const t = Math.max(0, Number(timeLeft) || 0)
   const max = Math.max(1, Number(total) || 1)

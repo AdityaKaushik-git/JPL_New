@@ -1,7 +1,4 @@
-/**
- * Authentication. There is NO public registration:
- * franchise accounts are created by the admin (see adminController.createFranchise).
- */
+// Authentication.
 const pool = require('../config/db');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');

@@ -1,8 +1,4 @@
-/**
- * Endpoints for signed-in accounts.
- *   role 'user'   = franchise owner (team owner, not a player)
- *   role 'player' = legacy player login (read-only view of their own card)
- */
+// Endpoints for signed-in accounts.
 const pool = require('../config/db');
 const { toRupees } = require('../utils/money');
 const { publicPlayer } = require('../services/serializers');
@@ -55,7 +51,7 @@ exports.getProfile = async (req, res) => {
     }
 };
 
-/** Owners may edit their own name and mobile only. Team, purse and squad are admin/engine controlled. */
+// Owners may edit their own name and mobile only.
 exports.updateProfile = async (req, res) => {
     try {
         const fullName = String((req.body && req.body.full_name) || '').trim();
@@ -151,7 +147,7 @@ exports.getPlayerProfile = async (req, res) => {
     }
 };
 
-/** Existing rule kept: a player login may adjust its own base price twice, only while Available. */
+// Existing rule kept: a player login may adjust its own base price twice, only while Available.
 exports.updatePlayerProfile = async (req, res) => {
     try {
         if (req.user.role !== 'player') return res.status(403).json({ message: 'Only player accounts can do this.' });

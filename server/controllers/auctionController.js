@@ -3,7 +3,7 @@ const hub = require('../sockets/hub');
 const { toRupees } = require('../utils/money');
 const { initialsOf } = require('../services/serializers');
 
-/** Current auction state (same shape as the auction:stateUpdate socket event). */
+// Current auction state (same shape as the auction:stateUpdate socket event).
 exports.getStatus = async (req, res) => {
     try {
         const state = hub.getState();
@@ -17,7 +17,7 @@ exports.getStatus = async (req, res) => {
     }
 };
 
-/** Public auction history — every SOLD / UNSOLD result, newest first. */
+// Public auction history — every SOLD / UNSOLD result, newest first.
 exports.getHistory = async (req, res) => {
     try {
         const [results] = await pool.query(`

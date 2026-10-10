@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 
-/** JPL wordmark: a cricket ball seam as the counter of the mark. */
+// JPL wordmark: a cricket ball seam as the counter of the mark.
 export default function Brand({ to = '/', compact = false }) {
   return (
     <Link to={to} className="brand" aria-label="JPL home">

@@ -1,7 +1,4 @@
-/**
- * Admin-only operations: franchises, players, rankings and auction history.
- * Every route here is behind authMiddleware + adminMiddleware.
- */
+// Admin-only operations: franchises, players, rankings and auction history.
 const pool = require('../config/db');
 const bcrypt = require('bcrypt');
 const hub = require('../sockets/hub');
@@ -35,10 +32,7 @@ async function afterPlayerChange() {
     hub.notifyPlayersChanged();
 }
 
-/**
- * Reverses a completed sale inside an open transaction: refunds the purse,
- * reduces spend and squad count, and removes the player from the roster.
- */
+// Reverses a completed sale inside an open transaction: refunds the purse,
 async function refundSale(connection, record) {
     const amount = toRupees(record.winning_bid);
     await connection.query('SELECT id FROM users WHERE id = ? FOR UPDATE', [record.winning_user_id]);
@@ -329,11 +323,7 @@ exports.deletePlayer = async (req, res) => {
     }
 };
 
-/**
- * Manual status reset. Only 'Available' and 'Unsold' may be set here —
- * 'In Auction' and 'Sold' are produced exclusively by the live auction engine.
- * Resetting a Sold player refunds the franchise and removes the player from its squad.
- */
+// Manual status reset.
 exports.updatePlayerStatus = async (req, res) => {
     const id = idParam(req);
     const status = req.body && req.body.status;

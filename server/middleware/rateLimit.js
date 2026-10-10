@@ -1,7 +1,4 @@
-/**
- * Minimal in-memory rate limiter (no extra dependency).
- * Suitable for a single Render web instance.
- */
+// Minimal in-memory rate limiter (no extra dependency).
 function createLimiter({ windowMs, max, message }) {
     const hits = new Map();
     setInterval(() => {

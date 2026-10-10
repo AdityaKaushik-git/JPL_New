@@ -26,7 +26,7 @@ export default function Modal({ open, title, onClose, children, width = 560, foo
   )
 }
 
-/** Confirmation for dangerous operations (sell, unsold, delete, refunds). */
+// Confirmation for dangerous operations (sell, unsold, delete, refunds).
 export function ConfirmDialog({ open, title, message, confirmLabel = 'Confirm', tone = 'danger', onConfirm, onCancel, busy }) {
   return (
     <Modal

@@ -1,7 +1,4 @@
-/**
- * Tiny registry so REST controllers can trigger real-time broadcasts
- * without importing the socket module directly (avoids circular requires).
- */
+// Tiny registry so REST controllers can trigger real-time broadcasts
 const hub = {
     io: null,
     engine: null,
@@ -12,27 +9,27 @@ function register(io, engine) {
     hub.engine = engine;
 }
 
-/** Re-broadcast franchise purses / squad counts to every client. */
+// Re-broadcast franchise purses / squad counts to every client.
 async function notifyTeamsChanged() {
     if (hub.engine) await hub.engine.broadcastTeams();
 }
 
-/** Tell clients that player data (stats, ranks, statuses) changed. */
+// Tell clients that player data (stats, ranks, statuses) changed.
 function notifyPlayersChanged() {
     if (hub.io) hub.io.emit('players:changed');
 }
 
-/** The player id currently on the auction block (or null). */
+// The player id currently on the auction block (or null).
 function activePlayerId() {
     return hub.engine ? hub.engine.getActivePlayerId() : null;
 }
 
-/** Snapshot of the live auction state, or null before the engine starts. */
+// Snapshot of the live auction state, or null before the engine starts.
 function getState() {
     return hub.engine ? hub.engine.getState() : null;
 }
 
-/** Triggers a complete reset of the auction engine state and starts the first lot. */
+// Triggers a complete reset of the auction engine state and starts the first lot.
 async function resetAndStartAuction() {
     if (hub.engine && hub.engine.resetAndStartAuction) {
         await hub.engine.resetAndStartAuction();
