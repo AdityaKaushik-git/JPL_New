@@ -127,7 +127,7 @@ exports.getPlayerPhoto = async (req, res) => {
         let photoUrl = p.image_url;
 
         if (!photoUrl) {
-            photoUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&size=500&background=1a1f2e&color=f2c14e&bold=true`;
+            photoUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&size=500&background=1a1f2e&color=f2c14e&bold=true&format=png`;
         }
 
         try {
@@ -150,7 +150,7 @@ exports.getPlayerPhoto = async (req, res) => {
         }
 
         // Fallback to UI Avatars
-        const fallbackResp = await fetch(`https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&size=500&background=1a1f2e&color=f2c14e&bold=true`);
+        const fallbackResp = await fetch(`https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&size=500&background=1a1f2e&color=f2c14e&bold=true&format=png`);
         const fallbackBuffer = Buffer.from(await fallbackResp.arrayBuffer());
         res.setHeader('Content-Type', 'image/png');
         res.setHeader('Cache-Control', 'public, max-age=86400');

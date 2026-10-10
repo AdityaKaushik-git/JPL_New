@@ -36,6 +36,7 @@ BAD_KEYWORDS = [
 
 def search_wikimedia_cricketer(name):
     try:
+        time.sleep(0.8) # Prevent rate limiting
         url = f"https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch={quote('\"' + name + '\" cricket')}&format=json"
         res = requests.get(url, headers=headers, timeout=2.5).json()
         items = res.get("query", {}).get("search", [])
@@ -58,7 +59,7 @@ def search_wikimedia_cricketer(name):
 def fetch_photo_for_player(name):
     url, src = search_wikimedia_cricketer(name)
     if not url:
-        url = f"https://ui-avatars.com/api/?name={quote(name)}&size=500&background=1a1f2e&color=f2c14e&bold=true"
+        url = f"https://ui-avatars.com/api/?name={quote(name)}&size=500&background=1a1f2e&color=f2c14e&bold=true&format=png"
         src = "UI Avatars"
     return url, src
 
