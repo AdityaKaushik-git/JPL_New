@@ -1,13 +1,10 @@
-import { forwardRef, useState } from 'react'
+import { forwardRef } from 'react'
 import { Maximize2, Minimize2, Wifi, WifiOff, Users, Trophy } from 'lucide-react'
 import Brand from '../Brand'
 import PlayerHero from './PlayerHero'
 import BidPanel from './BidPanel'
-import TeamStrip from './TeamStrip'
 import BidFeed from './BidFeed'
 import ResultOverlay from './ResultOverlay'
-import FranchiseModal from '../FranchiseModal'
-import LiveRankingsView from './LiveRankingsView'
 import TeamMark from '../TeamMark'
 import { formatINR, pad2 } from '../../lib/format'
 
@@ -22,14 +19,11 @@ const STATUS_LABEL = {
 
 // Broadcast composition shared by the public /live screen and the owner bid room.
 const LiveStage = forwardRef(function LiveStage({ socket, fullscreen, dock, leading }, ref) {
-  const { state, teams, stats, connection, overlay, pulse, dismissOverlay } = socket
+  const { state, stats, connection, overlay, dismissOverlay } = socket
   const { player, status, lot, result } = state
-  const leaderId = state.highestBidder ? state.highestBidder.id : null
-  const [selectedTeamId, setSelectedTeamId] = useState(null)
   const isEnded = status === 'Ended'
-  const showRankings = Boolean(state.showLiveRankings)
 
-  if (isEnded && !showRankings) {
+  if (isEnded) {
     return (
       <div className={`stage stage-ended${fullscreen && fullscreen.active ? ' is-fullscreen' : ''}`} ref={ref}>
         <header className="stage-top">
@@ -64,41 +58,6 @@ const LiveStage = forwardRef(function LiveStage({ socket, fullscreen, dock, lead
             </div>
           </div>
         </main>
-
-        <TeamStrip teams={teams} pulse={pulse} leaderId={leaderId} onSelectTeam={setSelectedTeamId} />
-        <FranchiseModal franchiseId={selectedTeamId} onClose={() => setSelectedTeamId(null)} />
-      </div>
-    )
-  }
-
-  if (showRankings) {
-    return (
-      <div className={`stage stage-ended${fullscreen && fullscreen.active ? ' is-fullscreen' : ''}`} ref={ref}>
-        <header className="stage-top">
-          {leading || <Brand to="/" />}
-          <div className="stage-title">
-            <span className="stage-event">JPL Live Auction</span>
-            <span className="status-pill status-completed">Live Rankings & Standings</span>
-          </div>
-          <div className="stage-tools">
-            <span className={`conn conn-${connection}`} title={connection === 'online' ? 'Connected' : 'Reconnecting'}>
-              {connection === 'online' ? <Wifi size={15} /> : <WifiOff size={15} />}
-              <span>{connection === 'online' ? 'Connected' : connection === 'offline' ? 'Offline' : 'Reconnecting'}</span>
-            </span>
-            <span className="watching" title="People connected"><Users size={15} /> {stats.total || 0}</span>
-            {fullscreen && fullscreen.supported && (
-              <button className="icon-btn" onClick={fullscreen.toggle} aria-label={fullscreen.active ? 'Exit fullscreen' : 'Fullscreen'}>
-                {fullscreen.active ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
-              </button>
-            )}
-          </div>
-        </header>
-
-        <main className="stage-main stage-main-rankings">
-          <LiveRankingsView teams={teams} onSelectTeam={setSelectedTeamId} />
-        </main>
-
-        <FranchiseModal franchiseId={selectedTeamId} onClose={() => setSelectedTeamId(null)} />
       </div>
     )
   }
@@ -146,7 +105,7 @@ const LiveStage = forwardRef(function LiveStage({ socket, fullscreen, dock, lead
               )}
             </div>
             <div className="stage-side">
-              <BidPanel state={state} onSelectTeam={setSelectedTeamId} />
+              <BidPanel state={state} />
               <BidFeed bids={state.bidHistory} />
             </div>
           </>
@@ -159,10 +118,8 @@ const LiveStage = forwardRef(function LiveStage({ socket, fullscreen, dock, lead
         )}
       </main>
 
-      <TeamStrip teams={teams} pulse={pulse} leaderId={leaderId} onSelectTeam={setSelectedTeamId} />
       {dock}
       <ResultOverlay result={overlay} onDismiss={dismissOverlay} />
-      <FranchiseModal franchiseId={selectedTeamId} onClose={() => setSelectedTeamId(null)} />
     </div>
   )
 })

@@ -296,7 +296,7 @@ input, select, textarea { font: inherit; }
    ========================================================================== */
 .stage {
   position: relative; height: 100vh; height: 100dvh; display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto auto; gap: clamp(.6rem, 1.2vh, 1.1rem);
+  grid-template-rows: auto minmax(0, 1fr) auto; gap: clamp(.6rem, 1.2vh, 1.1rem);
   padding: clamp(.7rem, 1.6vh, 1.4rem) clamp(.8rem, 2vw, 2.2rem);
   background:
     radial-gradient(1100px 700px at 30% 40%, rgba(47, 163, 107, .07), transparent 65%),
@@ -1052,7 +1052,7 @@ input, select, textarea { font: inherit; }
 /* Tablet & mobile broadcast: re-flow instead of shrinking */
 @media (max-width: 1000px) {
   body.is-broadcast { overflow: auto; }
-  .stage { height: auto; min-height: 100dvh; grid-template-rows: auto auto auto auto; overflow: visible; }
+  .stage { height: auto; min-height: 100dvh; grid-template-rows: auto auto auto; overflow: visible; }
   .stage-main { grid-template-columns: 1fr; }
   .stage-side { grid-template-rows: auto auto; }
   .hero { min-height: 0; }
@@ -1061,7 +1061,6 @@ input, select, textarea { font: inherit; }
   .bid-feed li:nth-child(n+5) { display: none; }
   .stage-lot { display: none; }
   .bid-dock { position: sticky; bottom: .5rem; z-index: 5; box-shadow: var(--shadow); }
-  .team-strip { order: 5; }
 }
 
 @media (max-width: 640px) {

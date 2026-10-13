@@ -204,7 +204,15 @@ module.exports = (io) => {
         try {
             const teams = await listFranchises(pool);
             for (const socket of io.sockets.sockets.values()) {
-                socket.emit('teams:update', teams);
+                const isAdmin = socket.user && socket.user.role === 'admin';
+                if (isAdmin) {
+                    socket.emit('teams:update', teams);
+                } else if (socket.user && socket.user.role === 'user') {
+                    const myTeam = teams.find(t => t.id === socket.user.id);
+                    socket.emit('teams:update', myTeam ? [myTeam] : []);
+                } else {
+                    socket.emit('teams:update', []);
+                }
             }
             return teams;
         } catch (err) {
@@ -709,7 +717,15 @@ module.exports = (io) => {
         socket.emit('auction:stateUpdate', getSanitizedState(socket.user));
         socket.emit('live:stats', liveStats());
         listFranchises(pool).then(teams => {
-            socket.emit('teams:update', teams);
+            const isAdmin = socket.user && socket.user.role === 'admin';
+            if (isAdmin) {
+                socket.emit('teams:update', teams);
+            } else if (socket.user && socket.user.role === 'user') {
+                const myTeam = teams.find(t => t.id === socket.user.id);
+                socket.emit('teams:update', myTeam ? [myTeam] : []);
+            } else {
+                socket.emit('teams:update', []);
+            }
         }).catch(() => {});
     }
 
