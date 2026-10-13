@@ -82,8 +82,8 @@ export default function Standings() {
                     <span title="Bowlers">BOWL: <b>{t.bowlers_count || 0}</b></span>
                     <span title="All-Rounders">AR: <b>{t.allrounders_count || 0}</b></span>
                     <span title="Wicket Keepers">WK: <b>{t.keepers_count || 0}</b></span>
-                    <span title="Foreign">FOR: <b>{t.foreign_count || 0}</b></span>
-                    <span title="Uncapped">UNC: <b>{t.uncapped_count || 0}</b></span>
+                    <span title="Indian Players (min 3)">IND: <b>{t.indian_count || 0}/3</b></span>
+                    <span title="Overseas Players (no limit)">OS: <b>{t.foreign_count || 0}</b></span>
                   </div>
                 </div>
                 

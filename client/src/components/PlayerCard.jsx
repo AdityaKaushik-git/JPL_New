@@ -12,7 +12,7 @@ export default function PlayerCard({ player, accent, priceLabel = 'Purchased', p
       <span className="player-card-mono" aria-hidden="true">{player.initials}</span>
       <div className="player-card-top">
         <PlayerAvatar player={player} size="lg" />
-        <RankBadge rank={player.current_rank} size="sm" />
+        <span className="badge-points-tag"><b>{player.ranking_points}</b> pts</span>
       </div>
       <h3 className="player-card-name">
         {player.name}

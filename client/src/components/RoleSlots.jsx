@@ -9,8 +9,8 @@ const SLOTS = [
 ]
 
 const INFO_SLOTS = [
-  { key: 'foreign_count',  max: 4, label: 'Foreign', short: 'FOR', title: 'Overseas players (max 4)' },
-  { key: 'uncapped_count', max: 2, label: 'Uncapped Indian', short: 'UNC', title: 'Uncapped Indian players (min 2)', isMin: true },
+  { key: 'indian_count',  max: 3, label: 'Indian', short: 'IND', title: 'Indian players (min 3)', isMin: true },
+  { key: 'foreign_count', max: null, label: 'Overseas', short: 'OS', title: 'Overseas players (no limit)' },
 ]
 
 export default function RoleSlots({ franchise, currentRole = null, compact = false }) {
@@ -39,17 +39,17 @@ export default function RoleSlots({ franchise, currentRole = null, compact = fal
       })}
       {INFO_SLOTS.map(s => {
         const used = Number(f[s.key] || 0)
-        const alert = s.isMin ? used < s.max : used >= s.max
+        const alert = s.isMin ? used < s.max : false
         return (
           <div
             key={s.key}
-            className={`role-slot role-slot-info${alert ? (s.isMin ? ' is-warn' : ' is-full') : ''}`}
+            className={`role-slot role-slot-info${alert ? ' is-warn' : ''}`}
             title={s.title}
           >
-            {!compact && <span className="role-slot-icon">{s.isMin ? '↑' : '⚑'}</span>}
+            {!compact && <span className="role-slot-icon">{s.isMin ? '🇮🇳' : '✈'}</span>}
             <span className="role-slot-label">{compact ? s.short : s.label}</span>
-            <span className={`role-slot-count${alert ? (s.isMin ? ' is-warn' : ' is-full') : ''}`}>
-              {used}<span className="role-slot-max">{s.isMin ? `/${s.max}✓` : `/${s.max}`}</span>
+            <span className={`role-slot-count${alert ? ' is-warn' : ''}`}>
+              {used}<span className="role-slot-max">{s.isMin ? `/${s.max}✓` : ''}</span>
             </span>
           </div>
         )
@@ -83,40 +83,41 @@ export function roleBlockMessage(franchise, role) {
   return null
 }
 
-export function canBidForeign(franchise, isForeign) {
-  if (!isForeign) return true
-  const f = franchise || {}
-  const foreignCount = Number(f.foreign_count || 0)
-  if (foreignCount >= 4) return false
-  if (foreignCount >= 2) {
-    // 3rd & 4th foreign player fill a Batsman slot space
-    return Number(f.batsmen_count || 0) < 5
-  }
+// No limit on overseas players
+export function canBidForeign() {
   return true
 }
 
-export function canBidUncapped(franchise, isUncapped, squadFull) {
-  if (isUncapped) return true
-  const uncapped = Number((franchise || {}).uncapped_count || 0)
-  return !(squadFull && uncapped < 2)
+export function foreignBlockMessage() {
+  return null
 }
 
-export function foreignBlockMessage(franchise, isForeign) {
-  if (!franchise || !isForeign) return null
+// Minimum 3 Indian players requirement lookahead
+export function canBidIndianRule(franchise, isForeign, squad, maxSquad = 15) {
+  if (!isForeign) return true
   const f = franchise || {}
-  const foreignCount = Number(f.foreign_count || 0)
-  if (foreignCount >= 4) return 'FOREIGN LIMIT — max 4 overseas players per squad'
-  if (foreignCount >= 2 && Number(f.batsmen_count || 0) >= 5) {
-    return 'BATSMAN SLOT FULL — 3rd/4th foreign player fills Batsman slot space'
+  const indianNow = Number(f.indian_count || 0)
+  const needed = Math.max(0, 3 - indianNow)
+  const remainingSlotsAfterThis = maxSquad - (squad + 1)
+  return remainingSlotsAfterThis >= needed
+}
+
+export function indianBlockMessage(franchise, isForeign, squad, maxSquad = 15) {
+  if (!franchise || !isForeign) return null
+  if (!canBidIndianRule(franchise, isForeign, squad, maxSquad)) {
+    const indianNow = Number(franchise.indian_count || 0)
+    const needed = Math.max(0, 3 - indianNow)
+    const remainingSlotsAfterThis = maxSquad - (squad + 1)
+    return `INDIAN MINIMUM — need ${needed} more Indian player(s) (${remainingSlotsAfterThis} slot(s) left)`
   }
   return null
 }
 
-export function uncappedBlockMessage(franchise, isUncapped, squadFull) {
-  if (!franchise || isUncapped) return null
-  if (!canBidUncapped(franchise, isUncapped, squadFull)) {
-    const needed = 2 - Number(franchise.uncapped_count || 0)
-    return `UNCAPPED INDIAN REQUIRED — need ${needed} more Uncapped Indian player(s)`
-  }
+// Backwards-compatible stubs
+export function canBidUncapped() {
+  return true
+}
+
+export function uncappedBlockMessage() {
   return null
 }

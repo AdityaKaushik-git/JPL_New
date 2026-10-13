@@ -15,7 +15,7 @@ const {
     MAX_ALLROUNDERS,
     MAX_KEEPERS,
     MAX_FOREIGN_PLAYERS,
-    MIN_UNCAPPED_PLAYERS,
+    MIN_INDIAN_PLAYERS,
 } = require('../config/auction');
 const { toRupees, formatINR } = require('../utils/money');
 const { publicPlayer, publicFranchise, logoUrl } = require('../services/serializers');
@@ -204,15 +204,7 @@ module.exports = (io) => {
         try {
             const teams = await listFranchises(pool);
             for (const socket of io.sockets.sockets.values()) {
-                const isAdmin = socket.user && socket.user.role === 'admin';
-                const canSeeRankings = isAdmin || showLiveRankings;
-                const sanitizedTeams = teams.map(t => {
-                    if (canSeeRankings) return t;
-                    // Redact live ranking points from team list when showLiveRankings is OFF for non-admins
-                    const { total_player_points, batsmen_points, ...rest } = t;
-                    return rest;
-                });
-                socket.emit('teams:update', sanitizedTeams);
+                socket.emit('teams:update', teams);
             }
             return teams;
         } catch (err) {
@@ -375,7 +367,7 @@ module.exports = (io) => {
             const [users] = await connection.query(
                 `SELECT id, role, status, purse, squad_count, max_squad_size,
                         batsmen_count, bowlers_count, allrounders_count, keepers_count,
-                        foreign_count, uncapped_count, team_name, team_short_name, team_color, logo, updated_at,
+                        foreign_count, uncapped_count, indian_count, team_name, team_short_name, team_color, logo, updated_at,
                         (SELECT COUNT(*) FROM teams t WHERE t.user_id = users.id) AS roster
                  FROM users WHERE id = ? FOR UPDATE`, [user.id]
             );
@@ -390,39 +382,27 @@ module.exports = (io) => {
 
             const playerRole = activeAuction.player ? activeAuction.player.playing_role : null;
 
-            // Foreign player cap & 3rd/4th foreign player Batsman slot space mapping
+            // Foreign player: no limit on overseas players — role slot still applies
             const isForeign = activeAuction.player && activeAuction.player.country &&
                 activeAuction.player.country.trim().toLowerCase() !== 'india';
-            const isUncapped = activeAuction.player && Boolean(activeAuction.player.is_uncapped);
+            const isIndian = !isForeign;
 
-            if (isForeign) {
-                const foreignCount = Number(f.foreign_count || 0);
-                if (foreignCount >= MAX_FOREIGN_PLAYERS) {
-                    throw new AuctionError(`FOREIGN CAP REACHED — maximum ${MAX_FOREIGN_PLAYERS} overseas players per squad.`);
-                }
-                if (foreignCount >= 2) {
-                    // 3rd and 4th foreign player fill a Batsman slot space
-                    if (Number(f.batsmen_count || 0) >= MAX_BATSMEN) {
-                        throw new AuctionError(`BATSMAN SLOT FULL — 3rd and 4th foreign players fill a Batsman slot space (${MAX_BATSMEN}/${MAX_BATSMEN} full).`);
-                    }
-                } else if (playerRole) {
-                    const roleErr = checkRoleSlot(playerRole, f);
-                    if (roleErr) throw new AuctionError(roleErr);
-                }
-            } else if (playerRole) {
+            // Role-slot check (applies to all players regardless of nationality)
+            if (playerRole) {
                 const roleErr = checkRoleSlot(playerRole, f);
                 if (roleErr) throw new AuctionError(roleErr);
             }
 
-            // Uncapped minimum requirement lookahead
-            const uncappedNow = Number(f.uncapped_count || 0);
-            const playerUncapped = activeAuction.player && Boolean(activeAuction.player.is_uncapped) && activeAuction.player.country && activeAuction.player.country.trim().toLowerCase() === 'india';
-            if (!playerUncapped && uncappedNow < MIN_UNCAPPED_PLAYERS) {
-                const uncappedNeeded = MIN_UNCAPPED_PLAYERS - uncappedNow;
+            // Indian minimum lookahead: ensure squad can still reach MIN_INDIAN_PLAYERS
+            const indianNow = Number(f.indian_count || 0);
+            if (!isIndian) {
+                // This player is foreign — after buying, remaining slots must cover the Indian shortfall
+                const indianNeeded = Math.max(0, MIN_INDIAN_PLAYERS - indianNow);
                 const remainingSlotsAfterThis = Number(f.max_squad_size) - (squad + 1);
-                if (remainingSlotsAfterThis < uncappedNeeded) {
+                if (remainingSlotsAfterThis < indianNeeded) {
                     throw new AuctionError(
-                        `UNCAPPED REQUIREMENT — you need at least ${MIN_UNCAPPED_PLAYERS} Uncapped Indian players. You must buy ${uncappedNeeded} more Uncapped Indian player(s) with your remaining ${Number(f.max_squad_size) - squad} slot(s).`
+                        `INDIAN PLAYER REQUIREMENT — you need at least ${MIN_INDIAN_PLAYERS} Indian players. ` +
+                        `You need ${indianNeeded} more Indian player(s) but would only have ${remainingSlotsAfterThis} slot(s) left.`
                     );
                 }
             }
@@ -535,16 +515,11 @@ module.exports = (io) => {
 
             const isForeign = activeAuction.player && activeAuction.player.country &&
                 activeAuction.player.country.trim().toLowerCase() !== 'india';
-            const isUncapped = activeAuction.player && Boolean(activeAuction.player.is_uncapped) && activeAuction.player.country && activeAuction.player.country.trim().toLowerCase() === 'india';
-
-            // If foreign player and foreign_count >= 2, fill Batsman slot space
-            let roleCol = roleCountColumn(playerRole);
-            if (isForeign && Number(f.foreign_count || 0) >= 2) {
-                roleCol = 'batsmen_count';
-            }
+            const isIndian = !isForeign;
 
             // Role slot re-check at sale time (concurrent protection)
-            const roleErr = checkRoleSlot(roleCol === 'batsmen_count' ? 'Batsman' : playerRole, f);
+            const roleCol = roleCountColumn(playerRole);
+            const roleErr = checkRoleSlot(playerRole, f);
             if (roleErr) throw new AuctionError(`Cannot sell: ${roleErr}`);
 
             if (toRupees(f.purse) < amount) {
@@ -572,9 +547,9 @@ module.exports = (io) => {
                     `UPDATE users SET foreign_count = foreign_count + 1 WHERE id = ?`, [bidderId]
                 );
             }
-            if (isUncapped) {
+            if (isIndian) {
                 await connection.query(
-                    `UPDATE users SET uncapped_count = uncapped_count + 1 WHERE id = ?`, [bidderId]
+                    `UPDATE users SET indian_count = COALESCE(indian_count, 0) + 1 WHERE id = ?`, [bidderId]
                 );
             }
 
@@ -733,14 +708,8 @@ module.exports = (io) => {
     function sendSnapshot(socket) {
         socket.emit('auction:stateUpdate', getSanitizedState(socket.user));
         socket.emit('live:stats', liveStats());
-        const isAdmin = socket.user && socket.user.role === 'admin';
         listFranchises(pool).then(teams => {
-            const sanitizedTeams = teams.map(t => {
-                if (isAdmin) return t;
-                const { total_player_points, batsmen_points, ...rest } = t;
-                return rest;
-            });
-            socket.emit('teams:update', sanitizedTeams);
+            socket.emit('teams:update', teams);
         }).catch(() => {});
     }
 

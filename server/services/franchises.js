@@ -7,7 +7,7 @@ const FRANCHISE_COLUMNS = `id, full_name, team_name, team_short_name, team_color
     (logo IS NOT NULL AND logo <> '') AS logo, starting_purse, purse, total_spent,
     squad_count, max_squad_size,
     batsmen_count, bowlers_count, allrounders_count, keepers_count,
-    foreign_count, uncapped_count,
+    foreign_count, uncapped_count, indian_count,
     (SELECT COALESCE(SUM(p.ranking_points), 0) FROM teams t JOIN players p ON p.id = t.player_id WHERE t.user_id = users.id) AS total_player_points,
     (SELECT COALESCE(SUM(p.ranking_points), 0) FROM teams t JOIN players p ON p.id = t.player_id WHERE t.user_id = users.id AND p.playing_role = 'Batsman') AS batsmen_points,
     status, updated_at`;

@@ -13,8 +13,8 @@ const { io } = require('socket.io-client');
 
 const BASE = process.env.TEST_BASE_URL || 'http://localhost:3000';
 const ADMIN = { loginId: process.env.TEST_ADMIN_ID || 'ADMIN001', password: process.env.TEST_ADMIN_PASSWORD || 'admin123' };
-const OWNER_A = { loginId: 'titans@jpl.com', password: 'Owner@123' };
-const OWNER_B = { loginId: 'warriors@jpl.com', password: 'Owner@123' };
+const OWNER_A = { loginId: process.env.TEST_OWNER_A_ID || 'Testjpl', password: process.env.TEST_OWNER_A_PASS || 'Owner@123' };
+const OWNER_B = { loginId: process.env.TEST_OWNER_B_ID || 'rishi', password: process.env.TEST_OWNER_B_PASS || 'Owner@123' };
 
 async function api(path, { method = 'GET', token, body } = {}) {
     const res = await fetch(BASE + path, {
@@ -57,7 +57,7 @@ test('public registration is gone', async () => {
     assert.equal(r.status, 404);
 });
 
-test('franchise creation always assigns ₹18 Cr and 12 slots, ignoring client values', async () => {
+test('franchise creation always assigns ₹75 Cr and 15 slots, ignoring client values', async () => {
     const admin = await login(ADMIN);
     const tag = Date.now().toString(36).slice(-4).toUpperCase();
     const r = await api('/api/admin/franchises', {
@@ -69,11 +69,11 @@ test('franchise creation always assigns ₹18 Cr and 12 slots, ignoring client v
         },
     });
     assert.equal(r.status, 201, JSON.stringify(r.data));
-    assert.equal(r.data.franchise.starting_purse, 180000000);
-    assert.equal(r.data.franchise.remaining_purse, 180000000);
+    assert.equal(r.data.franchise.starting_purse, 750000000);  // ₹75 Cr
+    assert.equal(r.data.franchise.remaining_purse, 750000000); // ₹75 Cr
     assert.equal(r.data.franchise.total_spent, 0);
     assert.equal(r.data.franchise.squad_count, 0);
-    assert.equal(r.data.franchise.max_squad_size, 12);
+    assert.equal(r.data.franchise.max_squad_size, 15);  // 15-player squad
 
     const owner = await login({ loginId: `test${tag}@jpl.com`, password: 'Owner@123' });
     const forbidden = await api('/api/admin/franchises', { method: 'POST', token: owner.token, body: {} });
@@ -147,11 +147,11 @@ test('bidding flow: validation, locking, sale and auto-finalise', async () => {
     [adminSock, sa, sb, spectator].forEach(s => s.disconnect());
 });
 
-test('squad limit of 12 is enforced server-side', async () => {
+test('squad limit of 15 is enforced server-side', async () => {
     const admin = await login(ADMIN);
     const owner = await login(OWNER_A);
     const me = (await api('/api/users/dashboard', { token: owner.token })).data.franchise;
-    assert.equal(me.max_squad_size, 12);
+    assert.equal(me.max_squad_size, 15);
 
     const adminSock = await connect(admin.token);
     const sock = await connect(owner.token);
@@ -159,7 +159,7 @@ test('squad limit of 12 is enforced server-side', async () => {
 
     // Fill the squad directly through the engine until it reports SQUAD FULL.
     let guard = 0;
-    while (guard++ < 14) {
+    while (guard++ < 17) {
         adminSock.emit('admin:nextPlayer');
         const st = await until(() => (adminSock.state.status === 'Live' ? adminSock.state : null)
             || adminSock.notes.find(n => /No Available players/.test(n.text)), 5000).catch(() => null);
@@ -172,7 +172,7 @@ test('squad limit of 12 is enforced server-side', async () => {
             adminSock.emit('admin:markUnsold');
             await until(() => adminSock.state.status === 'Completed');
             const after = (await api('/api/users/dashboard', { token: owner.token })).data.franchise;
-            assert.equal(after.squad_count, 12);
+            assert.equal(after.squad_count, 15);
             [adminSock, sock].forEach(s => s.disconnect());
             return;
         }
@@ -180,7 +180,7 @@ test('squad limit of 12 is enforced server-side', async () => {
         await until(() => adminSock.state.status === 'Completed');
     }
     [adminSock, sock].forEach(s => s.disconnect());
-    // Not enough seeded players to reach 12 is acceptable; verify the cap was never exceeded.
+    // Not enough seeded players to reach 15 is acceptable; verify the cap was never exceeded.
     const after = (await api('/api/users/dashboard', { token: owner.token })).data.franchise;
-    assert.ok(after.squad_count <= 12);
+    assert.ok(after.squad_count <= 15);
 });

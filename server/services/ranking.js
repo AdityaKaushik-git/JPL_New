@@ -141,8 +141,11 @@ async function recalculateRankings(pool, existingConnection = null) {
         for (const p of players) {
             const derived = deriveStats(p);
             Object.assign(p, derived);
-            p.newPoints = computePoints(p).points;
-            p.ranked = num(p.matches) > 0;
+            // Preserve official/Excel points if base_price_auto is 0 or if custom points exist
+            p.newPoints = (Number(p.base_price_auto) === 0 && num(p.ranking_points) > 0)
+                ? num(p.ranking_points)
+                : computePoints(p).points;
+            p.ranked = num(p.newPoints) > 0 || num(p.matches) > 0;
         }
 
         const ranked = players.filter(p => p.ranked).sort(sortForRank);

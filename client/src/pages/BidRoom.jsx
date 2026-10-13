@@ -9,7 +9,7 @@ import { useAuctionSocket } from '../hooks/useAuctionSocket'
 import { useFullscreen } from '../hooks/useFullscreen'
 import { useAuth } from '../contexts/AuthContext'
 import { formatINR, formatShort } from '../lib/format'
-import RoleSlots, { canBidForRole, roleBlockMessage, canBidForeign, foreignBlockMessage, canBidUncapped, uncappedBlockMessage } from '../components/RoleSlots'
+import RoleSlots, { canBidForRole, roleBlockMessage, canBidIndianRule, indianBlockMessage } from '../components/RoleSlots'
 
 // Franchise owner's bid room: the broadcast plus a bid dock.
 export default function BidRoom() {
@@ -42,8 +42,7 @@ export default function BidRoom() {
   if (me && me.status === 'disabled') block = { icon: <Lock size={18} />, text: 'Your franchise is disabled' }
   else if (full) block = { icon: <Lock size={18} />, text: `Squad full — ${squad} / ${maxSquad}` }
   else if (state.player && me && !canBidForRole(me, state.player.playing_role)) block = { icon: <Lock size={18} />, text: roleBlockMessage(me, state.player.playing_role) }
-  else if (state.player && me && !canBidForeign(me, isForeign)) block = { icon: <Lock size={18} />, text: foreignBlockMessage(me, isForeign) }
-  else if (state.player && me && !canBidUncapped(me, isUncapped, full)) block = { icon: <Lock size={18} />, text: uncappedBlockMessage(me, isUncapped, full) }
+  else if (state.player && me && !canBidIndianRule(me, isForeign, squad, maxSquad)) block = { icon: <Lock size={18} />, text: indianBlockMessage(me, isForeign, squad, maxSquad) }
   else if (!state.player || state.status === 'Completed' || state.status === 'Pending') block = { icon: <Gavel size={18} />, text: 'Waiting for the next player' }
   else if (state.status === 'Paused') block = { icon: <PauseCircle size={18} />, text: 'Auction paused' }
   else if (state.status === 'Processing') block = { icon: <Gavel size={18} />, text: 'Closing this player' }

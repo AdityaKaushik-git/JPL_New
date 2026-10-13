@@ -110,6 +110,7 @@ function publicFranchise(u) {
         keepers_count: n(u.keepers_count) || 0,
         foreign_count: n(u.foreign_count) || 0,
         uncapped_count: n(u.uncapped_count) || 0,
+        indian_count: n(u.indian_count) || 0,
         total_player_points: n(u.total_player_points) || 0,
         batsmen_points: n(u.batsmen_points) || 0,
         status: u.status || 'active',

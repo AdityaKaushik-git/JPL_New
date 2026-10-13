@@ -71,14 +71,9 @@ export default function PlayerHero({ player, lot, accent, compact = false }) {
         </div>
 
         <div className="hero-rank seq seq-5" style={{ marginTop: '0.5rem' }}>
-          <RankBadge rank={player.current_rank} size="lg" />
           <div className="hero-points">
             <b>{player.ranking_points}</b>
-            <small>ranking points</small>
-          </div>
-          <div className="hero-form">
-            <small>Form</small>
-            {isNew ? <span className="form-new">New</span> : <FormDelta value={form} />}
+            <small>Points</small>
           </div>
           <div className="hero-base">
             <small>Base price</small>

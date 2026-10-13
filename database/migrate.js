@@ -257,6 +257,87 @@ async function dataMigrations(db) {
             ) WHERE u.role = 'user'`, [STARTING_PURSE]);
     });
 
+    // JPL rule change: no foreign cap, minimum 3 Indian players — add indian_count column
+    await once(db, '007_indian_count_no_foreign_cap', async () => {
+        console.log('  adding indian_count column, no foreign-player cap');
+        await addColumn(db, 'users', 'indian_count', 'INT NOT NULL DEFAULT 0 AFTER foreign_count');
+        // Backfill from existing rosters
+        await db.query(`
+            UPDATE users u
+            SET indian_count = COALESCE(
+                (SELECT COUNT(*) FROM teams t
+                 JOIN players p ON p.id = t.player_id
+                 WHERE t.user_id = u.id
+                   AND (p.country IS NULL OR TRIM(LOWER(p.country)) = 'india')),
+                0
+            ) WHERE u.role = 'user'
+        `);
+    });
+
+    // Update ranking_points from the official Excel player list
+    await once(db, '008_excel_ranking_points', async () => {
+        console.log('  updating ranking_points from Excel player list');
+        const xlsxPath = path.join(__dirname, '..', 'player list.xlsx');
+        if (!fs.existsSync(xlsxPath)) {
+            console.warn('  ! player list.xlsx not found — skipping ranking_points update');
+            return;
+        }
+        try {
+            const ExcelJS = require('exceljs');
+            const workbook = new ExcelJS.Workbook();
+            await workbook.xlsx.readFile(xlsxPath);
+
+            // Map sheet → role
+            const sheetRoles = {
+                'batsman':       'Batsman',
+                'Wicket keeper': 'Wicket Keeper',
+                'bowler':        'Bowler',
+                'uncapped':      null, // role in column
+                'all rounder':   'All-Rounder',
+            };
+
+            let updated = 0;
+            let notFound = 0;
+
+            for (const [sheetName, sheetRole] of Object.entries(sheetRoles)) {
+                const ws = workbook.getWorksheet(sheetName);
+                if (!ws) continue;
+
+                // Get headers from row 1
+                const headers = [];
+                ws.getRow(1).eachCell((cell, col) => { headers[col] = String(cell.value || '').trim().toLowerCase(); });
+
+                const nameCol  = headers.findIndex(h => h === 'player name' || h === 'player') + 1;
+                const ptsCol   = headers.findIndex(h => h === 'points') + 1;
+                const roleCol  = headers.findIndex(h => h === 'role') + 1;
+
+                if (!nameCol || !ptsCol) continue;
+
+                ws.eachRow((row, rowNum) => {
+                    if (rowNum === 1) return; // skip header
+                    const name   = String(row.getCell(nameCol).value || '').trim();
+                    const points = Number(row.getCell(ptsCol).value) || 0;
+                    const role   = sheetRole || (roleCol ? String(row.getCell(roleCol).value || '').trim() : '');
+                    if (!name || !points) return;
+                    // Normalize uncapped role names
+                    const normRole = role === 'All Rounder' ? 'All-Rounder' : role;
+                    db.query(
+                        `UPDATE players SET ranking_points = ?, base_price_auto = 0 WHERE name = ? AND playing_role = ?`,
+                        [points, name, normRole]
+                    ).then(([r]) => {
+                        if (r.affectedRows > 0) { updated++; }
+                        else { notFound++; }
+                    }).catch(() => {});
+                });
+            }
+            // Small delay to let all async queries settle
+            await new Promise(r => setTimeout(r, 2000));
+            console.log(`  updated ranking_points: ${updated} players updated, ${notFound} not matched`);
+        } catch (err) {
+            console.warn(`  ! Could not load ExcelJS: ${err.message}. Try: npm install exceljs`);
+        }
+    });
+
     // Always keep counters consistent with the teams table (source of truth for rosters).
     await db.query(`UPDATE users u SET
         squad_count = (SELECT COUNT(*) FROM teams t WHERE t.user_id = u.id),
@@ -272,7 +353,8 @@ async function dataMigrations(db) {
           allrounders_count = COALESCE((SELECT COUNT(*) FROM teams t JOIN players p ON p.id = t.player_id WHERE t.user_id = u.id AND p.playing_role = 'All-Rounder'), 0),
           keepers_count     = COALESCE((SELECT COUNT(*) FROM teams t JOIN players p ON p.id = t.player_id WHERE t.user_id = u.id AND p.playing_role = 'Wicket Keeper'), 0),
           foreign_count     = COALESCE((SELECT COUNT(*) FROM teams t JOIN players p ON p.id = t.player_id WHERE t.user_id = u.id AND p.country IS NOT NULL AND TRIM(LOWER(p.country)) <> 'india' AND TRIM(p.country) <> ''), 0),
-          uncapped_count    = COALESCE((SELECT COUNT(*) FROM teams t JOIN players p ON p.id = t.player_id WHERE t.user_id = u.id AND p.is_uncapped = 1), 0)
+          uncapped_count    = COALESCE((SELECT COUNT(*) FROM teams t JOIN players p ON p.id = t.player_id WHERE t.user_id = u.id AND p.is_uncapped = 1), 0),
+          indian_count      = COALESCE((SELECT COUNT(*) FROM teams t JOIN players p ON p.id = t.player_id WHERE t.user_id = u.id AND (p.country IS NULL OR TRIM(LOWER(p.country)) = 'india')), 0)
         WHERE u.role = 'user'
     `);
 
@@ -332,7 +414,7 @@ async function main() {
         }
 
         if (isFresh) {
-            for (const name of ['001_remove_owner_player_rows', '002_franchise_18cr_12_players', '003_player_codes_and_order', '004_purse_50cr_squad_14', '005_role_counts_reconcile', '006_jpl2026_rules']) {
+            for (const name of ['001_remove_owner_player_rows', '002_franchise_18cr_12_players', '003_player_codes_and_order', '004_purse_50cr_squad_14', '005_role_counts_reconcile', '006_jpl2026_rules', '007_indian_count_no_foreign_cap']) {
                 await db.query('INSERT IGNORE INTO schema_migrations (name) VALUES (?)', [name]);
             }
         }

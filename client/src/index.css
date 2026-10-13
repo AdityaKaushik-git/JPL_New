@@ -277,6 +277,7 @@ input, select, textarea { font: inherit; }
   font-size: 9rem; line-height: 1; color: rgba(244, 233, 216, .045); pointer-events: none;
 }
 .player-card-top { display: flex; justify-content: space-between; align-items: flex-start; }
+.badge-points-tag { font-family: var(--font-display); font-size: .85rem; padding: .2rem .55rem; border-radius: var(--r-sm); background: rgba(242, 193, 78, .12); border: 1px solid rgba(242, 193, 78, .3); color: var(--gold); }
 .player-card-name { font-family: var(--font-display); font-size: 1.65rem; font-weight: 800; line-height: 1; margin-top: .3rem; }
 .player-card-role { display: flex; align-items: center; gap: .35rem; color: var(--chalk-2); font-size: .9rem; font-weight: 600; }
 .player-card-meta { display: flex; gap: 1rem; font-size: .85rem; color: var(--chalk-3); }

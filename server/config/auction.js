@@ -12,9 +12,9 @@ const MAX_BOWLERS     = 5;  // max Bowler per squad
 const MAX_ALLROUNDERS = 3;  // max All-Rounder per squad
 const MAX_KEEPERS     = 2;  // max Wicket Keeper per squad (NEW: was 1, now 2)
 
-// Foreign-player and uncapped-player limits (NEW)
-const MAX_FOREIGN_PLAYERS  = 4;  // max overseas players per squad
-const MIN_UNCAPPED_PLAYERS = 2;  // min uncapped players per squad
+// Indian-player minimum (NEW — no cap on foreign players)
+const MAX_FOREIGN_PLAYERS  = Infinity; // no limit on overseas players
+const MIN_INDIAN_PLAYERS   = 3;        // min Indian players per squad
 
 // Timer (seconds). The server owns the clock; clients only display it.
 const INITIAL_TIMER_SECONDS = clampInt(process.env.AUCTION_INITIAL_SECONDS, 30, 5, 600);
@@ -61,7 +61,7 @@ module.exports = {
     MAX_ALLROUNDERS,
     MAX_KEEPERS,
     MAX_FOREIGN_PLAYERS,
-    MIN_UNCAPPED_PLAYERS,
+    MIN_INDIAN_PLAYERS,
     INITIAL_TIMER_SECONDS,
     BID_RESET_SECONDS,
     AUTO_FINALIZE,
