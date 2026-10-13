@@ -56,6 +56,42 @@ function PlayersTab({ notify }) {
   const [confirm, setConfirm] = useState(null)
   const [busy, setBusy] = useState(false)
 
+  const counts = useMemo(() => {
+    const list = data ? data.players : []
+    const total = list.length
+    const batsmen = list.filter(p => p.playing_role === 'Batsman').length
+    const bowlers = list.filter(p => p.playing_role === 'Bowler').length
+    const allrounders = list.filter(p => p.playing_role === 'All-Rounder').length
+    const keepers = list.filter(p => p.playing_role === 'Wicket Keeper').length
+
+    const indian = list.filter(p => !p.country || p.country.trim().toLowerCase() === 'india').length
+    const overseas = list.filter(p => p.country && p.country.trim().toLowerCase() !== 'india').length
+
+    const available = list.filter(p => p.status === 'Available').length
+    const sold = list.filter(p => p.status === 'Sold').length
+    const unsold = list.filter(p => p.status === 'Unsold').length
+    const inAuction = list.filter(p => p.status === 'In Auction').length
+
+    const uncapped = list.filter(p => Boolean(p.is_uncapped)).length
+    const capped = total - uncapped
+
+    return {
+      total,
+      batsmen,
+      bowlers,
+      allrounders,
+      keepers,
+      indian,
+      overseas,
+      available,
+      sold,
+      unsold,
+      inAuction,
+      uncapped,
+      capped,
+    }
+  }, [data])
+
   const players = useMemo(() => {
     let list = data ? data.players : []
     if (role !== 'All') list = list.filter(p => p.playing_role === role)
@@ -99,6 +135,101 @@ function PlayersTab({ notify }) {
 
   return (
     <section className="panel">
+      <div className="player-stats-panel">
+        <div className="stats-primary-row">
+          <div
+            className={`stat-pill ${role === 'All' && cat === 'All' && statusFilter === 'All' ? 'active' : ''}`}
+            onClick={() => { setRole('All'); setCat('All'); setStatusFilter('All'); setQ('') }}
+            title="Total players in database (click to view all)"
+          >
+            <span className="pill-label">Total Players</span>
+            <b className="pill-value">{counts.total}</b>
+          </div>
+          <div
+            className={`stat-pill pill-avail ${statusFilter === 'Available' ? 'active' : ''}`}
+            onClick={() => setStatusFilter(statusFilter === 'Available' ? 'All' : 'Available')}
+            title="Available in auction"
+          >
+            <span className="pill-label">Available</span>
+            <b className="pill-value">{counts.available}</b>
+          </div>
+          <div
+            className={`stat-pill pill-sold ${statusFilter === 'Sold' ? 'active' : ''}`}
+            onClick={() => setStatusFilter(statusFilter === 'Sold' ? 'All' : 'Sold')}
+            title="Sold to franchises"
+          >
+            <span className="pill-label">Sold</span>
+            <b className="pill-value">{counts.sold}</b>
+          </div>
+          <div
+            className={`stat-pill pill-unsold ${statusFilter === 'Unsold' ? 'active' : ''}`}
+            onClick={() => setStatusFilter(statusFilter === 'Unsold' ? 'All' : 'Unsold')}
+            title="Unsold players"
+          >
+            <span className="pill-label">Unsold</span>
+            <b className="pill-value">{counts.unsold}</b>
+          </div>
+        </div>
+
+        <div className="classification-groups">
+          <div className="classification-group">
+            <span className="classification-group-label">Role:</span>
+            <button
+              type="button"
+              className={`filter-chip ${role === 'Batsman' ? 'active' : ''}`}
+              onClick={() => setRole(role === 'Batsman' ? 'All' : 'Batsman')}
+            >
+              <RoleIcon role="Batsman" size={13} /> Batsmen <b>{counts.batsmen}</b>
+            </button>
+            <button
+              type="button"
+              className={`filter-chip ${role === 'Bowler' ? 'active' : ''}`}
+              onClick={() => setRole(role === 'Bowler' ? 'All' : 'Bowler')}
+            >
+              <RoleIcon role="Bowler" size={13} /> Bowlers <b>{counts.bowlers}</b>
+            </button>
+            <button
+              type="button"
+              className={`filter-chip ${role === 'All-Rounder' ? 'active' : ''}`}
+              onClick={() => setRole(role === 'All-Rounder' ? 'All' : 'All-Rounder')}
+            >
+              <RoleIcon role="All-Rounder" size={13} /> All-Rounders <b>{counts.allrounders}</b>
+            </button>
+            <button
+              type="button"
+              className={`filter-chip ${role === 'Wicket Keeper' ? 'active' : ''}`}
+              onClick={() => setRole(role === 'Wicket Keeper' ? 'All' : 'Wicket Keeper')}
+            >
+              <RoleIcon role="Wicket Keeper" size={13} /> Keepers <b>{counts.keepers}</b>
+            </button>
+          </div>
+
+          <div className="classification-group">
+            <span className="classification-group-label">Category:</span>
+            <button
+              type="button"
+              className={`filter-chip ${cat === 'India' ? 'active' : ''}`}
+              onClick={() => setCat(cat === 'India' ? 'All' : 'India')}
+            >
+              Domestic (India) <b>{counts.indian}</b>
+            </button>
+            <button
+              type="button"
+              className={`filter-chip ${cat === 'Overseas' ? 'active' : ''}`}
+              onClick={() => setCat(cat === 'Overseas' ? 'All' : 'Overseas')}
+            >
+              Overseas <b>{counts.overseas}</b>
+            </button>
+            <button
+              type="button"
+              className={`filter-chip ${cat === 'Uncapped' ? 'active' : ''}`}
+              onClick={() => setCat(cat === 'Uncapped' ? 'All' : 'Uncapped')}
+            >
+              Uncapped <b>{counts.uncapped}</b>
+            </button>
+          </div>
+        </div>
+      </div>
       <div className="toolbar" style={{ flexWrap: 'wrap', gap: '.5rem' }}>
         <label className="search"><Search size={15} /><input value={q} onChange={e => setQ(e.target.value)} placeholder="Search name, ID, country" /></label>
         <select value={role} onChange={e => setRole(e.target.value)} className="select-sm" title="Filter by role">

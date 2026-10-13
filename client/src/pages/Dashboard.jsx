@@ -118,9 +118,15 @@ function AdminOverview() {
             {showRankings ? <Eye size={16} /> : <EyeOff size={16} />}
             Live Rankings: {showRankings ? 'ON' : 'OFF'}
           </button>
-          <button className="btn btn-success" onClick={() => emit('admin:startAuction')}>
-            <Play size={16} /> Start Auction
-          </button>
+          {state.status === 'Paused' ? (
+            <button className="btn btn-success" onClick={() => emit('admin:resumeAuction')}>
+              <Play size={16} /> Resume Auction
+            </button>
+          ) : (
+            <button className="btn btn-success" onClick={() => emit('admin:startAuction')}>
+              <Play size={16} /> Start Auction
+            </button>
+          )}
           <button className="btn btn-danger" onClick={() => emit('admin:endAuction')} disabled={isEnded}>
             <Square size={16} /> End Auction
           </button>

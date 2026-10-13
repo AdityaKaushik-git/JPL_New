@@ -82,6 +82,7 @@ function emptyAuction() {
 
 let activeAuction = emptyAuction();
 let showLiveRankings = false;
+let lastAuctionedPlayer = null;
 const connectedUsers = new Map();
 
 // ---- serial queue: one state mutation at a time -----------------------------
@@ -273,7 +274,7 @@ module.exports = (io) => {
     }
 
     // ---- start a lot ----------------------------------------------------------
-    async function startLot(playerId) {
+    async function startLot(playerId, { startPaused = false } = {}) {
         if (activeAuction.player && ['Live', 'Paused', 'Processing'].includes(activeAuction.status)) {
             if (activeAuction.highestBidder) {
                 throw new AuctionError('Finish the current player (SOLD or UNSOLD) before starting another.', 'warning');
@@ -291,8 +292,10 @@ module.exports = (io) => {
                 throw new AuctionError(`${rows[0].name} is ${rows[0].status}. Only Available players can be auctioned.`, 'warning');
             }
             player = publicPlayer(rows[0]);
+            const initialStatus = startPaused ? 'Paused' : 'Live';
             const [result] = await connection.query(
-                "INSERT INTO auctions (player_id, status, current_bid, start_time) VALUES (?, 'Live', 0, NOW())", [playerId]
+                'INSERT INTO auctions (player_id, status, current_bid, start_time) VALUES (?, ?, 0, NOW())',
+                [playerId, initialStatus]
             );
             auctionId = result.insertId;
             await connection.query("UPDATE players SET status = 'In Auction' WHERE id = ?", [playerId]);
@@ -306,25 +309,87 @@ module.exports = (io) => {
         }
 
         stopTimer();
+        lastAuctionedPlayer = {
+            id: player.id,
+            order: Number(player.auction_order ?? player.id),
+            role: player.playing_role,
+        };
+
         activeAuction = {
             ...emptyAuction(),
             auctionId,
             player: { ...player, status: 'In Auction' },
             lot,
-            status: 'Live',
+            status: startPaused ? 'Paused' : 'Live',
             timeLeft: INITIAL_TIMER_SECONDS,
             timerTotal: INITIAL_TIMER_SECONDS,
         };
-        startTimer();
+        if (!startPaused) {
+            startTimer();
+        }
         broadcastState();
         hub.notifyPlayersChanged();
-        notify(io, `Now on the block: ${player.name}`, 'info');
+        if (startPaused) {
+            notify(io, `Now on the block: ${player.name} (Auction Paused — admin click Resume to start timer)`, 'info');
+        } else {
+            notify(io, `Now on the block: ${player.name}`, 'info');
+        }
     }
 
-    async function nextAvailablePlayerId() {
-        const [rows] = await pool.query(
-            "SELECT id FROM players WHERE status = 'Available' ORDER BY COALESCE(auction_order, id), id LIMIT 1"
-        );
+    async function nextAvailablePlayerId({ role = null, afterOrder = null, afterId = null } = {}) {
+        let refOrder = afterOrder;
+        let refId = afterId;
+
+        // If no explicit afterOrder/afterId provided, check lastAuctionedPlayer
+        if (refOrder == null && lastAuctionedPlayer) {
+            if (role) {
+                // If filtering by role, only advance sequentially if lastAuctionedPlayer was in the same role
+                if (lastAuctionedPlayer.role === role) {
+                    refOrder = lastAuctionedPlayer.order;
+                    refId = lastAuctionedPlayer.id;
+                }
+            } else {
+                refOrder = lastAuctionedPlayer.order;
+                refId = lastAuctionedPlayer.id;
+            }
+        }
+
+        // 1. Try to find the next player in sequence after (refOrder, refId)
+        if (refOrder != null && refId != null) {
+            let sql = `
+                SELECT id, COALESCE(auction_order, id) AS ord
+                FROM players
+                WHERE status = 'Available'
+            `;
+            const params = [];
+            if (role) {
+                sql += ' AND playing_role = ?';
+                params.push(role);
+            }
+            sql += ' AND (COALESCE(auction_order, id) > ? OR (COALESCE(auction_order, id) = ? AND id > ?))';
+            params.push(refOrder, refOrder, refId);
+            sql += ' ORDER BY COALESCE(auction_order, id), id LIMIT 1';
+
+            const [rows] = await pool.query(sql, params);
+            if (rows.length) {
+                return rows[0].id;
+            }
+        }
+
+        // 2. Wrap around to the first available player (of that role, if role is set)
+        let sql = `
+            SELECT id, COALESCE(auction_order, id) AS ord
+            FROM players
+            WHERE status = 'Available'
+        `;
+        const params = [];
+        if (role) {
+            sql += ' AND playing_role = ?';
+            params.push(role);
+        }
+        sql += ' ORDER BY COALESCE(auction_order, id), id LIMIT 1';
+
+        const [rows] = await pool.query(sql, params);
         return rows.length ? rows[0].id : null;
     }
 
@@ -655,7 +720,15 @@ module.exports = (io) => {
             const [rows] = await pool.query(
                 "SELECT * FROM auctions WHERE status IN ('Live', 'Paused') ORDER BY id DESC LIMIT 1"
             );
-            if (!rows.length) return;
+            if (!rows.length) {
+                const [lastA] = await pool.query(
+                    "SELECT p.id, COALESCE(p.auction_order, p.id) as ord, p.playing_role FROM auctions a JOIN players p ON a.player_id = p.id ORDER BY a.id DESC LIMIT 1"
+                );
+                if (lastA.length) {
+                    lastAuctionedPlayer = { id: lastA[0].id, order: Number(lastA[0].ord), role: lastA[0].playing_role };
+                }
+                return;
+            }
             const auction = rows[0];
             const [players] = await pool.query('SELECT * FROM players WHERE id = ?', [auction.player_id]);
             if (!players.length) return;
@@ -677,6 +750,11 @@ module.exports = (io) => {
             const bidder = auction.highest_bidder_id ? await loadTeam(pool, auction.highest_bidder_id) : null;
 
             await pool.query("UPDATE auctions SET status = 'Paused' WHERE id = ?", [auction.id]);
+            lastAuctionedPlayer = {
+                id: player.id,
+                order: Number(player.auction_order ?? player.id),
+                role: player.playing_role,
+            };
             activeAuction = {
                 ...emptyAuction(),
                 auctionId: auction.id,
@@ -774,9 +852,15 @@ module.exports = (io) => {
             await startLot(id);
         });
 
-        guard(socket, 'admin:nextPlayer', true, async () => {
-            const id = await nextAvailablePlayerId();
-            if (!id) throw new AuctionError('No Available players left in the queue.', 'warning');
+        guard(socket, 'admin:nextPlayer', true, async (data) => {
+            const role = data && data.role && data.role !== 'All' ? data.role : null;
+            const id = await nextAvailablePlayerId({ role });
+            if (!id) {
+                const msg = role
+                    ? `No Available ${role} players left in the queue.`
+                    : 'No Available players left in the queue.';
+                throw new AuctionError(msg, 'warning');
+            }
             await startLot(id);
         });
 
@@ -824,20 +908,22 @@ module.exports = (io) => {
         });
 
         guard(socket, 'admin:startAuction', true, async () => {
-            if (activeAuction.status === 'Ended' || activeAuction.status === 'Pending' || activeAuction.status === 'Paused') {
-                activeAuction.status = 'Live';
-            }
-            if (activeAuction.player && activeAuction.status !== 'Completed') {
-                startTimer();
-                notify(io, 'The JPL Auction has officially STARTED!', 'success');
-            } else {
-                const id = await nextAvailablePlayerId();
-                if (id) {
-                    await startLot(id);
-                    notify(io, 'The JPL Auction has officially STARTED!', 'success');
-                } else {
-                    notify(io, 'The JPL Auction started, but no available players remain.', 'info');
+            if (activeAuction.player && ['Live', 'Paused'].includes(activeAuction.status)) {
+                if (activeAuction.status === 'Live') {
+                    stopTimer();
+                    activeAuction.status = 'Paused';
+                    await pool.query("UPDATE auctions SET status = 'Paused' WHERE id = ?", [activeAuction.auctionId]);
+                    broadcastState();
+                    notify(io, 'Auction paused', 'warning');
                 }
+                return;
+            }
+            const id = await nextAvailablePlayerId();
+            if (id) {
+                await startLot(id, { startPaused: true });
+                notify(io, 'The JPL Auction has been initialized in Paused state. Admin: Click Resume to start bidding!', 'info');
+            } else {
+                notify(io, 'The JPL Auction started, but no available players remain.', 'info');
             }
             broadcastState();
             await broadcastTeams();
@@ -868,6 +954,7 @@ module.exports = (io) => {
 
     async function resetAndStartAuction() {
         stopTimer();
+        lastAuctionedPlayer = null;
         activeAuction = emptyAuction();
         showLiveRankings = false;
         notify(io, 'Auction reset by Admin. Starting fresh session…', 'warning');
@@ -876,8 +963,8 @@ module.exports = (io) => {
 
         const id = await nextAvailablePlayerId();
         if (id) {
-            await startLot(id);
-            notify(io, 'The JPL Auction has officially STARTED!', 'success');
+            await startLot(id, { startPaused: true });
+            notify(io, 'The JPL Auction has been initialized in Paused state. Admin: Click Resume to start bidding!', 'info');
         } else {
             notify(io, 'The JPL Auction started, but no available players remain in the queue.', 'info');
         }

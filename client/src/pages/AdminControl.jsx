@@ -157,7 +157,14 @@ export default function AdminControl() {
             {showRankings ? <Eye size={15} /> : <EyeOff size={15} />}
             Live Rankings: {showRankings ? 'ON' : 'OFF'}
           </button>
-          <button className="btn btn-success btn-sm" onClick={handleStartAuctionClick} disabled={otpLoading}><Play size={15} /> {otpLoading ? 'Sending OTP…' : 'Start Auction'}</button>
+          {state.status === 'Paused' && (
+            <button className="btn btn-success btn-sm" onClick={() => emit('admin:resumeAuction')}>
+              <Play size={15} /> Resume Auction
+            </button>
+          )}
+          <button className={state.status === 'Paused' ? 'btn btn-ghost btn-sm' : 'btn btn-success btn-sm'} onClick={handleStartAuctionClick} disabled={otpLoading}>
+            <Play size={15} /> {otpLoading ? 'Sending OTP…' : (state.status === 'Paused' ? 'Reset & Start' : 'Start Auction')}
+          </button>
           <button className="btn btn-danger btn-sm" onClick={() => emit('admin:endAuction')} disabled={state.status === 'Ended'}><Square size={15} /> End Auction</button>
           <span className={`conn conn-${connection}`}>{connection === 'online' ? <Wifi size={15} /> : <WifiOff size={15} />} {connection === 'online' ? 'Connected' : 'Reconnecting'}</span>
           <span className="chip">{stats.bidders || 0} franchises online</span>
@@ -205,11 +212,15 @@ export default function AdminControl() {
           )}
 
           <div className="control-buttons">
-            <button className="btn btn-primary btn-lg" onClick={() => emit('admin:nextPlayer')} disabled={!queue.length || hasBidsOnCurrentLot}>
-              <SkipForward size={18} /> Next player
+            <button
+              className="btn btn-primary btn-lg"
+              onClick={() => emit('admin:nextPlayer', { role: roleFilter !== 'All' ? roleFilter : null })}
+              disabled={!queue.length || hasBidsOnCurrentLot}
+            >
+              <SkipForward size={18} /> {roleFilter !== 'All' ? `Next ${roleFilter}` : 'Next player'}
             </button>
             {state.status === 'Live' && <button className="btn btn-ghost btn-lg" onClick={() => emit('admin:pauseAuction')}><Pause size={18} /> Pause</button>}
-            {state.status === 'Paused' && <button className="btn btn-ghost btn-lg" onClick={() => emit('admin:resumeAuction')}><Play size={18} /> Resume</button>}
+            {state.status === 'Paused' && <button className="btn btn-success btn-lg" onClick={() => emit('admin:resumeAuction')}><Play size={18} /> Resume</button>}
             <button className="btn btn-success btn-lg" onClick={() => ask('sell')} disabled={!open || !state.highestBidder}>
               <CheckCircle2 size={18} /> Sell
             </button>

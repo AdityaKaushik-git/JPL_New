@@ -1970,3 +1970,132 @@ input, select, textarea { font: inherit; }
     margin: 0 auto;
   }
 }
+
+/* ---------- Manage Players Classifications Panel ---------- */
+.player-stats-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 1rem 1.15rem;
+  margin-bottom: 1.25rem;
+  background: rgba(14, 23, 42, 0.45);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+}
+
+.stats-primary-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.stat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: var(--r-sm);
+  background: rgba(237, 239, 244, 0.04);
+  border: 1px solid var(--line-2);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.stat-pill:hover {
+  background: rgba(237, 239, 244, 0.08);
+  border-color: var(--line);
+}
+
+.stat-pill.active {
+  background: rgba(200, 16, 46, 0.16);
+  border-color: var(--leather);
+}
+
+.stat-pill .pill-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--chalk-3);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.stat-pill .pill-value {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.stat-pill.pill-avail .pill-value {
+  color: #9fd9ff;
+}
+
+.stat-pill.pill-sold .pill-value {
+  color: #7fe0ae;
+}
+
+.stat-pill.pill-unsold .pill-value {
+  color: var(--chalk-2);
+}
+
+.classification-groups {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  padding-top: 0.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.classification-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.classification-group-label {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--chalk-3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-right: 0.2rem;
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(237, 239, 244, 0.04);
+  border: 1px solid var(--line-2);
+  font-size: 0.82rem;
+  color: var(--chalk-2);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.filter-chip:hover {
+  background: rgba(237, 239, 244, 0.1);
+  color: #fff;
+  border-color: var(--line);
+}
+
+.filter-chip.active {
+  background: rgba(200, 16, 46, 0.2);
+  border-color: var(--leather);
+  color: #fff;
+  font-weight: 600;
+}
+
+.filter-chip b {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: #fff;
+  margin-left: 0.15rem;
+}
