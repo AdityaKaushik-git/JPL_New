@@ -69,7 +69,7 @@ function OwnerDashboard() {
         <div className="card-grid">
           {data.squad.slice(0, 4).map(p => <PlayerCard key={p.id} player={p} accent={f.color} price={p.purchase_price} />)}
         </div>
-      ) : <EmptyState icon={<Users size={26} />} title="No players yet" action={<Link to="/auction" className="btn btn-primary">Go to the bid room</Link>}>Win bids in the live auction to build your squad of up to 12.</EmptyState>}
+      ) : <EmptyState icon={<Users size={26} />} title="No players yet" action={<Link to="/auction" className="btn btn-primary">Go to the bid room</Link>}>Win bids in the live auction to build your squad of up to 15.</EmptyState>}
 
       <section className="panel">
         <h2>Recent bids</h2>

@@ -119,7 +119,7 @@ exports.getStats = async (req, res) => {
 
 // ---------------------------------------------------------------------------
 // Franchises — only the admin can create them. Purse and squad limits are
-// assigned by the server (₹18,00,00,000 and 12 players) and cannot be edited.
+// assigned by the server (₹75,00,00,000 and 15 players) and cannot be edited.
 // ---------------------------------------------------------------------------
 exports.getFranchises = async (req, res) => {
     try {
@@ -144,7 +144,7 @@ exports.createFranchise = async (req, res) => {
         // Purse / squad fields in the body are ignored on purpose.
         const franchise = await createFranchise(pool, req.body);
         await hub.notifyTeamsChanged();
-        res.status(201).json({ message: `${franchise.team_name} created with a ₹18,00,00,000 purse.`, franchise });
+        res.status(201).json({ message: `${franchise.team_name} created with a ₹75,00,00,000 purse.`, franchise });
     } catch (error) {
         sendError(res, error, 'CREATE FRANCHISE');
     }

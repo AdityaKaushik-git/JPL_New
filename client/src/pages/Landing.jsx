@@ -100,8 +100,8 @@ export default function Landing() {
               <li><span>Virtual Purse Budget:</span> <b>₹75 Crore</b></li>
               <li><span>Squad Capacity:</span> <b>Exactly 15 Players</b></li>
               <li><span>Team Size:</span> <b>4 Students</b> per franchise</li>
-              <li><span>Foreign Players Cap:</span> <b>Max 4 Foreign Players</b></li>
-              <li><span>Uncapped Players Requirement:</span> <b>Min 2 Uncapped Players</b></li>
+              <li><span>Foreign Players Limit:</span> <b>No Limit (Unlimited Overseas)</b></li>
+              <li><span>Indian Players Requirement:</span> <b>Minimum 3 Indian Players</b></li>
             </ul>
             <div className="rule-checklist-box">
               <span className="checklist-title">Required Squad Composition (15 Total)</span>
@@ -197,7 +197,7 @@ export default function Landing() {
             </ul>
             <div className="rule-note-box">
               <CheckCircle2 size={16} className="text-turf" />
-              <span>Bidding requires valid purse floor balance, remaining role slots, max 4 foreign cap, and min 2 uncapped slots.</span>
+              <span>Bidding requires valid purse floor balance, remaining role slots, no overseas player limit, and minimum 3 Indian players.</span>
             </div>
           </div>
 
@@ -230,7 +230,7 @@ export default function Landing() {
         <Link to="/live" className="landing-link landing-fade-up delay-1">
           <Radio size={24} />
           <b>Live Broadcast Stage</b>
-          <span>Watch the live auction stage with real-time bid updates and leaderboards.</span>
+          <span>Watch the live auction stage with real-time player bids, timer, and sale announcements.</span>
         </Link>
         <Link to="/history" className="landing-link landing-fade-up delay-2">
           <ListOrdered size={24} />

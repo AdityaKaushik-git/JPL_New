@@ -99,10 +99,10 @@ export default function FranchiseForm({ initial = EMPTY_FRANCHISE, mode = 'creat
         <div className="assigned">
           <p>Assigned automatically by the server</p>
           <dl>
-            <div><dt>Starting purse</dt><dd>{formatINR(180000000)}</dd></div>
-            <div><dt>Remaining</dt><dd>{formatINR(180000000)}</dd></div>
+            <div><dt>Starting purse</dt><dd>{formatINR(750000000)}</dd></div>
+            <div><dt>Remaining</dt><dd>{formatINR(750000000)}</dd></div>
             <div><dt>Spent</dt><dd>{formatINR(0)}</dd></div>
-            <div><dt>Squad</dt><dd>0 / 12</dd></div>
+            <div><dt>Squad</dt><dd>0 / 15</dd></div>
           </dl>
         </div>
       )}
