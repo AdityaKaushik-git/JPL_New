@@ -21,10 +21,14 @@ export function AuthProvider({ children }) {
   }, [clearSession])
 
   useEffect(() => {
+    let active = true
     const token = localStorage.getItem('jpl_token') || sessionStorage.getItem('jpl_token')
     if (token) {
       api.getMe()
         .then((data) => {
+          if (!active) return
+          const currentToken = localStorage.getItem('jpl_token') || sessionStorage.getItem('jpl_token')
+          if (currentToken !== token) return
           if (data && data.user) {
             setUser(data.user)
             localStorage.setItem('jpl_user', JSON.stringify(data.user))
@@ -34,18 +38,29 @@ export function AuthProvider({ children }) {
           }
         })
         .catch(() => {
-          clearSession()
+          if (!active) return
+          const currentToken = localStorage.getItem('jpl_token') || sessionStorage.getItem('jpl_token')
+          if (currentToken === token) {
+            clearSession()
+          }
         })
         .finally(() => {
-          setLoading(false)
+          if (active) setLoading(false)
         })
     } else {
       setLoading(false)
     }
+    return () => { active = false }
   }, [clearSession])
 
   useEffect(() => {
-    const handleUnauthorized = () => {
+    const handleUnauthorized = (e) => {
+      const currentToken = localStorage.getItem('jpl_token') || sessionStorage.getItem('jpl_token')
+      const failedToken = e?.detail?.token
+      // If the 401 is from a previous/stale token, ignore it so the active session isn't killed
+      if (failedToken && currentToken && failedToken !== currentToken) {
+        return
+      }
       logout()
     }
     window.addEventListener('jpl:unauthorized', handleUnauthorized)
@@ -58,6 +73,7 @@ export function AuthProvider({ children }) {
     sessionStorage.setItem('jpl_token', token)
     sessionStorage.setItem('jpl_user', JSON.stringify(userData))
     setUser(userData)
+    setLoading(false)
   }
 
   const updateUser = useCallback((data) => {

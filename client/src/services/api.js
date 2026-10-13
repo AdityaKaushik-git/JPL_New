@@ -9,19 +9,24 @@ export function getDeviceId() {
   return id
 }
 
-function getHeaders() {
+function getHeaders(path = '') {
   const token = sessionStorage.getItem('jpl_token') || localStorage.getItem('jpl_token')
-  return {
+  const headers = {
     'Content-Type': 'application/json',
     'X-Device-Id': getDeviceId(),
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
   }
+  // Never send an old/stale token to the login endpoint
+  if (token && path !== '/auth/login') {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+  return headers
 }
 
 async function request(path, options = {}) {
+  const reqHeaders = { ...getHeaders(path), ...(options.headers || {}) }
   let res
   try {
-    res = await fetch(BASE + path, { headers: getHeaders(), ...options })
+    res = await fetch(BASE + path, { ...options, headers: reqHeaders })
   } catch (e) {
     throw new Error('Cannot reach the server. Check your connection.')
   }
@@ -29,7 +34,8 @@ async function request(path, options = {}) {
   try { data = await res.json() } catch (e) { data = {} }
   if (!res.ok) {
     if (res.status === 401 && path !== '/auth/login') {
-      window.dispatchEvent(new Event('jpl:unauthorized'))
+      const sentToken = reqHeaders['Authorization'] ? reqHeaders['Authorization'].replace('Bearer ', '') : null
+      window.dispatchEvent(new CustomEvent('jpl:unauthorized', { detail: { token: sentToken } }))
     }
     const err = new Error(data.message || `Request failed (${res.status})`)
     err.status = res.status

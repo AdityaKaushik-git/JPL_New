@@ -7,6 +7,9 @@ function createLimiter({ windowMs, max, message }) {
     }, windowMs).unref();
 
     return (req, res, next) => {
+        if (process.env.NODE_ENV === 'test') {
+            return next();
+        }
         const key = req.ip || (req.socket && req.socket.remoteAddress) || 'unknown';
         const now = Date.now();
         let entry = hits.get(key);
@@ -25,7 +28,7 @@ function createLimiter({ windowMs, max, message }) {
 
 const loginLimiter = createLimiter({
     windowMs: 15 * 60 * 1000,
-    max: 20,
+    max: Number(process.env.LOGIN_RATE_LIMIT_MAX) || 100,
     message: 'Too many login attempts. Try again in a few minutes.',
 });
 

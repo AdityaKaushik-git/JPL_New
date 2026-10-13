@@ -30,12 +30,16 @@ export default function Login() {
       login(data.token, data.user)
       if (from) {
         navigate(from, { replace: true })
+      } else {
+        const dest = data.user?.role === 'admin' ? '/admin/control' : '/dashboard'
+        navigate(dest, { replace: true })
       }
     } catch (err) {
       setError(err.message || 'Invalid credentials')
       if (err.canForceLogout) {
         setCanForceLogout(true)
       }
+    } finally {
       setLoading(false)
     }
   }

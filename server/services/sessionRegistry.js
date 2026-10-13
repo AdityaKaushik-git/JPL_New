@@ -160,18 +160,16 @@ function isSessionValid(user, token) {
     return true;
   } else if (user.role === 'admin') {
     if (!token) return false;
+    cleanStaleSessions();
     if (adminSessions.has(token)) return true;
-    if (adminSessions.size < 2) {
-      adminSessions.set(token, {
-        token,
-        userId: user.id,
-        socketIds: new Set(),
-        lastSeen: Date.now(),
-        ip: 'auto-restored',
-      });
-      return true;
-    }
-    return false;
+    adminSessions.set(token, {
+      token,
+      userId: user.id,
+      socketIds: new Set(),
+      lastSeen: Date.now(),
+      ip: 'auto-restored',
+    });
+    return true;
   }
   return true;
 }
