@@ -1,91 +1,152 @@
 import { useState } from 'react'
+import { Trophy, Coins, Shield, Sparkles, Award } from 'lucide-react'
 import PitchBackdrop from '../PitchBackdrop'
 import RoleIcon from '../RoleIcon'
-import RankBadge from '../RankBadge'
-import StatGrid, { keyStatsFor } from '../StatGrid'
-import { FormDelta } from '../Movement'
 import { formatINR, pad2, roleMeta } from '../../lib/format'
 
-// The centre of the broadcast: displays player photo if available (or initials watermark),
+// The centre of the broadcast: displays player showcase, key metrics, and photo spotlight.
 export default function PlayerHero({ player, lot, accent, compact = false }) {
   if (!player) return null
   const [imgError, setImgError] = useState(false)
   const role = roleMeta(player.playing_role)
-  const form = player.ranking_points - player.previous_ranking_points
-  const isNew = player.current_rank === null || (player.previous_rank === null && form === 0)
   const number = lot ? lot.position : player.auction_order
   const isForeign = player.country && player.country.trim().toLowerCase() !== 'india'
   const photoUrl = player.id ? `/api/players/${player.id}/photo?v=2` : (player.image_url || player.image)
 
   return (
-    <section className={`hero${compact ? ' hero-compact' : ''}`} style={accent ? { '--accent': accent } : undefined} aria-label={`Now on the block: ${player.name}`}>
+    <section 
+      className={`hero${compact ? ' hero-compact' : ''}`} 
+      style={accent ? { '--accent': accent } : undefined} 
+      aria-label={`Now on the block: ${player.name}`}
+    >
       <PitchBackdrop className="hero-pitch" />
+      <div className="hero-glow-orb hero-orb-accent" />
       
       <div className="hero-body">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem' }}>
-          <div style={{ minWidth: 0, flex: 1 }}>
-            <p className="hero-lot seq seq-1">
-              Player <b>#{pad2(number)}</b>
-              {lot && <span className="hero-lot-total"> of {lot.total}</span>}
-              {player.player_code && <span className="hero-code">{player.player_code}</span>}
-            </p>
-
-            <h1 className="hero-name seq seq-3">
-              {player.name}
-              {isForeign && <span className="badge-foreign">{player.country}</span>}
-              {player.is_uncapped && <span className="badge-uncapped">Uncapped</span>}
-            </h1>
-
-            <div className="hero-tags seq seq-4" style={{ marginTop: '0.5rem' }}>
-              <span className={`role-chip role-${role.key}`}><RoleIcon role={player.playing_role} size={22} /> {role.label}</span>
-              {isForeign && <span className="hero-style" style={{ color: '#38bdf8', fontWeight: 600 }}>Overseas ({player.country})</span>}
-              {player.is_uncapped && <span className="hero-style" style={{ color: '#fbbf24', fontWeight: 600 }}>Uncapped</span>}
-              {player.batting_style && <span className="hero-style">{player.batting_style}</span>}
-              {player.bowling_style && <span className="hero-style">{player.bowling_style}</span>}
-            </div>
+        {/* Top Header Row: Lot, Category, and Rank */}
+        <div className="hero-lot-bar seq seq-1">
+          <div className="hero-lot-info">
+            <span className="hero-lot-badge">
+              LOT <b>#{pad2(number)}</b>
+              {lot && <span className="hero-lot-total"> / {pad2(lot.total)}</span>}
+            </span>
+            {player.set_label && <span className="hero-set-pill">{player.set_label}</span>}
+            {player.player_code && <span className="hero-code-pill">{player.player_code}</span>}
           </div>
-
-          {photoUrl && !imgError ? (
-            <div className="hero-photo-container seq seq-2" style={{
-              width: compact ? '5rem' : 'min(22vw, 11rem)',
-              flexShrink: 0,
-              aspectRatio: '1/1',
-              borderRadius: '50%',
-              border: '3px solid var(--accent, var(--gold))',
-              boxShadow: '0 0 25px rgba(242, 193, 78, 0.3)',
-              overflow: 'hidden',
-              zIndex: 3,
-              background: '#0f172a'
-            }}>
-              <img
-                src={photoUrl}
-                alt={player.name}
-                referrerPolicy="no-referrer"
-                onError={() => setImgError(true)}
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              />
+          {player.current_rank && (
+            <div className="hero-rank-pill">
+              <Award size={15} className="rank-award-icon" />
+              <span>OVERALL RANK <b>#{player.current_rank}</b></span>
             </div>
-          ) : (
-            <span className="hero-watermark" aria-hidden="true">{player.initials}</span>
           )}
         </div>
 
-        <div className="hero-rank seq seq-5" style={{ marginTop: '0.5rem' }}>
-          <div className="hero-points">
-            <b>{player.ranking_points}</b>
-            <small>Points</small>
+        {/* Central Spotlight: Player Name, Badges, and Photo */}
+        <div className="hero-main-row">
+          <div className="hero-text-col">
+            <h1 className="hero-name seq seq-2">
+              {player.name}
+            </h1>
+
+            {/* Badges & Meta Chips */}
+            <div className="hero-tags seq seq-3">
+              <span className={`role-chip role-${role.key}`}>
+                <RoleIcon role={player.playing_role} size={18} />
+                <b>{role.label}</b>
+              </span>
+              {isForeign ? (
+                <span className="badge-chip badge-overseas">
+                  <span className="chip-indicator" /> Overseas · {player.country}
+                </span>
+              ) : (
+                <span className="badge-chip badge-indian">
+                  <span className="chip-indicator" /> Indian Player
+                </span>
+              )}
+              {player.is_uncapped && (
+                <span className="badge-chip badge-uncapped-pill">
+                  <Sparkles size={13} /> Uncapped
+                </span>
+              )}
+              {player.batting_style && (
+                <span className="badge-chip badge-skill">{player.batting_style}</span>
+              )}
+              {player.bowling_style && (
+                <span className="badge-chip badge-skill">{player.bowling_style}</span>
+              )}
+            </div>
           </div>
-          <div className="hero-base">
-            <small>Base price</small>
-            <b>{formatINR(player.base_price)}</b>
+
+          {/* Photo Showcase */}
+          <div className="hero-photo-stage seq seq-2">
+            <div className="photo-backdrop-ring" />
+            {photoUrl && !imgError ? (
+              <div className="hero-photo-frame">
+                <img
+                  src={photoUrl}
+                  alt={player.name}
+                  referrerPolicy="no-referrer"
+                  onError={() => setImgError(true)}
+                  className="hero-avatar-image"
+                />
+                <div className="photo-inner-shadow" />
+                <div className="photo-role-crest" title={role.label}>
+                  <RoleIcon role={player.playing_role} size={18} />
+                </div>
+              </div>
+            ) : (
+              <div className="hero-photo-frame hero-initials-frame">
+                <span className="hero-initials-text">{player.initials}</span>
+                <div className="photo-role-crest" title={role.label}>
+                  <RoleIcon role={player.playing_role} size={18} />
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
-        {!compact && (
-          <div className="seq seq-6">
-            <StatGrid items={keyStatsFor(player)} size="broadcast" className="hero-stats" />
+        {/* Key Auction Metrics Ribbon */}
+        <div className="hero-metrics-ribbon seq seq-4">
+          <div className="metric-box metric-points-box">
+            <div className="metric-box-head">
+              <Trophy size={16} className="metric-gold-icon" />
+              <small>ICC Ranking Points</small>
+            </div>
+            <div className="metric-box-body">
+              <b className="metric-big-number">{player.ranking_points || 0}</b>
+              <span className="metric-points-tag">PTS</span>
+            </div>
+            <span className="metric-box-foot">Champion Tie-Breaker Rating</span>
           </div>
-        )}
+
+          <div className="metric-box metric-base-box">
+            <div className="metric-box-head">
+              <Coins size={16} className="metric-gold-icon" />
+              <small>Opening Base Price</small>
+            </div>
+            <div className="metric-box-body">
+              <b className="metric-big-price">{formatINR(player.base_price)}</b>
+            </div>
+            <span className="metric-box-foot">Floor Bidding Threshold</span>
+          </div>
+
+          {(player.category_rank || player.set_label) && (
+            <div className="metric-box metric-bracket-box">
+              <div className="metric-box-head">
+                <Shield size={16} className="metric-gold-icon" />
+                <small>Role Category Bracket</small>
+              </div>
+              <div className="metric-box-body">
+                <b className="metric-big-bracket">
+                  {player.category_rank ? `#${player.category_rank} ${role.short || role.label}` : (player.set_label || 'Standard')}
+                </b>
+              </div>
+              <span className="metric-box-foot">
+                {player.set_label ? `${player.set_label} Queue` : 'Category Standing'}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
     </section>
   )

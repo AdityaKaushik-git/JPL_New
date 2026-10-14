@@ -66,45 +66,59 @@ export default function BidRoom() {
 
   const dock = (
     <div className={`bid-dock${full ? ' is-full' : ''}`}>
-      <div className="bid-dock-stat">
-        <small>Purse left</small>
-        <b>{formatShort(purse)}</b>
+      <div className="bid-dock-info">
+        <div className="bid-dock-stat purse-stat">
+          <div className="dock-stat-head">
+            <Wallet size={13} className="dock-stat-icon" />
+            <small>Purse Available</small>
+          </div>
+          <b>{formatShort(purse)}</b>
+        </div>
+        <div className="bid-dock-stat squad-stat">
+          <div className="dock-stat-head">
+            <Trophy size={13} className="dock-stat-icon" />
+            <small>Squad Capacity</small>
+          </div>
+          <b className={full ? 'text-danger' : ''}>{full ? 'Squad Full' : `${squad} / ${maxSquad}`}</b>
+        </div>
+        <div className="dock-slots-container">
+          <RoleSlots franchise={me} currentRole={state.player?.playing_role} compact={true} />
+        </div>
       </div>
-      <div className="bid-dock-stat">
-        <small>Squad</small>
-        <b className={full ? 'text-danger' : ''}>{full ? 'Squad full' : `${squad} / ${maxSquad}`}</b>
-      </div>
-      <RoleSlots franchise={me} currentRole={state.player?.playing_role} compact={true} />
-      
-      <button 
-        className="not-interested-btn"
-        onClick={() => emit('user:optOut')}
-        disabled={isOptedOut || !state.player || state.status !== 'Live'}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '8px',
-          cursor: isOptedOut ? 'not-allowed' : 'pointer',
-          userSelect: 'none',
-          fontSize: '0.88rem',
-          fontWeight: 600,
-          color: isOptedOut ? 'var(--danger)' : 'var(--chalk-2)',
-          padding: '8px 16px',
-          borderRadius: '8px',
-          background: isOptedOut ? 'rgba(229, 72, 77, 0.14)' : 'rgba(237, 239, 244, 0.04)',
-          border: isOptedOut ? '1px solid rgba(229, 72, 77, 0.4)' : '1px solid var(--line)',
-          transition: 'all 0.15s ease'
-        }}>
-        <Ban size={16} />
-        <span>{isOptedOut ? 'Opted Out' : 'Not Interested'}</span>
-      </button>
 
-      <button className={`bid-button${block ? ' is-blocked' : ''}${block && block.tone === 'lead' ? ' is-lead' : ''}`}
-        onClick={placeBid} disabled={Boolean(block)} aria-describedby="bid-hint">
-        {block ? <>{block.icon}<span>{block.text}</span></> : <><Gavel size={22} /><span>Bid {formatINR(state.nextBid)}</span></>}
-      </button>
-      <p id="bid-hint" className="bid-dock-hint">{block ? '' : 'Press Space to bid'}</p>
+      <div className="bid-dock-controls">
+        <button 
+          className={`not-interested-btn${isOptedOut ? ' is-opted' : ''}`}
+          onClick={() => emit('user:optOut')}
+          disabled={isOptedOut || !state.player || state.status !== 'Live'}
+          title={isOptedOut ? 'You opted out of this lot' : 'Pass on this lot'}
+        >
+          <Ban size={16} />
+          <span>{isOptedOut ? 'Opted Out' : 'Pass / Opt Out'}</span>
+        </button>
+
+        <div className="bid-btn-wrapper">
+          <button 
+            className={`bid-button${block ? ' is-blocked' : ''}${block && block.tone === 'lead' ? ' is-lead' : ''}`}
+            onClick={placeBid} 
+            disabled={Boolean(block)} 
+            aria-describedby="bid-hint"
+          >
+            {block ? (
+              <>
+                {block.icon}
+                <span>{block.text}</span>
+              </>
+            ) : (
+              <>
+                <Gavel size={22} className="bid-gavel-glyph" />
+                <span className="bid-text">Bid {formatINR(state.nextBid)}</span>
+                <span className="bid-shortcut-badge">SPACE</span>
+              </>
+            )}
+          </button>
+        </div>
+      </div>
     </div>
   )
 
