@@ -1,11 +1,13 @@
 import { forwardRef, useState, useEffect } from 'react'
-import { Maximize2, Minimize2, Wifi, WifiOff, Users, Trophy, Activity, Eye, EyeOff } from 'lucide-react'
+import { Maximize2, Minimize2, Wifi, WifiOff, Users, Trophy, Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import Brand from '../Brand'
 import PlayerHero from './PlayerHero'
 import BidPanel from './BidPanel'
 import BidFeed from './BidFeed'
 import ResultOverlay from './ResultOverlay'
+import LiveRankingsView from './LiveRankingsView'
+import FranchiseModal from '../FranchiseModal'
 import TeamMark from '../TeamMark'
 import { formatINR, pad2 } from '../../lib/format'
 
@@ -29,8 +31,8 @@ const LiveStage = forwardRef(function LiveStage({ socket, fullscreen, dock, lead
   const showResults = isDeclared
   const showEndedWaiting = !isDeclared && isEnded
 
-  const [viewMode, setViewMode] = useState('declared') // 'declared' | 'live'
   const [fetchedTeams, setFetchedTeams] = useState([])
+  const [selectedFranchise, setSelectedFranchise] = useState(null)
 
   // If results are declared, ensure teams are loaded (fallback API fetch if socket teams not present yet)
   useEffect(() => {
@@ -94,200 +96,17 @@ const LiveStage = forwardRef(function LiveStage({ socket, fullscreen, dock, lead
           </div>
         </header>
 
-        <main className="stage-main">
+        <main className={`stage-main ${showResults ? 'stage-main-results' : ''}`}>
           {showResults ? (
-            <div className="stage-declared-results" style={{ width: '100%', maxWidth: '1050px', margin: '0 auto', padding: '1rem', overflowY: 'auto' }}>
-              <div style={{ textAlign: 'center', marginBottom: '1.25rem' }}>
-                <div className="ended-trophy-glow" style={{ margin: '0 auto 0.75rem' }}>
-                  <Trophy size={48} className="trophy-gold" />
-                </div>
-                <h1 style={{ fontSize: '2rem', margin: 0, fontWeight: 800 }}>Official Auction Results</h1>
-                <p className="muted" style={{ margin: '0.25rem 0 0', fontSize: '1rem' }}>
-                  Final franchise standings based on total player points. Franchises must complete all 15 player slots to qualify.
-                </p>
-              </div>
-
-              {/* View Switcher Tabs: Official Declared Results vs Live Rankings (Real-Time) */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.75rem',
-                marginBottom: '1.5rem',
-                borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-                paddingBottom: '0.75rem'
-              }}>
-                <button
-                  type="button"
-                  onClick={() => setViewMode('declared')}
-                  className={`btn btn-sm ${viewMode === 'declared' ? 'btn-primary' : 'btn-ghost'}`}
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontWeight: 600 }}
-                >
-                  <Trophy size={15} /> Official Declared Results
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setViewMode('live')}
-                  className={`btn btn-sm ${viewMode === 'live' ? 'btn-primary' : 'btn-ghost'}`}
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontWeight: 600 }}
-                >
-                  <Activity size={15} /> Live Rankings (All Franchises)
-                </button>
-              </div>
-
-              {(() => {
-                const allActive = (teamsList || []).filter(t => t && t.status !== 'disabled');
-                const sortFn = (a, b) => {
-                  const ptsDiff = (Number(b.total_player_points) || 0) - (Number(a.total_player_points) || 0);
-                  if (ptsDiff !== 0) return ptsDiff;
-                  const purseDiff = (Number(b.remaining_purse) || 0) - (Number(a.remaining_purse) || 0);
-                  if (purseDiff !== 0) return purseDiff;
-                  const batDiff = (Number(b.batsmen_points) || 0) - (Number(a.batsmen_points) || 0);
-                  if (batDiff !== 0) return batDiff;
-                  return (a.team_name || '').localeCompare(b.team_name || '');
-                };
-
-                if (viewMode === 'live') {
-                  const sortedAll = [...allActive].sort(sortFn);
-                  return (
-                    <div style={{ display: 'grid', gap: '0.75rem' }}>
-                      {sortedAll.map((t, idx) => (
-                        <div
-                          key={t.id}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            padding: '1rem 1.5rem',
-                            borderRadius: '12px',
-                            background: idx === 0 ? 'rgba(245, 158, 11, 0.15)' : 'rgba(255,255,255,0.04)',
-                            border: idx === 0 ? '1px solid rgba(245, 158, 11, 0.5)' : '1px solid rgba(255,255,255,0.08)',
-                          }}
-                        >
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-                            <span style={{ fontSize: '1.4rem', fontWeight: 800, minWidth: '40px', color: idx === 0 ? '#f59e0b' : idx === 1 ? '#cbd5e1' : idx === 2 ? '#d97706' : 'var(--muted)' }}>
-                              {idx === 0 ? '🥇 1st' : idx === 1 ? '🥈 2nd' : idx === 2 ? '🥉 3rd' : `#${idx + 1}`}
-                            </span>
-                            <TeamMark team={t} size={48} />
-                            <div>
-                              <div style={{ fontSize: '1.25rem', fontWeight: 700 }}>{t.team_name}</div>
-                              <div className="muted" style={{ fontSize: '0.9rem' }}>
-                                {t.owner_name} · Squad: {t.squad_count || 0}/{t.max_squad_size || 15} · IND: {t.indian_count || 0}/3 · OS: {t.foreign_count || 0}
-                              </div>
-                            </div>
-                          </div>
-                          <div style={{ textAlign: 'right' }}>
-                            <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#10b981' }}>
-                              {Number(t.total_player_points || 0).toLocaleString('en-IN')} pts
-                            </div>
-                            <div className="muted" style={{ fontSize: '0.85rem' }}>Purse: {formatINR(t.remaining_purse || 0)}</div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  );
-                }
-
-                // Official Declared Results View (Strict 15 player squad qualification)
-                const qTeams = allActive.filter(t => (Number(t.squad_count) || 0) >= 15).sort(sortFn);
-                const dqTeams = allActive.filter(t => (Number(t.squad_count) || 0) < 15).sort(sortFn);
-
-                return (
-                  <>
-                    {qTeams.length === 0 ? (
-                      <div style={{ textAlign: 'center', padding: '1.5rem', background: 'rgba(245, 158, 11, 0.08)', borderRadius: '12px', border: '1px solid rgba(245, 158, 11, 0.3)', margin: '1rem 0' }}>
-                        <h3 style={{ color: '#f59e0b', margin: 0, fontSize: '1.2rem' }}>No Franchises Qualified Yet</h3>
-                        <p className="muted" style={{ margin: '0.35rem 0 0', fontSize: '0.95rem' }}>
-                          Every franchise must complete all 15 player slots to be ranked in the declared results. Any franchise with fewer than 15 players is termed disqualified. Switch to the <strong>Live Rankings</strong> tab above to view real-time standings.
-                        </p>
-                      </div>
-                    ) : (
-                      <div style={{ display: 'grid', gap: '0.75rem' }}>
-                        {qTeams.map((t, idx) => (
-                          <div
-                            key={t.id}
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'space-between',
-                              padding: '1rem 1.5rem',
-                              borderRadius: '12px',
-                              background: idx === 0 ? 'rgba(245, 158, 11, 0.15)' : 'rgba(255,255,255,0.04)',
-                              border: idx === 0 ? '1px solid rgba(245, 158, 11, 0.5)' : '1px solid rgba(255,255,255,0.08)',
-                            }}
-                          >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-                              <span style={{ fontSize: '1.4rem', fontWeight: 800, minWidth: '40px', color: idx === 0 ? '#f59e0b' : idx === 1 ? '#cbd5e1' : idx === 2 ? '#d97706' : 'var(--muted)' }}>
-                                {idx === 0 ? '🥇 1st' : idx === 1 ? '🥈 2nd' : idx === 2 ? '🥉 3rd' : `#${idx + 1}`}
-                              </span>
-                              <TeamMark team={t} size={48} />
-                              <div>
-                                <div style={{ fontSize: '1.25rem', fontWeight: 700 }}>
-                                  {t.team_name}
-                                  {idx === 0 && (
-                                    <span style={{ marginLeft: '0.5rem', fontSize: '0.75rem', background: '#f59e0b', color: '#000', padding: '0.15rem 0.5rem', borderRadius: '4px', fontWeight: 800, verticalAlign: 'middle' }}>
-                                      CHAMPION
-                                    </span>
-                                  )}
-                                </div>
-                                <div className="muted" style={{ fontSize: '0.9rem' }}>
-                                  {t.owner_name} · Squad: {t.squad_count}/15 · IND: {t.indian_count || 0}/3 · OS: {t.foreign_count || 0}
-                                </div>
-                              </div>
-                            </div>
-                            <div style={{ textAlign: 'right' }}>
-                              <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#10b981' }}>
-                                {Number(t.total_player_points || 0).toLocaleString('en-IN')} pts
-                              </div>
-                              <div className="muted" style={{ fontSize: '0.85rem' }}>Purse: {formatINR(t.remaining_purse || 0)}</div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {dqTeams.length > 0 && (
-                      <div style={{ marginTop: '2rem', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1.25rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
-                          <span style={{ background: '#ef4444', color: '#fff', padding: '0.15rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 700 }}>DISQUALIFIED</span>
-                          <span style={{ fontWeight: 600, fontSize: '0.95rem' }}>Incomplete Squads (&lt; 15 players) — Excluded from Results</span>
-                        </div>
-                        <div style={{ display: 'grid', gap: '0.5rem' }}>
-                          {dqTeams.map(t => (
-                            <div
-                              key={t.id}
-                              style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'space-between',
-                                padding: '0.75rem 1.25rem',
-                                borderRadius: '8px',
-                                background: 'rgba(239, 68, 68, 0.06)',
-                                border: '1px solid rgba(239, 68, 68, 0.3)',
-                                opacity: 0.85
-                              }}
-                            >
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                <TeamMark team={t} size={36} />
-                                <div>
-                                  <div style={{ fontWeight: 600 }}>{t.team_name} ({t.owner_name})</div>
-                                  <div style={{ fontSize: '0.8rem', color: '#ef4444', fontWeight: 600 }}>
-                                    Incomplete Squad: {t.squad_count || 0}/15 players · Disqualified from results
-                                  </div>
-                                </div>
-                              </div>
-                              <div style={{ textAlign: 'right', fontSize: '0.9rem', color: 'var(--muted)' }}>
-                                {Number(t.total_player_points || 0).toLocaleString('en-IN')} pts
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </>
-                );
-              })()}
-            </div>
+            <LiveRankingsView
+              teams={teamsList}
+              onSelectTeam={(team) => setSelectedFranchise(team)}
+              isDeclared={isDeclared}
+              isAdmin={isAdmin}
+              showRankings={state.showLiveRankings}
+              onToggleRankings={() => emit && emit('admin:toggleRankings', { enabled: !state.showLiveRankings })}
+              initialView="declared"
+            />
           ) : (
             <div className="stage-idle stage-ended-waiting">
               <div className="ended-trophy-glow">
@@ -301,6 +120,8 @@ const LiveStage = forwardRef(function LiveStage({ socket, fullscreen, dock, lead
             </div>
           )}
         </main>
+
+        <FranchiseModal franchiseId={selectedFranchise?.id} onClose={() => setSelectedFranchise(null)} />
       </div>
     )
   }
@@ -374,6 +195,7 @@ const LiveStage = forwardRef(function LiveStage({ socket, fullscreen, dock, lead
 
       {dock}
       <ResultOverlay result={overlay} onDismiss={dismissOverlay} />
+      <FranchiseModal franchiseId={selectedFranchise?.id} onClose={() => setSelectedFranchise(null)} />
     </div>
   )
 })
