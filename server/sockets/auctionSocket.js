@@ -796,7 +796,7 @@ module.exports = (io) => {
         socket.emit('live:stats', liveStats());
         listFranchises(pool).then(teams => {
             const isAdmin = socket.user && socket.user.role === 'admin';
-            if (isAdmin) {
+            if (isAdmin || showLiveRankings) {
                 socket.emit('teams:update', teams);
             } else if (socket.user && socket.user.role === 'user') {
                 const myTeam = teams.find(t => t.id === socket.user.id);
