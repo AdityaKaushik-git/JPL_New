@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Play, Pause, SkipForward, CheckCircle2, XCircle, RotateCcw, Radio, Wifi, WifiOff, Search, Square, Eye, EyeOff } from 'lucide-react'
+import { Play, Pause, SkipForward, CheckCircle2, XCircle, RotateCcw, Radio, Wifi, WifiOff, Search, Square, Eye, EyeOff, Shuffle } from 'lucide-react'
 import ToastContainer from '../components/Toast'
 import Modal, { ConfirmDialog } from '../components/Modal'
 import FranchiseModal from '../components/FranchiseModal'
@@ -77,6 +77,20 @@ export default function AdminControl() {
       setOtpError(err.message || 'Invalid OTP code')
     } finally {
       setOtpLoading(false)
+    }
+  }
+
+  const [randomizing, setRandomizing] = useState(false)
+  async function handleRandomizeQueue() {
+    setRandomizing(true)
+    try {
+      const res = await api.randomizeQueue()
+      addToast(res.message || 'Player queue randomized!', 'success')
+      reloadPlayers()
+    } catch (err) {
+      addToast(err.message || 'Failed to randomize queue', 'danger')
+    } finally {
+      setRandomizing(false)
     }
   }
 
@@ -235,10 +249,20 @@ export default function AdminControl() {
           <div className="panel-head" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '.6rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '.5rem', flexWrap: 'wrap' }}>
               <h2>Player queue <span className="count">{queue.length}</span></h2>
-              <label className="search" style={{ flex: 1, minWidth: '160px', maxWidth: '240px' }}>
-                <Search size={15} />
-                <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search name/country/code" />
-              </label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '.4rem', flex: 1, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                <button
+                  className="btn btn-ghost btn-sm"
+                  onClick={handleRandomizeQueue}
+                  disabled={hasBidsOnCurrentLot || randomizing}
+                  title="Randomize player queue following the 10-player role slot rule"
+                >
+                  <Shuffle size={14} /> {randomizing ? 'Randomizing…' : 'Randomize'}
+                </button>
+                <label className="search" style={{ minWidth: '160px', maxWidth: '240px' }}>
+                  <Search size={15} />
+                  <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search name/country/code" />
+                </label>
+              </div>
             </div>
             <div style={{ display: 'flex', gap: '.4rem', flexWrap: 'wrap' }}>
               <select value={roleFilter} onChange={e => setRoleFilter(e.target.value)} className="select-sm" title="Filter by role">

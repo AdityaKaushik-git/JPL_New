@@ -28,8 +28,9 @@ router.delete('/players/:id', adminController.deletePlayer);
 router.post('/players/:id/matches', adminController.addPlayerMatch);
 router.delete('/players/:id/matches/:matchId', adminController.deletePlayerMatch);
 
-// Rankings
+// Rankings & Queue
 router.post('/rankings/recalculate', adminController.recalculateRankings);
+router.post('/queue/randomize', adminController.randomizeQueue);
 
 // History
 router.get('/auction-history', adminController.getAuctionHistory);

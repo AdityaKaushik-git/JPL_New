@@ -423,7 +423,7 @@ async function main() {
         await ensureAdmin(db);
 
         const pool = mysql.createPool({ ...baseConfig(), database: DB_NAME, multipleStatements: false });
-        const result = await recalculateRankings(pool);
+        const result = await recalculateRankings(pool, null, { randomizeQueue: false });
         await pool.end();
         console.log(`→ rankings recalculated (${result.ranked}/${result.players} ranked)`);
         console.log('✅ migration complete');

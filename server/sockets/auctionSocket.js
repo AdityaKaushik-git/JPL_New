@@ -945,6 +945,13 @@ module.exports = (io) => {
             notify(io, `Live Rankings visibility turned ${showLiveRankings ? 'ON' : 'OFF'} by Admin.`, 'info');
         });
 
+        guard(socket, 'admin:randomizeQueue', true, async () => {
+            const { recalculateRankings } = require('../services/ranking');
+            await recalculateRankings(pool, null, { randomizeQueue: true });
+            notify(io, 'Player queue randomized following the slot rule (10 random Batsmen, 10 Bowlers, 10 Keepers, 10 All-Rounders).', 'success');
+            hub.notifyPlayersChanged();
+        });
+
         socket.on('disconnect', () => {
             sessionRegistry.socketDisconnected(socket.user, socket.token, socket.id);
             connectedUsers.delete(socket.id);

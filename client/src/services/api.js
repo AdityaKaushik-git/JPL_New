@@ -90,6 +90,7 @@ export const api = {
   addPlayerMatch: (id, body) => request(`/admin/players/${id}/matches`, json('POST', body)),
   deletePlayerMatch: (id, matchId) => request(`/admin/players/${id}/matches/${matchId}`, { method: 'DELETE' }),
   recalculateRankings: () => request('/admin/rankings/recalculate', json('POST')),
+  randomizeQueue: () => request('/admin/queue/randomize', json('POST')),
   getAuctionHistory: () => request('/admin/auction-history'),
   deleteAuctionHistory: (id) => request(`/admin/auction-history/${id}`, { method: 'DELETE' }),
   requestStartOtp: () => request('/admin/auction/request-start-otp', json('POST')),

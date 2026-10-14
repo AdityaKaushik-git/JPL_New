@@ -129,8 +129,86 @@ function sortForRank(a, b) {
         || String(a.name).localeCompare(String(b.name));
 }
 
+// Fisher-Yates array shuffle helper
+function shuffleArray(array) {
+    const arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+}
+
+// Builds the player auction queue following the 10-player role slot rule:
+// Set 1: 10 random Batsmen, 10 random Bowlers, 10 random Wicket Keepers, 10 random All-Rounders
+// Set 2: next 10 random Batsmen, 10 Bowlers, 10 Keepers, 10 All-Rounders, etc.
+function buildSlotOrderedQueue(players, { randomize = true } = {}) {
+    const roleSeq = ['Batsman', 'Bowler', 'Wicket Keeper', 'All-Rounder'];
+
+    // If an auction is partially underway (some players Sold, Unsold, or In Auction),
+    // preserve those finished/in-action players at their existing order, and randomize remaining Available players.
+    // When all players are Available (fresh or reset session), all players are ordered 1 to N.
+    const nonAvailable = players.filter(p => p.status && p.status !== 'Available');
+    const available = players.filter(p => !p.status || p.status === 'Available');
+
+    nonAvailable.sort((a, b) => Number(a.auction_order ?? a.id) - Number(b.auction_order ?? b.id));
+
+    // Group available players by role
+    const byRole = {};
+    for (const role of roleSeq) {
+        byRole[role] = [];
+    }
+    const otherAvailable = [];
+
+    for (const p of available) {
+        if (byRole[p.playing_role]) {
+            byRole[p.playing_role].push(p);
+        } else {
+            otherAvailable.push(p);
+        }
+    }
+
+    // Shuffle players within each role randomly (or preserve order if randomize=false)
+    for (const role of roleSeq) {
+        byRole[role] = randomize ? shuffleArray(byRole[role]) : byRole[role];
+    }
+    const orderedOthers = randomize ? shuffleArray(otherAvailable) : otherAvailable;
+
+    const maxLen = Math.max(
+        byRole['Batsman'].length,
+        byRole['Bowler'].length,
+        byRole['Wicket Keeper'].length,
+        byRole['All-Rounder'].length
+    );
+    const maxSets = Math.max(1, Math.ceil(maxLen / 10));
+
+    const setOrdered = [];
+    for (let s = 0; s < maxSets; s++) {
+        const start = s * 10;
+        const end = start + 10;
+        for (const role of roleSeq) {
+            const list = byRole[role] || [];
+            const chunk = list.slice(start, end);
+            setOrdered.push(...chunk);
+        }
+    }
+
+    const setIds = new Set(setOrdered.map(p => p.id));
+    const remainingAvailable = available.filter(p => !setIds.has(p.id));
+    const finalAvailable = [...setOrdered, ...orderedOthers, ...remainingAvailable];
+
+    const finalOrdered = [...nonAvailable, ...finalAvailable];
+    const orderMap = new Map();
+    finalOrdered.forEach((p, idx) => {
+        orderMap.set(p.id, idx + 1);
+    });
+
+    return orderMap;
+}
+
 // Recomputes derived stats, points and ranks for every player inside one
-async function recalculateRankings(pool, existingConnection = null) {
+async function recalculateRankings(pool, existingConnection = null, options = {}) {
+    const { randomizeQueue = false } = (typeof options === 'boolean' ? { randomizeQueue: options } : options) || {};
     const connection = existingConnection || await pool.getConnection();
     const ownTransaction = !existingConnection;
     try {
@@ -159,37 +237,22 @@ async function recalculateRankings(pool, existingConnection = null) {
         }
         Object.values(byCategory).forEach(list => list.forEach((p, i) => { p.newCategoryRank = i + 1; }));
 
-        // Auction Set Ordering (Rule 5): Set 1 (Bat 1-10, Bowl 1-10, WK 1-10, AR 1-10), Set 2...
-        const roleSeq = ['Batsman', 'Bowler', 'Wicket Keeper', 'All-Rounder'];
-        const setOrderedPlayers = [];
-        const maxLen = Math.max(
-            (byCategory['Batsman'] || []).length,
-            (byCategory['Bowler'] || []).length,
-            (byCategory['Wicket Keeper'] || []).length,
-            (byCategory['All-Rounder'] || []).length
-        );
-        const maxSets = Math.max(1, Math.ceil(maxLen / 10));
-
-        for (let s = 0; s < maxSets; s++) {
-            const start = s * 10;
-            const end = start + 10;
-            for (const role of roleSeq) {
-                const list = byCategory[role] || [];
-                const chunk = list.slice(start, end);
-                setOrderedPlayers.push(...chunk);
-            }
+        // Auction Set Ordering (Rule 5 with Randomization):
+        // Follows the slot rule (10 Batsmen, 10 Bowlers, 10 Wicket Keepers, 10 All-Rounders per set),
+        // with players in each role randomized when randomizeQueue is true.
+        let newAuctionOrderMap;
+        const allHaveOrder = players.every(p => p.auction_order !== null && p.auction_order !== undefined && Number(p.auction_order) > 0);
+        if (!randomizeQueue && allHaveOrder) {
+            newAuctionOrderMap = new Map(players.map(p => [p.id, Number(p.auction_order)]));
+        } else {
+            newAuctionOrderMap = buildSlotOrderedQueue(players, { randomize: true });
         }
-
-        const setPlayerIds = new Set(setOrderedPlayers.map(p => p.id));
-        const remainingPlayers = players.filter(p => !setPlayerIds.has(p.id)).sort(sortForRank);
-        const finalOrdered = [...setOrderedPlayers, ...remainingPlayers];
-        finalOrdered.forEach((p, i) => { p.newAuctionOrder = i + 1; });
 
         let changed = 0;
         for (const p of players) {
             const newRank = p.ranked ? p.newRank : null;
             const newCatRank = p.ranked ? p.newCategoryRank : null;
-            const newAuctionOrder = p.newAuctionOrder || p.id;
+            const newAuctionOrder = newAuctionOrderMap.get(p.id) || p.auction_order || p.id;
             const oldRank = p.current_rank === null ? null : num(p.current_rank);
             const oldCatRank = p.category_rank === null ? null : num(p.category_rank);
             const oldPoints = num(p.ranking_points);
@@ -275,5 +338,7 @@ module.exports = {
     bowlingScore,
     keepingScore,
     basePriceFromPoints,
+    shuffleArray,
+    buildSlotOrderedQueue,
     recalculateRankings,
 };

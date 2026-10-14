@@ -117,4 +117,75 @@ test('ranking_points range is valid (1-1000)', () => {
     }
 });
 
+test('buildSlotOrderedQueue enforces role slots of 10 and randomizes players within roles', () => {
+    const { buildSlotOrderedQueue } = require('../server/services/ranking');
+
+    // Create a mock pool of players: 25 Batsmen, 25 Bowlers, 25 Keepers, 25 All-Rounders
+    const mockPlayers = [];
+    let id = 1;
+    const roles = ['Batsman', 'Bowler', 'Wicket Keeper', 'All-Rounder'];
+    for (const role of roles) {
+        for (let i = 1; i <= 25; i++) {
+            mockPlayers.push({ id: id++, name: `${role} ${i}`, playing_role: role, ranking_points: 100 + i, status: 'Available' });
+        }
+    }
+
+    const orderMap1 = buildSlotOrderedQueue(mockPlayers, { randomize: true });
+    assert.equal(orderMap1.size, 100, 'All 100 players must have an order');
+
+    // Map ordered list
+    const ordered = [...mockPlayers].sort((a, b) => orderMap1.get(a.id) - orderMap1.get(b.id));
+
+    // Set 1:
+    // 1-10: Batsmen
+    for (let i = 0; i < 10; i++) {
+        assert.equal(ordered[i].playing_role, 'Batsman', `Slot ${i + 1} should be a Batsman`);
+    }
+    // 11-20: Bowlers
+    for (let i = 10; i < 20; i++) {
+        assert.equal(ordered[i].playing_role, 'Bowler', `Slot ${i + 1} should be a Bowler`);
+    }
+    // 21-30: Wicket Keepers
+    for (let i = 20; i < 30; i++) {
+        assert.equal(ordered[i].playing_role, 'Wicket Keeper', `Slot ${i + 1} should be a Wicket Keeper`);
+    }
+    // 31-40: All-Rounders
+    for (let i = 30; i < 40; i++) {
+        assert.equal(ordered[i].playing_role, 'All-Rounder', `Slot ${i + 1} should be an All-Rounder`);
+    }
+
+    // Set 2:
+    // 41-50: Batsmen
+    for (let i = 40; i < 50; i++) {
+        assert.equal(ordered[i].playing_role, 'Batsman', `Slot ${i + 1} should be a Batsman (Set 2)`);
+    }
+    // 51-60: Bowlers
+    for (let i = 50; i < 60; i++) {
+        assert.equal(ordered[i].playing_role, 'Bowler', `Slot ${i + 1} should be a Bowler (Set 2)`);
+    }
+    // 61-70: Wicket Keepers
+    for (let i = 60; i < 70; i++) {
+        assert.equal(ordered[i].playing_role, 'Wicket Keeper', `Slot ${i + 1} should be a Wicket Keeper (Set 2)`);
+    }
+    // 71-80: All-Rounders
+    for (let i = 70; i < 80; i++) {
+        assert.equal(ordered[i].playing_role, 'All-Rounder', `Slot ${i + 1} should be an All-Rounder (Set 2)`);
+    }
+
+    // Set 3: Remaining 5 players of each role (81-100)
+    for (let i = 80; i < 85; i++) assert.equal(ordered[i].playing_role, 'Batsman');
+    for (let i = 85; i < 90; i++) assert.equal(ordered[i].playing_role, 'Bowler');
+    for (let i = 90; i < 95; i++) assert.equal(ordered[i].playing_role, 'Wicket Keeper');
+    for (let i = 95; i < 100; i++) assert.equal(ordered[i].playing_role, 'All-Rounder');
+
+    // Run a second time and check randomization (the sequence of first 10 batsmen should not be identical in both runs)
+    const orderMap2 = buildSlotOrderedQueue(mockPlayers, { randomize: true });
+    const ordered2 = [...mockPlayers].sort((a, b) => orderMap2.get(a.id) - orderMap2.get(b.id));
+    const firstTenIds1 = ordered.slice(0, 10).map(p => p.id).join(',');
+    const firstTenIds2 = ordered2.slice(0, 10).map(p => p.id).join(',');
+    // With 25 batsmen, probability of identical first 10 order is 1 / (25P10) which is virtually 0
+    assert.notEqual(firstTenIds1, firstTenIds2, 'Successive randomizations should produce randomized player orders');
+});
+
 console.log('✅ Rules unit tests passed');
+

@@ -28,7 +28,7 @@ function idParam(req) {
 }
 
 async function afterPlayerChange() {
-    await recalculateRankings(pool);
+    await recalculateRankings(pool, null, { randomizeQueue: false });
     hub.notifyPlayersChanged();
 }
 
@@ -375,11 +375,25 @@ exports.updatePlayerStatus = async (req, res) => {
 
 exports.recalculateRankings = async (req, res) => {
     try {
-        const result = await recalculateRankings(pool);
+        const randomize = req.body && req.body.randomizeQueue !== undefined ? Boolean(req.body.randomizeQueue) : false;
+        const result = await recalculateRankings(pool, null, { randomizeQueue: randomize });
         hub.notifyPlayersChanged();
         res.json({ message: `Rankings recalculated — ${result.ranked} ranked players, ${result.changed} changed.`, ...result });
     } catch (error) {
         sendError(res, error, 'RECALCULATE RANKINGS');
+    }
+};
+
+exports.randomizeQueue = async (req, res) => {
+    try {
+        const result = await recalculateRankings(pool, null, { randomizeQueue: true });
+        hub.notifyPlayersChanged();
+        res.json({
+            message: 'Player queue randomized successfully following the slot rule (10 random Batsmen, 10 Bowlers, 10 Keepers, 10 All-Rounders per set).',
+            ...result,
+        });
+    } catch (error) {
+        sendError(res, error, 'RANDOMIZE QUEUE');
     }
 };
 
@@ -569,8 +583,8 @@ exports.verifyStartAuctionOtp = async (req, res) => {
     }
 
     try {
-        // 5. Trigger ranking recalculation & reset socket engine state
-        await recalculateRankings(pool);
+        // 5. Trigger ranking recalculation with randomized slot-rule queue & reset socket engine state
+        await recalculateRankings(pool, null, { randomizeQueue: true });
         await hub.resetAndStartAuction();
 
         res.json({

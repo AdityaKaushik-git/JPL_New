@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Plus, Pencil, Trash2, RotateCcw, Calculator, Search, KeyRound, Power, ListOrdered, Eye } from 'lucide-react'
+import { Plus, Pencil, Trash2, RotateCcw, Calculator, Search, KeyRound, Power, ListOrdered, Eye, Shuffle } from 'lucide-react'
 import ToastContainer from '../components/Toast'
 import Modal, { ConfirmDialog } from '../components/Modal'
 import FranchiseModal from '../components/FranchiseModal'
@@ -125,6 +125,19 @@ function PlayersTab({ notify }) {
     try { const r = await api.recalculateRankings(); notify(r.message, 'success'); reload() } catch (e) { notify(e.message, 'danger') }
   }
 
+  async function handleRandomizeQueue() {
+    setBusy(true)
+    try {
+      const r = await api.randomizeQueue()
+      notify(r.message || 'Player queue randomized following the slot rule!', 'success')
+      reload()
+    } catch (e) {
+      notify(e.message, 'danger')
+    } finally {
+      setBusy(false)
+    }
+  }
+
   async function runConfirm() {
     setBusy(true)
     try { await confirm.run(); setConfirm(null); reload() } catch (e) { notify(e.message, 'danger') } finally { setBusy(false) }
@@ -245,7 +258,8 @@ function PlayersTab({ notify }) {
           <option value="order">Sort: Order</option><option value="name">Sort: Name</option><option value="price">Sort: Base Price</option><option value="rank">Sort: Rank</option>
         </select>
         <span className="spacer" />
-        <button className="btn btn-ghost btn-sm" onClick={recalc}><Calculator size={15} /> Recalculate rankings</button>
+        <button className="btn btn-ghost btn-sm" onClick={handleRandomizeQueue} disabled={busy} title="Randomize player auction queue following the 10-player role slot rule"><Shuffle size={15} /> Randomize queue</button>
+        <button className="btn btn-ghost btn-sm" onClick={recalc} disabled={busy}><Calculator size={15} /> Recalculate rankings</button>
         <button className="btn btn-primary btn-sm" onClick={() => setEditing({})}><Plus size={15} /> Add player</button>
       </div>
 
