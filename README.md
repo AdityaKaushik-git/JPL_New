@@ -37,16 +37,15 @@ Bid increments scale progressively based on the current bid:
 
 ## 2. Player Queue & Role Slot Ordering
 
-The auction engine sequences players according to the **10-player Role Slot Rule**:
-- **Set 1:** 10 random **Batsmen**, 10 random **Bowlers**, 10 random **Wicket Keepers**, 10 random **All-Rounders**
-- **Set 2:** Next 10 random **Batsmen**, 10 random **Bowlers**, 10 random **Wicket Keepers**, 10 random **All-Rounders**
-- **Subsequent Sets:** Repeats in 10-player chunks until all 280 players across all roles are sequenced.
+The auction engine sequences players according to the **Excel Slot Rule** directly from `player list.xlsx`:
+- **Round 1 (Set 1):** Top 10 **Batsmen** (randomised), Top 10 **Bowlers** (randomised), 5 **Wicket Keepers** (randomised), 10 **All-Rounders** (randomised), 5 **Uncapped** (randomised)
+- **Round 2 (Set 2):** Next 10 **Batsmen** (randomised), 10 **Bowlers** (randomised), 5 **Wicket Keepers** (randomised), 10 **All-Rounders** (randomised), 5 **Uncapped** (randomised)
+- **Subsequent Sets:** Follows each exact Excel slot set (Rounds 1–6 through all 5 categories, Rounds 7 & 8 for remaining Batsmen and Bowlers) with players within each slot randomized using Fisher-Yates shuffle.
 
 ### Randomization & Queue Controls
-- Within each role's pool, players are shuffled randomly using Fisher-Yates, ensuring unpredictable lots while preserving role slots.
-- **Admin Control & Admin Pages:** Admins can click **Randomize queue** at any time to re-shuffle the available queue while maintaining the slot rule.
-- **Role Progression:** Admins can advance sequentially through the global queue or filter and auction `Next <Role>` players on demand.
-- **Auction Start OTP:** Starting or resetting the auction requires email OTP verification and automatically initializes a fresh randomized queue.
+- Within each slot, the specific players from that Excel tier are shuffled randomly, ensuring lots are unpredictable within each tier while strictly preserving slot structure.
+- **Admin Control & Admin Pages:** Admins can click **Randomize queue** at any time to re-shuffle players within each slot while maintaining the slot order.
+- **Declare Result & Disqualification Rule:** When the admin clicks **Declare Result: ON**, the results are published. Any franchise that has not completed a full squad of **15 players** is excluded from the results leaderboard and is marked as **Disqualified**.
 
 ---
 

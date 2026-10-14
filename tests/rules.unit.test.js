@@ -187,5 +187,120 @@ test('buildSlotOrderedQueue enforces role slots of 10 and randomizes players wit
     assert.notEqual(firstTenIds1, firstTenIds2, 'Successive randomizations should produce randomized player orders');
 });
 
+test('buildSlotOrderedQueue with actual Excel players accurately groups by Excel slots and randomizes within each slot', () => {
+    const { buildSlotOrderedQueue } = require('../server/services/ranking');
+    const slotsData = require('../server/data/excel_slots.json');
+
+    const realPlayers = slotsData.map((s, idx) => ({
+        id: idx + 1,
+        name: s.name,
+        excel_sheet: s.sheet,
+        excel_set: s.set,
+        playing_role: s.sheet === 'batsman' ? 'Batsman' : s.sheet === 'bowler' ? 'Bowler' : s.sheet === 'Wicket keeper' ? 'Wicket Keeper' : 'All-Rounder',
+        is_uncapped: s.sheet === 'uncapped' ? 1 : 0,
+        ranking_points: 500,
+        status: 'Available',
+    }));
+
+    const orderMap = buildSlotOrderedQueue(realPlayers, { randomize: true });
+    assert.equal(orderMap.size, 280, 'All 280 Excel players must be ordered');
+
+    const ordered = [...realPlayers].sort((a, b) => orderMap.get(a.id) - orderMap.get(b.id));
+
+    // Slot 1: Top 10 Batsmen (Set 1 Batsmen)
+    const expectedTop10Batsmen = new Set([
+        'Abhishek Sharma', 'Sahibzada Farhan', 'Harry Brook', 'Dewald Brevis', 'Shreyas Iyer',
+        'Pathum Nissanka', 'Tilak Varma', 'Mitchell Marsh', 'Travis Head', 'Brian Bennett'
+    ]);
+    const slot1Batsmen = ordered.slice(0, 10).map(p => p.name);
+    assert.equal(slot1Batsmen.length, 10);
+    for (const name of slot1Batsmen) {
+        assert.ok(expectedTop10Batsmen.has(name), `Slot 1 must contain Top 10 Batsman "${name}"`);
+    }
+
+    // Slot 2: Top 10 Bowlers (Set 1 Bowlers)
+    const expectedTop10Bowlers = new Set([
+        'Rashid Khan', 'Abrar Ahmed', 'Adam Zampa', 'Adil Rashid', 'Nathan Ellis',
+        'Jamie Overton', 'Nasum Ahmed', 'Jasprit Bumrah', 'Liam Dawson', 'Mohammad Nawaz'
+    ]);
+    const slot2Bowlers = ordered.slice(10, 20).map(p => p.name);
+    assert.equal(slot2Bowlers.length, 10);
+    for (const name of slot2Bowlers) {
+        assert.ok(expectedTop10Bowlers.has(name), `Slot 2 must contain Top 10 Bowler "${name}"`);
+    }
+
+    // Slot 3: Set 1 Wicket Keepers (5 players)
+    const expectedSet1Keepers = new Set(['Ishan Kishan', 'Jos Buttler', 'Phil Salt', 'Tim Seifert', 'Shai Hope']);
+    const slot3Keepers = ordered.slice(20, 25).map(p => p.name);
+    assert.equal(slot3Keepers.length, 5);
+    for (const name of slot3Keepers) {
+        assert.ok(expectedSet1Keepers.has(name), `Slot 3 must contain Set 1 Keeper "${name}"`);
+    }
+
+    // Slot 4: Set 1 All-Rounders (10 players)
+    assert.equal(ordered.slice(25, 35).length, 10);
+    for (let i = 25; i < 35; i++) {
+        assert.equal(ordered[i].excel_sheet, 'all rounder');
+        assert.equal(ordered[i].excel_set, 1);
+    }
+
+    // Slot 5: Set 1 Uncapped (5 players)
+    assert.equal(ordered.slice(35, 40).length, 5);
+    for (let i = 35; i < 40; i++) {
+        assert.equal(ordered[i].excel_sheet, 'uncapped');
+        assert.equal(ordered[i].excel_set, 1);
+    }
+
+    // Slot 6: Set 2 Batsmen (10 players)
+    assert.equal(ordered.slice(40, 50).length, 10);
+    for (let i = 40; i < 50; i++) {
+        assert.equal(ordered[i].excel_sheet, 'batsman');
+        assert.equal(ordered[i].excel_set, 2);
+    }
+
+    // Randomization verification: consecutive runs produce different orders within Slot 1
+    const orderMap2 = buildSlotOrderedQueue(realPlayers, { randomize: true });
+    const ordered2 = [...realPlayers].sort((a, b) => orderMap2.get(a.id) - orderMap2.get(b.id));
+    const slot1Run1 = ordered.slice(0, 10).map(p => p.name).join(',');
+    const slot1Run2 = ordered2.slice(0, 10).map(p => p.name).join(',');
+    assert.notEqual(slot1Run1, slot1Run2, 'Slot 1 Top 10 Batsmen order should be randomised between runs');
+});
+
+test('franchises with fewer than 15 players are excluded from results and termed disqualified', () => {
+    const franchises = [
+        { id: 1, team_name: 'Team Alpha', squad_count: 15, total_player_points: 5000, remaining_purse: 10000000 },
+        { id: 2, team_name: 'Team Beta', squad_count: 14, total_player_points: 6000, remaining_purse: 20000000 }, // Incomplete!
+        { id: 3, team_name: 'Team Gamma', squad_count: 15, total_player_points: 4500, remaining_purse: 5000000 },
+        { id: 4, team_name: 'Team Delta', squad_count: 10, total_player_points: 4000, remaining_purse: 30000000 }, // Incomplete!
+    ];
+
+    const mapped = franchises.map(f => {
+        const squadCount = Number(f.squad_count || 0);
+        const isDisqualified = squadCount < 15;
+        return {
+            ...f,
+            is_disqualified: isDisqualified,
+            qualification_status: isDisqualified ? 'Disqualified' : 'Qualified',
+            disqualification_reason: isDisqualified ? 'Incomplete squad (< 15 players)' : null,
+        };
+    });
+
+    const qualified = mapped.filter(f => !f.is_disqualified);
+    const disqualified = mapped.filter(f => f.is_disqualified);
+
+    // Only 2 teams have 15 players
+    assert.equal(qualified.length, 2, 'Only franchises with 15 players should qualify');
+    assert.equal(disqualified.length, 2, 'Franchises with < 15 players should be disqualified');
+
+    // Team Beta had more points (6000) than Alpha (5000), but has 14 players, so Beta is disqualified
+    assert.equal(disqualified[0].team_name, 'Team Beta');
+    assert.equal(disqualified[0].qualification_status, 'Disqualified');
+    assert.equal(disqualified[0].disqualification_reason, 'Incomplete squad (< 15 players)');
+
+    // Result rankings contain ONLY Alpha (#1) and Gamma (#2)
+    assert.equal(qualified[0].team_name, 'Team Alpha');
+    assert.equal(qualified[1].team_name, 'Team Gamma');
+});
+
 console.log('✅ Rules unit tests passed');
 

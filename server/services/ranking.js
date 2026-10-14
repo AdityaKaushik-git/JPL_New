@@ -139,12 +139,42 @@ function shuffleArray(array) {
     return arr;
 }
 
-// Builds the player auction queue following the 10-player role slot rule:
-// Set 1: 10 random Batsmen, 10 random Bowlers, 10 random Wicket Keepers, 10 random All-Rounders
-// Set 2: next 10 random Batsmen, 10 Bowlers, 10 Keepers, 10 All-Rounders, etc.
-function buildSlotOrderedQueue(players, { randomize = true } = {}) {
-    const roleSeq = ['Batsman', 'Bowler', 'Wicket Keeper', 'All-Rounder'];
+const fs = require('fs');
+const path = require('path');
 
+// Preloaded Excel slot definitions
+let excelSlotsMap = null;
+function getExcelSlotsMap() {
+    if (!excelSlotsMap) {
+        excelSlotsMap = new Map();
+        try {
+            const filePath = path.join(__dirname, '../data/excel_slots.json');
+            if (fs.existsSync(filePath)) {
+                const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+                const norm = s => String(s || '').trim().toLowerCase();
+                for (const item of data) {
+                    const roleKey = item.sheet === 'uncapped'
+                        ? 'uncapped'
+                        : (norm(item.sheet) === 'wicket keeper'
+                            ? 'wicket keeper'
+                            : (norm(item.sheet) === 'all rounder' ? 'all-rounder' : norm(item.sheet)));
+                    excelSlotsMap.set(norm(item.name) + '|' + roleKey, item);
+                }
+            }
+        } catch (e) {
+            console.error('Error loading excel_slots.json:', e);
+        }
+    }
+    return excelSlotsMap;
+}
+
+// Builds the player auction queue following the slots like in player list.xlsx:
+// Round 1 (Set 1): Top 10 Batsmen (randomised), Top 10 Bowlers (randomised), 5 Keepers (randomised), 10 All-Rounders (randomised), 5 Uncapped (randomised)
+// Round 2 (Set 2): Next 10 Batsmen (randomised), 10 Bowlers (randomised), 5 Keepers (randomised), 10 All-Rounders (randomised), 5 Uncapped (randomised)
+// ...
+// Round 7 (Set 7): 10 Batsmen (randomised), 10 Bowlers (randomised)
+// Round 8 (Set 8): 10 Batsmen (randomised), 10 Bowlers (randomised)
+function buildSlotOrderedQueue(players, { randomize = true } = {}) {
     // If an auction is partially underway (some players Sold, Unsold, or In Auction),
     // preserve those finished/in-action players at their existing order, and randomize remaining Available players.
     // When all players are Available (fresh or reset session), all players are ordered 1 to N.
@@ -153,51 +183,112 @@ function buildSlotOrderedQueue(players, { randomize = true } = {}) {
 
     nonAvailable.sort((a, b) => Number(a.auction_order ?? a.id) - Number(b.auction_order ?? b.id));
 
-    // Group available players by role
-    const byRole = {};
-    for (const role of roleSeq) {
-        byRole[role] = [];
+    // The slot definition sequence following the Excel sheet "player list.xlsx"
+    const slotRounds = [];
+    for (let s = 1; s <= 6; s++) {
+        slotRounds.push(['batsman', s]);
+        slotRounds.push(['bowler', s]);
+        slotRounds.push(['Wicket keeper', s]);
+        slotRounds.push(['all rounder', s]);
+        slotRounds.push(['uncapped', s]);
     }
-    const otherAvailable = [];
+    slotRounds.push(['batsman', 7]);
+    slotRounds.push(['bowler', 7]);
+    slotRounds.push(['batsman', 8]);
+    slotRounds.push(['bowler', 8]);
+
+    const norm = s => String(s || '').trim().toLowerCase();
+    const excelMap = getExcelSlotsMap();
+
+    // Group available players by their exact Excel slot if matched
+    const slotBuckets = new Map();
+    slotRounds.forEach(([sheet, sNum]) => slotBuckets.set(sheet + '|' + sNum, []));
+
+    const unmatchedAvailable = [];
 
     for (const p of available) {
-        if (byRole[p.playing_role]) {
-            byRole[p.playing_role].push(p);
+        let sheet = p.excel_sheet;
+        let setNum = p.excel_set ? Number(p.excel_set) : null;
+
+        if (!sheet || !setNum) {
+            const roleKey = p.is_uncapped
+                ? 'uncapped'
+                : (norm(p.playing_role) === 'wicket keeper'
+                    ? 'wicket keeper'
+                    : (norm(p.playing_role) === 'all-rounder' ? 'all-rounder' : norm(p.playing_role)));
+            const matched = excelMap.get(norm(p.name) + '|' + roleKey);
+            if (matched) {
+                sheet = matched.sheet;
+                setNum = matched.set;
+            }
+        }
+
+        const bucketKey = sheet && setNum ? `${sheet}|${setNum}` : null;
+        if (bucketKey && slotBuckets.has(bucketKey)) {
+            slotBuckets.get(bucketKey).push(p);
         } else {
-            otherAvailable.push(p);
+            unmatchedAvailable.push(p);
         }
     }
 
-    // Shuffle players within each role randomly (or preserve order if randomize=false)
-    for (const role of roleSeq) {
-        byRole[role] = randomize ? shuffleArray(byRole[role]) : byRole[role];
-    }
-    const orderedOthers = randomize ? shuffleArray(otherAvailable) : otherAvailable;
+    // Sequence players slot-by-slot, randomizing players within each slot
+    const slotOrdered = [];
+    slotRounds.forEach(([sheet, sNum]) => {
+        const bucket = slotBuckets.get(sheet + '|' + sNum) || [];
+        if (bucket.length > 0) {
+            const chunk = randomize ? shuffleArray(bucket) : bucket;
+            slotOrdered.push(...chunk);
+        }
+    });
 
-    const maxLen = Math.max(
-        byRole['Batsman'].length,
-        byRole['Bowler'].length,
-        byRole['Wicket Keeper'].length,
-        byRole['All-Rounder'].length
-    );
-    const maxSets = Math.max(1, Math.ceil(maxLen / 10));
+    // Handle any unmatched / mock players (e.g. from unit tests) following role slot rule
+    let fallbackOrdered = [];
+    if (unmatchedAvailable.length > 0) {
+        const roleSeq = ['Batsman', 'Bowler', 'Wicket Keeper', 'All-Rounder'];
+        const byRole = {};
+        for (const role of roleSeq) byRole[role] = [];
+        const others = [];
 
-    const setOrdered = [];
-    for (let s = 0; s < maxSets; s++) {
-        const start = s * 10;
-        const end = start + 10;
+        for (const p of unmatchedAvailable) {
+            if (byRole[p.playing_role]) {
+                byRole[p.playing_role].push(p);
+            } else {
+                others.push(p);
+            }
+        }
+
+        // Sort by ranking points / id before chunking into 10s
         for (const role of roleSeq) {
-            const list = byRole[role] || [];
-            const chunk = list.slice(start, end);
-            setOrdered.push(...chunk);
+            byRole[role].sort((a, b) => (Number(b.ranking_points) || 0) - (Number(a.ranking_points) || 0) || (a.id - b.id));
+        }
+
+        const maxLen = Math.max(
+            byRole['Batsman'].length,
+            byRole['Bowler'].length,
+            byRole['Wicket Keeper'].length,
+            byRole['All-Rounder'].length
+        );
+        const maxSets = Math.max(1, Math.ceil(maxLen / 10));
+
+        for (let s = 0; s < maxSets; s++) {
+            const start = s * 10;
+            const end = start + 10;
+            for (const role of roleSeq) {
+                const list = byRole[role] || [];
+                const chunk = list.slice(start, end);
+                if (chunk.length > 0) {
+                    fallbackOrdered.push(...(randomize ? shuffleArray(chunk) : chunk));
+                }
+            }
+        }
+        if (others.length > 0) {
+            fallbackOrdered.push(...(randomize ? shuffleArray(others) : others));
         }
     }
 
-    const setIds = new Set(setOrdered.map(p => p.id));
-    const remainingAvailable = available.filter(p => !setIds.has(p.id));
-    const finalAvailable = [...setOrdered, ...orderedOthers, ...remainingAvailable];
-
+    const finalAvailable = [...slotOrdered, ...fallbackOrdered];
     const finalOrdered = [...nonAvailable, ...finalAvailable];
+
     const orderMap = new Map();
     finalOrdered.forEach((p, idx) => {
         orderMap.set(p.id, idx + 1);

@@ -143,7 +143,9 @@ async function upgradeExisting(db) {
     await modifyColumn(db, 'players', 'year', "VARCHAR(20) NOT NULL DEFAULT 'N/A'", lacksDefault);
     await addColumn(db, 'players', 'player_code', 'VARCHAR(20) NULL AFTER id');
     await addColumn(db, 'players', 'auction_order', 'INT NULL AFTER player_code');
-    await addColumn(db, 'players', 'batting_style', 'VARCHAR(40) NULL AFTER playing_role');
+    await addColumn(db, 'players', 'excel_sheet',   'VARCHAR(50) NULL AFTER playing_role');
+    await addColumn(db, 'players', 'excel_set',     'INT NULL AFTER excel_sheet');
+    await addColumn(db, 'players', 'batting_style', 'VARCHAR(40) NULL AFTER excel_set');
     await addColumn(db, 'players', 'bowling_style', 'VARCHAR(60) NULL AFTER batting_style');
     // Country & image (new fields — added safely)
     await addColumn(db, 'players', 'country',       'VARCHAR(60) NULL AFTER bowling_style');
@@ -335,6 +337,35 @@ async function dataMigrations(db) {
             console.log(`  updated ranking_points: ${updated} players updated, ${notFound} not matched`);
         } catch (err) {
             console.warn(`  ! Could not load ExcelJS: ${err.message}. Try: npm install exceljs`);
+        }
+    });
+
+    // Backfill excel_sheet and excel_set from server/data/excel_slots.json
+    await once(db, '009_excel_slots_columns', async () => {
+        console.log('  backfilling excel_sheet and excel_set for players from excel_slots.json');
+        try {
+            const slotsData = require('../server/data/excel_slots.json');
+            const norm = s => String(s || '').trim().toLowerCase();
+            let count = 0;
+            for (const item of slotsData) {
+                const roleKey = item.sheet === 'uncapped'
+                    ? 'uncapped'
+                    : (norm(item.sheet) === 'wicket keeper'
+                        ? 'wicket keeper'
+                        : (norm(item.sheet) === 'all rounder' ? 'all-rounder' : norm(item.sheet)));
+                const [r] = await db.query(
+                    `UPDATE players SET excel_sheet = ?, excel_set = ?
+                     WHERE LOWER(TRIM(name)) = ? AND (
+                        (is_uncapped = 1 AND ? = 'uncapped') OR
+                        (is_uncapped = 0 AND LOWER(TRIM(playing_role)) = ?)
+                     )`,
+                    [item.sheet, item.set, norm(item.name), roleKey, roleKey]
+                );
+                count += r.affectedRows;
+            }
+            console.log(`  backfilled ${count} players with excel_sheet and excel_set`);
+        } catch (err) {
+            console.warn('  ! could not backfill excel slots:', err.message);
         }
     });
 

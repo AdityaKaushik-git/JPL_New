@@ -206,7 +206,7 @@ module.exports = (io) => {
             const teams = await listFranchises(pool);
             for (const socket of io.sockets.sockets.values()) {
                 const isAdmin = socket.user && socket.user.role === 'admin';
-                if (isAdmin) {
+                if (isAdmin || showLiveRankings) {
                     socket.emit('teams:update', teams);
                 } else if (socket.user && socket.user.role === 'user') {
                     const myTeam = teams.find(t => t.id === socket.user.id);
@@ -942,13 +942,13 @@ module.exports = (io) => {
             showLiveRankings = Boolean(enabled);
             broadcastState();
             await broadcastTeams();
-            notify(io, `Live Rankings visibility turned ${showLiveRankings ? 'ON' : 'OFF'} by Admin.`, 'info');
+            notify(io, showLiveRankings ? 'Auction Results have been Declared by Admin!' : 'Auction Results visibility turned OFF by Admin.', 'info');
         });
 
         guard(socket, 'admin:randomizeQueue', true, async () => {
             const { recalculateRankings } = require('../services/ranking');
             await recalculateRankings(pool, null, { randomizeQueue: true });
-            notify(io, 'Player queue randomized following the slot rule (10 random Batsmen, 10 Bowlers, 10 Keepers, 10 All-Rounders).', 'success');
+            notify(io, 'Player queue randomized following Excel slots (Top 10 Batsmen randomised, Top 10 Bowlers randomised, etc.).', 'success');
             hub.notifyPlayersChanged();
         });
 
@@ -984,9 +984,12 @@ module.exports = (io) => {
         broadcastTeams,
         getState: getSanitizedState,
         getActivePlayerId: () => (isLotOpen() && activeAuction.player ? activeAuction.player.id : null),
+        getShowLiveRankings: () => showLiveRankings,
         resetAndStartAuction,
     };
     hub.register(io, engine);
     restore().then(() => broadcastState());
     return engine;
 };
+
+module.exports.getShowLiveRankings = () => showLiveRankings;

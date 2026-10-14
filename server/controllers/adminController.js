@@ -389,7 +389,7 @@ exports.randomizeQueue = async (req, res) => {
         const result = await recalculateRankings(pool, null, { randomizeQueue: true });
         hub.notifyPlayersChanged();
         res.json({
-            message: 'Player queue randomized successfully following the slot rule (10 random Batsmen, 10 Bowlers, 10 Keepers, 10 All-Rounders per set).',
+            message: 'Player queue randomized successfully following the Excel slot rule (Top 10 Batsmen randomised, Top 10 Bowlers randomised, etc. per set).',
             ...result,
         });
     } catch (error) {

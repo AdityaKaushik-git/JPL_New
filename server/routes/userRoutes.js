@@ -7,8 +7,12 @@ router.use(authMiddleware);
 
 router.get('/dashboard', userController.getDashboard);
 router.get('/profile', userController.getProfile);
-router.put('/profile', userController.updateProfile);
-router.get('/standings', adminMiddleware, userController.getStandings);
+router.get('/standings', (req, res, next) => {
+    if (req.user && req.user.role === 'admin') return next();
+    const auctionSocket = require('../sockets/auctionSocket');
+    if (auctionSocket.getShowLiveRankings && auctionSocket.getShowLiveRankings()) return next();
+    return res.status(403).json({ message: 'Auction results have not been declared yet.' });
+}, userController.getStandings);
 
 router.get('/my-team', franchiseMiddleware, userController.getTeam);
 router.get('/my-bids', franchiseMiddleware, userController.getBids);

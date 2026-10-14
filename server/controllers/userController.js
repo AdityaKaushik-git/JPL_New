@@ -176,22 +176,49 @@ exports.updatePlayerProfile = async (req, res) => {
 exports.getStandings = async (req, res) => {
     try {
         const franchises = await listFranchises(pool);
-        const standings = franchises
-            .map(f => ({
+        const mapped = franchises.map(f => {
+            const squadCount = Number(f.squad_count || 0);
+            const isDisqualified = squadCount < 15;
+            return {
                 ...f,
                 // backwards-compatible keys
                 owner_name: f.owner_name,
                 purse: f.remaining_purse,
-                players_count: f.squad_count,
-            }))
+                players_count: squadCount,
+                is_disqualified: isDisqualified,
+                qualification_status: isDisqualified ? 'Disqualified' : 'Qualified',
+                disqualification_reason: isDisqualified ? 'Incomplete squad (< 15 players)' : null,
+            };
+        });
+
+        // Real-time live rankings (ALL active franchises sorted by points) so admin sees who is winning in real-time
+        const liveStandings = [...mapped]
             .sort((a, b) => {
                 const ptsDiff = (Number(b.total_player_points) || 0) - (Number(a.total_player_points) || 0);
                 if (ptsDiff !== 0) return ptsDiff;
                 const purseDiff = (Number(b.remaining_purse) || 0) - (Number(a.remaining_purse) || 0);
                 if (purseDiff !== 0) return purseDiff;
                 return (Number(b.batsmen_points) || 0) - (Number(a.batsmen_points) || 0);
-            });
-        res.json({ standings });
+            })
+            .map((f, idx) => ({ ...f, rank: idx + 1 }));
+
+        // Qualified franchises with 15 completed players (for Declare Result)
+        const qualified = liveStandings
+            .filter(f => !f.is_disqualified)
+            .map((f, idx) => ({ ...f, result_rank: idx + 1 }));
+
+        // Disqualified franchises (< 15 players)
+        const disqualified = liveStandings
+            .filter(f => f.is_disqualified)
+            .map(f => ({ ...f, result_rank: null }));
+
+        res.json({
+            standings: liveStandings, // All franchises ranked for real-time live view
+            live_standings: liveStandings,
+            qualified,                // Only 15-player franchises for Declare Result
+            disqualified,             // Incomplete franchises
+            all: liveStandings,
+        });
     } catch (error) {
         console.error('STANDINGS ERROR:', error.message);
         res.status(500).json({ message: 'Server error' });

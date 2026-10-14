@@ -1,0 +1,1402 @@
+[
+  {
+    "sheet": "batsman",
+    "set": 1,
+    "name": "Abhishek Sharma"
+  },
+  {
+    "sheet": "batsman",
+    "set": 1,
+    "name": "Sahibzada Farhan"
+  },
+  {
+    "sheet": "batsman",
+    "set": 1,
+    "name": "Harry Brook"
+  },
+  {
+    "sheet": "batsman",
+    "set": 1,
+    "name": "Dewald Brevis"
+  },
+  {
+    "sheet": "batsman",
+    "set": 1,
+    "name": "Shreyas Iyer"
+  },
+  {
+    "sheet": "batsman",
+    "set": 1,
+    "name": "Pathum Nissanka"
+  },
+  {
+    "sheet": "batsman",
+    "set": 1,
+    "name": "Tilak Varma"
+  },
+  {
+    "sheet": "batsman",
+    "set": 1,
+    "name": "Mitchell Marsh"
+  },
+  {
+    "sheet": "batsman",
+    "set": 1,
+    "name": "Travis Head"
+  },
+  {
+    "sheet": "batsman",
+    "set": 1,
+    "name": "Brian Bennett"
+  },
+  {
+    "sheet": "batsman",
+    "set": 2,
+    "name": "Ibrahim Zadran"
+  },
+  {
+    "sheet": "batsman",
+    "set": 2,
+    "name": "Jacob Bethell"
+  },
+  {
+    "sheet": "batsman",
+    "set": 2,
+    "name": "George Munsey"
+  },
+  {
+    "sheet": "batsman",
+    "set": 2,
+    "name": "Tim David"
+  },
+  {
+    "sheet": "batsman",
+    "set": 2,
+    "name": "Connor Esterhuizen"
+  },
+  {
+    "sheet": "batsman",
+    "set": 2,
+    "name": "Tanzid Hasan"
+  },
+  {
+    "sheet": "batsman",
+    "set": 2,
+    "name": "Saiteja Mukkamalla"
+  },
+  {
+    "sheet": "batsman",
+    "set": 2,
+    "name": "Ryan Rickelton"
+  },
+  {
+    "sheet": "batsman",
+    "set": 2,
+    "name": "Suryakumar Yadav"
+  },
+  {
+    "sheet": "batsman",
+    "set": 2,
+    "name": "Kusal Mendis"
+  },
+  {
+    "sheet": "batsman",
+    "set": 3,
+    "name": "Finn Allen"
+  },
+  {
+    "sheet": "batsman",
+    "set": 3,
+    "name": "Aiden Markram"
+  },
+  {
+    "sheet": "batsman",
+    "set": 3,
+    "name": "Saif Hassan"
+  },
+  {
+    "sheet": "batsman",
+    "set": 3,
+    "name": "Towhid Hridoy"
+  },
+  {
+    "sheet": "batsman",
+    "set": 3,
+    "name": "Michael Levitt"
+  },
+  {
+    "sheet": "batsman",
+    "set": 3,
+    "name": "Kamil Mishara"
+  },
+  {
+    "sheet": "batsman",
+    "set": 3,
+    "name": "Josh Inglis"
+  },
+  {
+    "sheet": "batsman",
+    "set": 3,
+    "name": "Cameron Green"
+  },
+  {
+    "sheet": "batsman",
+    "set": 3,
+    "name": "Tim Robinson"
+  },
+  {
+    "sheet": "batsman",
+    "set": 3,
+    "name": "Sherfane Rutherford"
+  },
+  {
+    "sheet": "batsman",
+    "set": 4,
+    "name": "Rovman Powell"
+  },
+  {
+    "sheet": "batsman",
+    "set": 4,
+    "name": "Shivam Dube"
+  },
+  {
+    "sheet": "batsman",
+    "set": 4,
+    "name": "Lhuan-Dre Pretorius"
+  },
+  {
+    "sheet": "batsman",
+    "set": 4,
+    "name": "Shimron Hetmyer"
+  },
+  {
+    "sheet": "batsman",
+    "set": 4,
+    "name": "Muhammad Waseem"
+  },
+  {
+    "sheet": "batsman",
+    "set": 4,
+    "name": "Babar Azam"
+  },
+  {
+    "sheet": "batsman",
+    "set": 4,
+    "name": "Kusal Perera"
+  },
+  {
+    "sheet": "batsman",
+    "set": 4,
+    "name": "Vaibhav Sooryavanshi"
+  },
+  {
+    "sheet": "batsman",
+    "set": 4,
+    "name": "Salman Agha"
+  },
+  {
+    "sheet": "batsman",
+    "set": 4,
+    "name": "Hasan Nawaz"
+  },
+  {
+    "sheet": "batsman",
+    "set": 5,
+    "name": "Brandon King"
+  },
+  {
+    "sheet": "batsman",
+    "set": 5,
+    "name": "Richie Berrington"
+  },
+  {
+    "sheet": "batsman",
+    "set": 5,
+    "name": "Brandon McMullen"
+  },
+  {
+    "sheet": "batsman",
+    "set": 5,
+    "name": "Andries Gous"
+  },
+  {
+    "sheet": "batsman",
+    "set": 5,
+    "name": "Glenn Phillips"
+  },
+  {
+    "sheet": "batsman",
+    "set": 5,
+    "name": "Tom Banton"
+  },
+  {
+    "sheet": "batsman",
+    "set": 5,
+    "name": "Shubham Ranjane"
+  },
+  {
+    "sheet": "batsman",
+    "set": 5,
+    "name": "Kamindu Mendis"
+  },
+  {
+    "sheet": "batsman",
+    "set": 5,
+    "name": "Kushal Bhurtel"
+  },
+  {
+    "sheet": "batsman",
+    "set": 5,
+    "name": "Parvez Hossain Emon"
+  },
+  {
+    "sheet": "batsman",
+    "set": 6,
+    "name": "Yuvraj Samra"
+  },
+  {
+    "sheet": "batsman",
+    "set": 6,
+    "name": "Glenn Maxwell"
+  },
+  {
+    "sheet": "batsman",
+    "set": 6,
+    "name": "Dasun Shanaka"
+  },
+  {
+    "sheet": "batsman",
+    "set": 6,
+    "name": "Reeza Hendricks"
+  },
+  {
+    "sheet": "batsman",
+    "set": 6,
+    "name": "Max O'Dowd"
+  },
+  {
+    "sheet": "batsman",
+    "set": 6,
+    "name": "Daryl Mitchell"
+  },
+  {
+    "sheet": "batsman",
+    "set": 6,
+    "name": "Alishan Sharafu"
+  },
+  {
+    "sheet": "batsman",
+    "set": 6,
+    "name": "Sediqullah Atal"
+  },
+  {
+    "sheet": "batsman",
+    "set": 6,
+    "name": "Tristan Stubbs"
+  },
+  {
+    "sheet": "batsman",
+    "set": 6,
+    "name": "Louren Steenkamp"
+  },
+  {
+    "sheet": "batsman",
+    "set": 7,
+    "name": "Matt Renshaw"
+  },
+  {
+    "sheet": "batsman",
+    "set": 7,
+    "name": "Mark Chapman"
+  },
+  {
+    "sheet": "batsman",
+    "set": 7,
+    "name": "Paul Stirling"
+  },
+  {
+    "sheet": "batsman",
+    "set": 7,
+    "name": "Lorcan Tucker"
+  },
+  {
+    "sheet": "batsman",
+    "set": 7,
+    "name": "Ben Duckett"
+  },
+  {
+    "sheet": "batsman",
+    "set": 7,
+    "name": "Harry Tector"
+  },
+  {
+    "sheet": "batsman",
+    "set": 7,
+    "name": "Fakhar Zaman"
+  },
+  {
+    "sheet": "batsman",
+    "set": 7,
+    "name": "Marcus Stoinis"
+  },
+  {
+    "sheet": "batsman",
+    "set": 7,
+    "name": "Darwish Rasooli"
+  },
+  {
+    "sheet": "batsman",
+    "set": 7,
+    "name": "Ross Adair"
+  },
+  {
+    "sheet": "batsman",
+    "set": 8,
+    "name": "Jan Frylinck"
+  },
+  {
+    "sheet": "batsman",
+    "set": 8,
+    "name": "Anshy Rath"
+  },
+  {
+    "sheet": "batsman",
+    "set": 8,
+    "name": "David Miller"
+  },
+  {
+    "sheet": "batsman",
+    "set": 8,
+    "name": "Johnson Charles"
+  },
+  {
+    "sheet": "batsman",
+    "set": 8,
+    "name": "Shayan Jahangir"
+  },
+  {
+    "sheet": "batsman",
+    "set": 8,
+    "name": "Prithvi Shaw"
+  },
+  {
+    "sheet": "batsman",
+    "set": 8,
+    "name": "Mayank Aggarwal"
+  },
+  {
+    "sheet": "batsman",
+    "set": 8,
+    "name": "Deepak Hooda"
+  },
+  {
+    "sheet": "batsman",
+    "set": 8,
+    "name": "Venkatesh Iyer"
+  },
+  {
+    "sheet": "batsman",
+    "set": 8,
+    "name": "Sarfaraz Khan"
+  },
+  {
+    "sheet": "Wicket keeper",
+    "set": 1,
+    "name": "Ishan Kishan"
+  },
+  {
+    "sheet": "Wicket keeper",
+    "set": 1,
+    "name": "Jos Buttler"
+  },
+  {
+    "sheet": "Wicket keeper",
+    "set": 1,
+    "name": "Phil Salt"
+  },
+  {
+    "sheet": "Wicket keeper",
+    "set": 1,
+    "name": "Tim Seifert"
+  },
+  {
+    "sheet": "Wicket keeper",
+    "set": 1,
+    "name": "Shai Hope"
+  },
+  {
+    "sheet": "Wicket keeper",
+    "set": 2,
+    "name": "Rahmanullah Gurbaz"
+  },
+  {
+    "sheet": "Wicket keeper",
+    "set": 2,
+    "name": "Sanju Samson"
+  },
+  {
+    "sheet": "Wicket keeper",
+    "set": 2,
+    "name": "Quinton de Kock"
+  },
+  {
+    "sheet": "Wicket keeper",
+    "set": 2,
+    "name": "Litton Das"
+  },
+  {
+    "sheet": "Wicket keeper",
+    "set": 2,
+    "name": "Devon Conway"
+  },
+  {
+    "sheet": "Wicket keeper",
+    "set": 3,
+    "name": "Jitesh Sharma"
+  },
+  {
+    "sheet": "Wicket keeper",
+    "set": 3,
+    "name": "Jordan Cox"
+  },
+  {
+    "sheet": "Wicket keeper",
+    "set": 3,
+    "name": "Heinrich Klassen"
+  },
+  {
+    "sheet": "Wicket keeper",
+    "set": 3,
+    "name": "Jaker Ali"
+  },
+  {
+    "sheet": "Wicket keeper",
+    "set": 3,
+    "name": "K.L Rahul"
+  },
+  {
+    "sheet": "Wicket keeper",
+    "set": 4,
+    "name": "Dhruv Jurel"
+  },
+  {
+    "sheet": "Wicket keeper",
+    "set": 4,
+    "name": "Donovan Ferreira"
+  },
+  {
+    "sheet": "Wicket keeper",
+    "set": 4,
+    "name": "Rishabh Pant"
+  },
+  {
+    "sheet": "Wicket keeper",
+    "set": 4,
+    "name": "Nicolas Pooran"
+  },
+  {
+    "sheet": "Wicket keeper",
+    "set": 4,
+    "name": "Jamie Smith"
+  },
+  {
+    "sheet": "Wicket keeper",
+    "set": 5,
+    "name": "Jonny Bairstow"
+  },
+  {
+    "sheet": "Wicket keeper",
+    "set": 5,
+    "name": "Ben Mcdermott"
+  },
+  {
+    "sheet": "Wicket keeper",
+    "set": 5,
+    "name": "Alex Carey"
+  },
+  {
+    "sheet": "Wicket keeper",
+    "set": 5,
+    "name": "Sam Billings"
+  },
+  {
+    "sheet": "Wicket keeper",
+    "set": 5,
+    "name": "Mohammad Rizwan"
+  },
+  {
+    "sheet": "Wicket keeper",
+    "set": 6,
+    "name": "Tom Latham"
+  },
+  {
+    "sheet": "Wicket keeper",
+    "set": 6,
+    "name": "Niroshan Dickwella"
+  },
+  {
+    "sheet": "Wicket keeper",
+    "set": 6,
+    "name": "Haris Sohail"
+  },
+  {
+    "sheet": "Wicket keeper",
+    "set": 6,
+    "name": "Matthew Wade"
+  },
+  {
+    "sheet": "Wicket keeper",
+    "set": 6,
+    "name": "K.S. Bharat"
+  },
+  {
+    "sheet": "bowler",
+    "set": 1,
+    "name": "Rashid Khan"
+  },
+  {
+    "sheet": "bowler",
+    "set": 1,
+    "name": "Abrar Ahmed"
+  },
+  {
+    "sheet": "bowler",
+    "set": 1,
+    "name": "Adam Zampa"
+  },
+  {
+    "sheet": "bowler",
+    "set": 1,
+    "name": "Adil Rashid"
+  },
+  {
+    "sheet": "bowler",
+    "set": 1,
+    "name": "Nathan Ellis"
+  },
+  {
+    "sheet": "bowler",
+    "set": 1,
+    "name": "Jamie Overton"
+  },
+  {
+    "sheet": "bowler",
+    "set": 1,
+    "name": "Nasum Ahmed"
+  },
+  {
+    "sheet": "bowler",
+    "set": 1,
+    "name": "Jasprit Bumrah"
+  },
+  {
+    "sheet": "bowler",
+    "set": 1,
+    "name": "Liam Dawson"
+  },
+  {
+    "sheet": "bowler",
+    "set": 1,
+    "name": "Mohammad Nawaz"
+  },
+  {
+    "sheet": "bowler",
+    "set": 2,
+    "name": "Varun Chakaravarthy"
+  },
+  {
+    "sheet": "bowler",
+    "set": 2,
+    "name": "Wanindu Hasaranga"
+  },
+  {
+    "sheet": "bowler",
+    "set": 2,
+    "name": "Jofra Archer"
+  },
+  {
+    "sheet": "bowler",
+    "set": 2,
+    "name": "Mitchell Santner"
+  },
+  {
+    "sheet": "bowler",
+    "set": 2,
+    "name": "Akeal Hosein"
+  },
+  {
+    "sheet": "bowler",
+    "set": 2,
+    "name": "Mujeeb Ur Rahman"
+  },
+  {
+    "sheet": "bowler",
+    "set": 2,
+    "name": "Arshdeep Singh"
+  },
+  {
+    "sheet": "bowler",
+    "set": 2,
+    "name": "Salman Mirza"
+  },
+  {
+    "sheet": "bowler",
+    "set": 2,
+    "name": "Maheesh Theekshana"
+  },
+  {
+    "sheet": "bowler",
+    "set": 2,
+    "name": "Matthew Humphreys"
+  },
+  {
+    "sheet": "bowler",
+    "set": 3,
+    "name": "Rishad Hossain"
+  },
+  {
+    "sheet": "bowler",
+    "set": 3,
+    "name": "Dunith Wellalage"
+  },
+  {
+    "sheet": "bowler",
+    "set": 3,
+    "name": "Mustafizur Rahman"
+  },
+  {
+    "sheet": "bowler",
+    "set": 3,
+    "name": "Blessing Muzarabani"
+  },
+  {
+    "sheet": "bowler",
+    "set": 3,
+    "name": "Gudakesh Motie"
+  },
+  {
+    "sheet": "bowler",
+    "set": 3,
+    "name": "Brad Currie"
+  },
+  {
+    "sheet": "bowler",
+    "set": 3,
+    "name": "Harmeet Singh"
+  },
+  {
+    "sheet": "bowler",
+    "set": 3,
+    "name": "Jacob Duffy"
+  },
+  {
+    "sheet": "bowler",
+    "set": 3,
+    "name": "Shamar Joseph"
+  },
+  {
+    "sheet": "bowler",
+    "set": 3,
+    "name": "Josh Hazlewood"
+  },
+  {
+    "sheet": "bowler",
+    "set": 4,
+    "name": "Aryan Dutt"
+  },
+  {
+    "sheet": "bowler",
+    "set": 4,
+    "name": "Kwena Maphaka"
+  },
+  {
+    "sheet": "bowler",
+    "set": 4,
+    "name": "Matt Henry"
+  },
+  {
+    "sheet": "bowler",
+    "set": 4,
+    "name": "Lungi Ngidi"
+  },
+  {
+    "sheet": "bowler",
+    "set": 4,
+    "name": "Mark Watt"
+  },
+  {
+    "sheet": "bowler",
+    "set": 4,
+    "name": "Xavier Bartlett"
+  },
+  {
+    "sheet": "bowler",
+    "set": 4,
+    "name": "Lockie Ferguson"
+  },
+  {
+    "sheet": "bowler",
+    "set": 4,
+    "name": "Sandeep Lamichhane"
+  },
+  {
+    "sheet": "bowler",
+    "set": 4,
+    "name": "Nuwan Thushara"
+  },
+  {
+    "sheet": "bowler",
+    "set": 4,
+    "name": "Ben Sears"
+  },
+  {
+    "sheet": "bowler",
+    "set": 5,
+    "name": "Sufyan Muqeem"
+  },
+  {
+    "sheet": "bowler",
+    "set": 5,
+    "name": "Marco Jansen"
+  },
+  {
+    "sheet": "bowler",
+    "set": 5,
+    "name": "Dushmantha Chameera"
+  },
+  {
+    "sheet": "bowler",
+    "set": 5,
+    "name": "Ravi Bishnoi"
+  },
+  {
+    "sheet": "bowler",
+    "set": 5,
+    "name": "Richard Ngarava"
+  },
+  {
+    "sheet": "bowler",
+    "set": 5,
+    "name": "Matheesha Pathirana"
+  },
+  {
+    "sheet": "bowler",
+    "set": 5,
+    "name": "Keshav Maharaj"
+  },
+  {
+    "sheet": "bowler",
+    "set": 5,
+    "name": "Fazalhaq Farooqi"
+  },
+  {
+    "sheet": "bowler",
+    "set": 5,
+    "name": "Usman Tariq"
+  },
+  {
+    "sheet": "bowler",
+    "set": 5,
+    "name": "Shadley van Schalkwyk"
+  },
+  {
+    "sheet": "bowler",
+    "set": 6,
+    "name": "Kuldeep Yadav"
+  },
+  {
+    "sheet": "bowler",
+    "set": 6,
+    "name": "Gerald Coetzee"
+  },
+  {
+    "sheet": "bowler",
+    "set": 6,
+    "name": "Taskin Ahmed"
+  },
+  {
+    "sheet": "bowler",
+    "set": 6,
+    "name": "Ottniel Baartman"
+  },
+  {
+    "sheet": "bowler",
+    "set": 6,
+    "name": "Sean Abbott"
+  },
+  {
+    "sheet": "bowler",
+    "set": 6,
+    "name": "Shoriful Islam"
+  },
+  {
+    "sheet": "bowler",
+    "set": 6,
+    "name": "Zakary Foulkes"
+  },
+  {
+    "sheet": "bowler",
+    "set": 6,
+    "name": "Kagiso Rabada"
+  },
+  {
+    "sheet": "bowler",
+    "set": 6,
+    "name": "Bjorn Fortuin"
+  },
+  {
+    "sheet": "bowler",
+    "set": 6,
+    "name": "Noor Ahmad"
+  },
+  {
+    "sheet": "bowler",
+    "set": 7,
+    "name": "Ben Dwarshuis"
+  },
+  {
+    "sheet": "bowler",
+    "set": 7,
+    "name": "Lalit Rajbanshi"
+  },
+  {
+    "sheet": "bowler",
+    "set": 7,
+    "name": "Mark Adair"
+  },
+  {
+    "sheet": "bowler",
+    "set": 7,
+    "name": "Nosthush Kenjige"
+  },
+  {
+    "sheet": "bowler",
+    "set": 7,
+    "name": "Kyle Jamieson"
+  },
+  {
+    "sheet": "bowler",
+    "set": 7,
+    "name": "Logan van Beek"
+  },
+  {
+    "sheet": "bowler",
+    "set": 7,
+    "name": "Ish Sodhi"
+  },
+  {
+    "sheet": "bowler",
+    "set": 7,
+    "name": "Haider Ali"
+  },
+  {
+    "sheet": "bowler",
+    "set": 7,
+    "name": "Spencer Johnson"
+  },
+  {
+    "sheet": "bowler",
+    "set": 7,
+    "name": "Joshua Little"
+  },
+  {
+    "sheet": "bowler",
+    "set": 8,
+    "name": "Anrich Nortje"
+  },
+  {
+    "sheet": "bowler",
+    "set": 8,
+    "name": "Bernard Scholtz"
+  },
+  {
+    "sheet": "bowler",
+    "set": 8,
+    "name": "Kyle Klein"
+  },
+  {
+    "sheet": "bowler",
+    "set": 8,
+    "name": "Paul van Meekeren"
+  },
+  {
+    "sheet": "bowler",
+    "set": 8,
+    "name": "Luke Wood"
+  },
+  {
+    "sheet": "bowler",
+    "set": 8,
+    "name": "Ruben Trumpelmann"
+  },
+  {
+    "sheet": "bowler",
+    "set": 8,
+    "name": "Muhammad Arfan"
+  },
+  {
+    "sheet": "bowler",
+    "set": 8,
+    "name": "Barry McCarthy"
+  },
+  {
+    "sheet": "bowler",
+    "set": 8,
+    "name": "Safyaan Sharif"
+  },
+  {
+    "sheet": "bowler",
+    "set": 8,
+    "name": "Umesh Yadav"
+  },
+  {
+    "sheet": "uncapped",
+    "set": 1,
+    "name": "Anuj Rawat"
+  },
+  {
+    "sheet": "uncapped",
+    "set": 1,
+    "name": "Kumar Kushagra"
+  },
+  {
+    "sheet": "uncapped",
+    "set": 1,
+    "name": "Salil Arora"
+  },
+  {
+    "sheet": "uncapped",
+    "set": 1,
+    "name": "Urvil Patel"
+  },
+  {
+    "sheet": "uncapped",
+    "set": 1,
+    "name": "Kartik Sharma"
+  },
+  {
+    "sheet": "uncapped",
+    "set": 2,
+    "name": "Aarya Desai"
+  },
+  {
+    "sheet": "uncapped",
+    "set": 2,
+    "name": "Yash Dhull"
+  },
+  {
+    "sheet": "uncapped",
+    "set": 2,
+    "name": "Abhinav Manohar"
+  },
+  {
+    "sheet": "uncapped",
+    "set": 2,
+    "name": "Anmolpreet Singh"
+  },
+  {
+    "sheet": "uncapped",
+    "set": 2,
+    "name": "Atharva Taide"
+  },
+  {
+    "sheet": "uncapped",
+    "set": 3,
+    "name": "Shreyas Gopal"
+  },
+  {
+    "sheet": "uncapped",
+    "set": 3,
+    "name": "Rajvardhan Hangargekar"
+  },
+  {
+    "sheet": "uncapped",
+    "set": 3,
+    "name": "Tanush Kotian"
+  },
+  {
+    "sheet": "uncapped",
+    "set": 3,
+    "name": "Shivang Kumar"
+  },
+  {
+    "sheet": "uncapped",
+    "set": 3,
+    "name": "Mahipal Lomror"
+  },
+  {
+    "sheet": "uncapped",
+    "set": 4,
+    "name": "Akash Madhwal"
+  },
+  {
+    "sheet": "uncapped",
+    "set": 4,
+    "name": "Ashok Sharma"
+  },
+  {
+    "sheet": "uncapped",
+    "set": 4,
+    "name": "Yash Raj Punja"
+  },
+  {
+    "sheet": "uncapped",
+    "set": 4,
+    "name": "Vignesh Puthur"
+  },
+  {
+    "sheet": "uncapped",
+    "set": 4,
+    "name": "Naman Tiwari"
+  },
+  {
+    "sheet": "uncapped",
+    "set": 5,
+    "name": "Wahidullah Zadran"
+  },
+  {
+    "sheet": "uncapped",
+    "set": 5,
+    "name": "Tom Moores"
+  },
+  {
+    "sheet": "uncapped",
+    "set": 5,
+    "name": "Tristan Luus"
+  },
+  {
+    "sheet": "uncapped",
+    "set": 5,
+    "name": "Ankit Kumar"
+  },
+  {
+    "sheet": "uncapped",
+    "set": 5,
+    "name": "Rohan Kunnummal"
+  },
+  {
+    "sheet": "uncapped",
+    "set": 6,
+    "name": "Danish Malewar"
+  },
+  {
+    "sheet": "uncapped",
+    "set": 6,
+    "name": "Mayank Rawat"
+  },
+  {
+    "sheet": "uncapped",
+    "set": 6,
+    "name": "Dharmendrasinh Jadeja"
+  },
+  {
+    "sheet": "uncapped",
+    "set": 6,
+    "name": "Vishal Nishad"
+  },
+  {
+    "sheet": "uncapped",
+    "set": 6,
+    "name": "Praful Hinge"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 1,
+    "name": "Sikandar Raza"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 1,
+    "name": "Saim Ayub"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 1,
+    "name": "Will Jacks"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 1,
+    "name": "Dipendra Singh Airee"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 1,
+    "name": "Roston Chase"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 1,
+    "name": "Azmatullah Omarzai"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 1,
+    "name": "Gerhard Erasmus"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 1,
+    "name": "Hardik Pandya"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 1,
+    "name": "Jason Holder"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 1,
+    "name": "Mohammad Nabi"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 2,
+    "name": "Sam Curran"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 2,
+    "name": "Romario Shepherd"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 2,
+    "name": "Benjamin Manenti"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 2,
+    "name": "Axar Patel"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 2,
+    "name": "Gareth Delany"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 2,
+    "name": "Shadab Khan"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 2,
+    "name": "Bas de Leede"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 2,
+    "name": "Brad Evans"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 2,
+    "name": "George Linde"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 2,
+    "name": "Michael Leask"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 3,
+    "name": "JJ Smit"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 3,
+    "name": "Rachin Ravindra"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 3,
+    "name": "Mahedi Hasan"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 3,
+    "name": "Matthew Forde"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 3,
+    "name": "James Neesham"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 3,
+    "name": "George Dockrell"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 3,
+    "name": "Michael Bracewell"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 3,
+    "name": "Rohit Paudel"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 3,
+    "name": "Curtis Campher"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 3,
+    "name": "Charith Asalanka"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 4,
+    "name": "Ryan Burl"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 4,
+    "name": "Faheem Ashraf"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 4,
+    "name": "Rishad Hossain"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 4,
+    "name": "Muhammad Asim"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 4,
+    "name": "Saad Bin Zafar"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 4,
+    "name": "Milind Kumar"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 4,
+    "name": "Sese Bau"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 4,
+    "name": "Aaron Hardie"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 4,
+    "name": "Roelof van der Merwe"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 4,
+    "name": "Shaheen Afridi"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 5,
+    "name": "Corbin Bosch"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 5,
+    "name": "Washington Sundar"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 5,
+    "name": "Assad Vala"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 5,
+    "name": "Jan Nicol Loftie-Eaton"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 5,
+    "name": "Virandeep Singh"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 5,
+    "name": "Harsh Thaker"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 5,
+    "name": "Yasim Murtaza"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 5,
+    "name": "Gulbadin Naib"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 5,
+    "name": "Grant Stewart"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 5,
+    "name": "Gulshan Jha"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 6,
+    "name": "Kushal Malla"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 6,
+    "name": "Mohammed Aslam"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 6,
+    "name": "Cole McConchie"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 6,
+    "name": "Dhananjaya de Silva"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 6,
+    "name": "Aamir Kaleem"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 6,
+    "name": "JJ Smuts"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 6,
+    "name": "Benjamin Ward"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 6,
+    "name": "Tanzim Hasan Sakib"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 6,
+    "name": "Nick Greenwood"
+  },
+  {
+    "sheet": "all rounder",
+    "set": 6,
+    "name": "Matthew Short"
+  }
+]

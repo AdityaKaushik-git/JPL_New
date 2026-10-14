@@ -110,7 +110,9 @@ def import_players():
                 'country_code': get_country_code(country),
                 'is_uncapped': is_uncapped,
                 'points': points,
-                'base_price': base_price
+                'base_price': base_price,
+                'sheet': sheet_name,
+                'set': int(d.get('Set')) if d.get('Set') is not None else 1
             })
             
     print(f"Total players parsed from Excel: {len(parsed_players)}")
@@ -172,13 +174,15 @@ def import_players():
             print("Inserting 280 Excel players into DB...")
             insert_sql = """
                 INSERT INTO players (
-                    player_code, auction_order, name, playing_role, country, country_code,
+                    player_code, auction_order, name, playing_role, excel_sheet, excel_set,
+                    country, country_code,
                     is_uncapped, course, year, enrollment_number, base_price, status,
                     ranking_points, previous_ranking_points, form_points, matches,
                     current_rank, previous_rank, category_rank, previous_category_rank,
                     base_price_auto
                 ) VALUES (
                     %s, %s, %s, %s, %s, %s,
+                    %s, %s,
                     %s, 'N/A', 'N/A', %s, %s, 'Available',
                     %s, %s, %s, 10,
                     %s, %s, %s, %s,
@@ -192,7 +196,8 @@ def import_players():
                 form_pts = min(100, max(0, int(p['points'] / 10)))
                 
                 cursor.execute(insert_sql, (
-                    p_code, i, p['name'], p['role'], p['country'], p['country_code'],
+                    p_code, i, p['name'], p['role'], p['sheet'], p['set'],
+                    p['country'], p['country_code'],
                     p['is_uncapped'], e_num, p['base_price'],
                     p['points'], p['points'], form_pts,
                     p['current_rank'], p['current_rank'], p['category_rank'], p['category_rank']

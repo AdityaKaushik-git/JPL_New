@@ -38,6 +38,8 @@ CREATE TABLE IF NOT EXISTS players (
     auction_order INT NULL,
     name VARCHAR(100) NOT NULL,
     playing_role ENUM('Batsman', 'Bowler', 'All-Rounder', 'Wicket Keeper') NOT NULL,
+    excel_sheet VARCHAR(50) NULL,
+    excel_set INT NULL,
     batting_style VARCHAR(40) NULL,
     bowling_style VARCHAR(60) NULL,
     course VARCHAR(50) NOT NULL DEFAULT 'N/A',

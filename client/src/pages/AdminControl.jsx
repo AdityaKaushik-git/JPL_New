@@ -166,10 +166,10 @@ export default function AdminControl() {
           <button
             className={`btn btn-sm ${showRankings ? 'btn-success' : 'btn-ghost'}`}
             onClick={() => emit('admin:toggleRankings', { enabled: !showRankings })}
-            title="Toggle whether non-admin users can see Live Rankings"
+            title="Declare auction results for franchises"
           >
             {showRankings ? <Eye size={15} /> : <EyeOff size={15} />}
-            Live Rankings: {showRankings ? 'ON' : 'OFF'}
+            Declare Result: {showRankings ? 'ON' : 'OFF'}
           </button>
           {state.status === 'Paused' && (
             <button className="btn btn-success btn-sm" onClick={() => emit('admin:resumeAuction')}>
