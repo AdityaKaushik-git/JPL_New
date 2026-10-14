@@ -1,88 +1,124 @@
 # JPL — JCC Cricket Sports Meet · Live Player Auction
 
 A real-time cricket player auction built for a projector-first live event.
-Franchise **owners** (who do not play) bid from a **₹18,00,00,000** purse to build squads of at most **12 players**.
-Players have **no photos** — identity is carried by initials, role glyphs, rankings and statistics from MySQL.
+Franchise **owners** (who do not play) bid from a **₹75,00,00,000** (₹75 Cr) purse to build squads of **15 players**.
+Players have **no photos** — identity is carried by initials, role glyphs, rankings, points and statistics from MySQL.
 
 **Stack:** Node.js · Express 5 · Socket.IO 4 · MySQL 8 (mysql2) · JWT · bcrypt · React 18 + Vite · lucide-react
 
 ---
 
-## 1. Architecture
+## 1. Auction Rules (JPL 2026 Single Source of Truth)
+
+All business rules are strictly enforced by the server in `server/config/auction.js` and under transaction locks in MySQL:
+
+| Rule | Value | Enforcement |
+|---|---|---|
+| **Starting Purse** | **₹75,00,00,000** (₹75 Cr) | Assigned by server on franchise creation; client values ignored |
+| **Squad Size** | **15 players** max | Checked under row locks on every bid and finalize |
+| **Batsman Slot** | Max **5** per squad | Squad composition check (`BATSMAN SLOT FULL`) |
+| **Bowler Slot** | Max **5** per squad | Squad composition check (`BOWLER SLOT FULL`) |
+| **All-Rounder Slot** | Max **3** per squad | Squad composition check (`ALL-ROUNDER SLOT FULL`) |
+| **Wicket Keeper Slot** | Max **2** per squad | Squad composition check (`WICKET-KEEPER SLOT FULL`) |
+| **Indian Minimum** | Min **3** Indian players | Foreign player purchase blocked if remaining open slots < Indian shortfall |
+| **Foreign Players** | **No cap** (Unlimited) | Any number of overseas players permitted as long as Indian minimum can be satisfied |
+
+### Bid Increment Ladder (JPL 2026)
+Bid increments scale progressively based on the current bid:
+- `< ₹50 L`: **+₹5,00,000** (+₹5 L)
+- `₹50 L – ₹1 Cr`: **+₹10,00,000** (+₹10 L)
+- `₹1 Cr – ₹2 Cr`: **+₹25,00,000** (+₹25 L)
+- `₹2 Cr – ₹5 Cr`: **+₹50,00,000** (+₹50 L)
+- `₹5 Cr – ₹10 Cr`: **+₹1,00,00,000** (+₹1 Cr)
+- `₹10 Cr – ₹20 Cr`: **+₹2,00,00,000** (+₹2 Cr)
+- `≥ ₹20 Cr`: **+₹5,00,00,000** (+₹5 Cr)
+
+---
+
+## 2. Player Queue & Role Slot Ordering
+
+The auction engine sequences players according to the **10-player Role Slot Rule**:
+- **Set 1:** 10 random **Batsmen**, 10 random **Bowlers**, 10 random **Wicket Keepers**, 10 random **All-Rounders**
+- **Set 2:** Next 10 random **Batsmen**, 10 random **Bowlers**, 10 random **Wicket Keepers**, 10 random **All-Rounders**
+- **Subsequent Sets:** Repeats in 10-player chunks until all 280 players across all roles are sequenced.
+
+### Randomization & Queue Controls
+- Within each role's pool, players are shuffled randomly using Fisher-Yates, ensuring unpredictable lots while preserving role slots.
+- **Admin Control & Admin Pages:** Admins can click **Randomize queue** at any time to re-shuffle the available queue while maintaining the slot rule.
+- **Role Progression:** Admins can advance sequentially through the global queue or filter and auction `Next <Role>` players on demand.
+- **Auction Start OTP:** Starting or resetting the auction requires email OTP verification and automatically initializes a fresh randomized queue.
+
+---
+
+## 3. Architecture
 
 ```
 client/  (React + Vite, built to client/dist and served by Express)
   src/components/live/   broadcast stage: PlayerHero, BidPanel, TimerRing, TeamStrip, BidFeed, ResultOverlay
-  src/pages/             Live, BidRoom, AdminControl, Admin, Rankings, PlayerProfile, Dashboard, …
+  src/components/        RoleSlots, PlayerCard, Toast, Modal, Initials, TeamMark, RoleIcon
+  src/pages/             Live, BidRoom, AdminControl, Admin, Rankings, PlayerProfile, Dashboard, Standings
   src/hooks/useAuctionSocket.js   one socket per page; mirrors server state
-  src/lib/format.js      the single currency formatter (₹18,00,00,000 / ₹1.74 Cr)
+  src/lib/format.js      the single currency formatter (₹75,00,00,000 / ₹1.74 Cr)
 server/
-  config/auction.js      business rules: purse, squad size, timer, bid increments
+  config/auction.js      business rules: purse, squad size, timer, bid increments, role limits
   sockets/auctionSocket.js   the auction engine (server-authoritative)
-  services/ranking.js    JPL ranking algorithm (documented in the file header)
+  services/ranking.js    ranking algorithm + randomized slot queue builder (`buildSlotOrderedQueue`)
   services/franchises.js franchise creation — purse/squad assigned here, never from input
+  services/emailService.js OTP verification for start/reset auction safety
   controllers/, routes/  REST API
 database/
   schema.sql             fresh install
   migrate.js             idempotent migrator (runs on every `npm start`)
-  migrations/001_premium_auction.sql   manual one-shot upgrade of the original schema
-  seed.js                demo franchises + 24 players with stats
-tests/auction.integration.test.js
+  migrations/            incremental schema & rule migrations
+  seed.js                demo franchises + players with stats
+tests/
+  rules.unit.test.js     unit tests for purse, slots, foreign/Indian rules, and randomized slot queue
+  auction.integration.test.js
+  privacy.test.js
 ```
 
 ### Server is the source of truth
 Clients only send *intents*. For every bid the engine:
 1. authenticates the socket (JWT) and requires role `user` (franchise owner);
 2. **computes the bid amount itself** (client amount is only used to detect a stale click);
-3. rejects self-outbidding, closed lots and expired timers;
+3. rejects self-outbidding, closed lots, and expired timers;
 4. opens a transaction and locks the franchise row and the auction row (`SELECT … FOR UPDATE`);
-5. re-checks franchise `status = active`, **squad < 12** and **purse ≥ bid** from MySQL;
+5. re-checks franchise `status = active`, **squad < 15**, **purse ≥ bid**, and **role slot limits** from MySQL;
 6. records the bid, commits, then broadcasts.
 
-All state-changing socket handlers run through a single serial queue, so simultaneous bids are processed one after another (verified by test: two identical bids in the same instant → exactly one accepted).
-The SELL step re-checks purse and squad under lock. CHECK constraints (`purse ≥ 0`, `squad_count ≤ max_squad_size`) back this up in the database.
+All state-changing socket handlers run through a single serial queue, so simultaneous bids are processed one after another. The SELL step re-checks purse, squad size, and role slots under lock.
 
 ### Socket.IO events
 | Direction | Event | Notes |
 |---|---|---|
 | client → server | `user:join` | request a snapshot (also sent automatically on connect) |
 | | `user:placeBid {auctionId, amount}` | franchise owners only |
-| | `admin:startPlayer {playerId}` / `admin:nextPlayer` | next = lowest `auction_order` that is Available |
-| | `admin:pauseAuction` / `admin:resumeAuction` | |
-| | `admin:sellPlayer` / `admin:markUnsold` | |
+| | `admin:startPlayer {playerId}` | start lot for a specific player |
+| | `admin:nextPlayer {role}` | next Available player (overall or filtered by role) |
+| | `admin:startAuction` | start/resume auction safely in Paused state |
+| | `admin:pauseAuction` / `admin:resumeAuction` | pause/resume clock |
+| | `admin:sellPlayer` / `admin:markUnsold` | close lot |
 | | `admin:reAuction {playerId}` | Unsold → Available |
+| | `admin:randomizeQueue` | randomize player queue following role slot rule |
+| | `admin:toggleRankings {enabled}` | toggle live ranking points visibility for bidders |
 | server → client | `auction:stateUpdate` | full state (player, lot, bid, bidder, timer, history, result) |
 | | `auction:timer` | seconds left, every second |
 | | `auction:bidPlaced`, `auction:sold`, `auction:unsold` | drive animations |
 | | `teams:update` | purses & squad counts for the team strip |
 | | `players:changed`, `auction:playerReset`, `purse:update`, `live:stats`, `auction:notification` | |
 
-**Timer:** starts at `AUCTION_INITIAL_SECONDS` (30), resets to `AUCTION_BID_RESET_SECONDS` (15) when a bid lands with less time left. At 00:00 the lot closes automatically — SOLD to the highest bidder, otherwise UNSOLD (`AUCTION_AUTO_FINALIZE=false` restores manual closing).
+**Timer:** starts at `AUCTION_INITIAL_SECONDS` (30), resets to `AUCTION_BID_RESET_SECONDS` (10) when a bid lands with less time left. At 00:00 the lot closes automatically (`AUCTION_AUTO_FINALIZE=false` restores manual closing).
 **Restart safety:** if the server restarts mid-lot, the open auction is restored in a *Paused* state.
-**Bid increments:** +₹1,00,000 below ₹1 Cr · +₹5,00,000 up to ₹5 Cr · +₹10,00,000 above.
-
-### Accounts
-| Role | Created by | Can |
-|---|---|---|
-| `admin` | bootstrap (env) | everything; runs the auction |
-| `user` = franchise owner | **admin only** | bid, view dashboard/squad/bids |
-| `player` (legacy) | existing data | view own card; change own base price twice while Available |
-| spectator | — | `/live`, rankings, teams, results, player profiles (read-only) |
-
-There is **no public registration** (`/api/auth/register` no longer exists; `/register` redirects to login).
-
-### JPL ranking
-Original model, not ICC. Batting, bowling, all-rounder (√(B×W)) and wicketkeeper scores on a 0–1000 scale, adjusted for experience and player-of-the-match impact. Full formula is documented at the top of `server/services/ranking.js`. Rankings recompute whenever player data changes; movement, form (points delta) and history are stored.
 
 ---
 
-## 2. Local installation
+## 4. Local installation
 
 Requirements: Node 20+, MySQL 8.0.16+ (or MariaDB 10.4+).
 
 ```bash
-git clone https://github.com/AdityaKaushik-git/JPL_JCC.git
-cd JPL_JCC
+git clone https://github.com/AdityaKaushik-git/JPL_New.git
+cd JPL_New/JPL_JCC_New
 cp .env.example .env          # set DB_* and a long JWT_SECRET
 npm install
 npm run build                 # builds the React client into client/dist
@@ -96,36 +132,16 @@ For client hot-reload: `npm run start:server` in one terminal and `cd client && 
 - Admin: `ADMIN001` / value of `ADMIN_PASSWORD` (default `admin123` — change it)
 - Owners: `titans@jpl.com`, `warriors@jpl.com`, `royals@jpl.com`, `strikers@jpl.com` / `Owner@123`
 
-## 3. Environment variables
-See `.env.example`. Required: `DB_HOST`, `DB_USER`, `DB_PASS`, `DB_NAME`, `JWT_SECRET` (≥16 chars).
-Optional: `DB_PORT`, `DB_SSL`, `DB_POOL_SIZE`, `PORT`, `CORS_ORIGIN`, `ADMIN_LOGIN_ID`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `AUCTION_INITIAL_SECONDS`, `AUCTION_BID_RESET_SECONDS`, `AUCTION_AUTO_FINALIZE`.
+---
 
-## 4. Database setup
-- **Fresh database:** `npm run migrate` (creates tables from `schema.sql` and a bootstrap admin).
-- **Existing database from the original version:** back it up, then `npm run migrate`. It is idempotent and:
-  widens money columns to `DECIMAL(15,2)`, drops `players.photo_url`, adds stats/ranking/franchise columns and tables,
-  removes owners that the old registration inserted as ₹0 "players", sets every franchise to ₹18 Cr (remaining = ₹18 Cr − actual spend) with a 12-player limit, and recalculates rankings.
-  The same upgrade exists as plain SQL in `database/migrations/001_premium_auction.sql`.
+## 5. Testing
 
-## 5. Deploying on Render
-Render has no managed MySQL, so `render.yaml` runs **MySQL 8 as a private service with a persistent disk**, and the app as a Docker web service.
-
-1. Push this repo to GitHub.
-2. Render → **New → Blueprint** → select the repo. Render reads `render.yaml`.
-3. Set `ADMIN_PASSWORD` when prompted. `JWT_SECRET` and the MySQL passwords are generated.
-4. Deploy. The container builds the client, runs `database/migrate.js`, then starts the server. Health check: `/api/health`.
-5. Sign in as the admin → **Manage → Franchises → Create franchise**, add players, then open **/live** on the projector.
-
-Keep the web service at **one instance** — the live auction clock lives in that process. Private services and disks need a paid Render plan.
-Using an external MySQL instead? Delete the `pserv` block, set `DB_*` manually and `DB_SSL=true` if required.
-
-## 6. Testing
 ```bash
-npm run seed
-AUCTION_INITIAL_SECONDS=5 AUCTION_BID_RESET_SECONDS=3 npm run start:server
-# in another terminal
-TEST_BASE_URL=http://localhost:3000 npm test
-```
-Covers: registration removed; franchise always gets ₹18 Cr / 12 slots even if the request tries to set them; owner cannot call admin APIs; spectators cannot bid; tampered bid amounts rejected; concurrent identical bids → one accepted; self-outbid blocked; auto SOLD / UNSOLD at 00:00; purse arithmetic; 12-player limit → SQUAD FULL.
+# Run unit tests
+node --test tests/rules.unit.test.js
 
-**Manual event rehearsal:** open `/live` on a second screen (press **F** for fullscreen), sign in two owners in separate browsers at `/auction`, run players from `/admin/control`, and check SOLD/UNSOLD overlays, the team strip pulse, and the purse/squad counts in each owner's dashboard.
+# Build client production bundle
+npm run build
+```
+Tests cover: starting purse ₹75 Cr; 15-player squad limit; no foreign cap; min 3 Indian players requirement; role slot limits; randomized queue slot rule; sequential queue advancement; and tamper-proof server bid validation.
+
