@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Radio, ListOrdered, ArrowRight, Calendar, Clock, MapPin, Building2, Shield, Coins, Gavel, Trophy, Layers, CheckCircle2 } from 'lucide-react'
+import { Radio, ListOrdered, ArrowRight, Calendar, Clock, MapPin, Building2, Shield, Coins, Gavel, Trophy, Layers } from 'lucide-react'
 import PitchBackdrop from '../components/PitchBackdrop'
 import RoleIcon from '../components/RoleIcon'
 import { useAsync } from '../hooks/useAsync'
@@ -99,27 +99,30 @@ export default function Landing() {
             <ul className="rule-list">
               <li><span>Virtual Purse Budget:</span> <b>₹75 Crore</b></li>
               <li><span>Squad Capacity:</span> <b>Exactly 15 Players</b></li>
-              <li><span>Team Size:</span> <b>4 Students</b> per franchise</li>
+              <li><span>Team Size:</span> <b>4 Students / Franchise</b></li>
               <li><span>Foreign Players Limit:</span> <b>No Limit (Unlimited Overseas)</b></li>
               <li><span>Indian Players Requirement:</span> <b>Minimum 3 Indian Players</b></li>
             </ul>
             <div className="rule-checklist-box">
-              <span className="checklist-title">Required Squad Composition (15 Total)</span>
+              <div className="checklist-head">
+                <span className="checklist-title">Required Squad Composition</span>
+                <span className="checklist-badge">15 Players</span>
+              </div>
               <div className="squad-roles-grid">
                 <div className="squad-role-item">
-                  <span className="role-lbl"><RoleIcon role="bat" size={13} /> Batsmen</span>
+                  <span className="role-lbl"><RoleIcon role="Batsman" size={15} /> Batsmen</span>
                   <b className="role-cap">5 Players</b>
                 </div>
                 <div className="squad-role-item">
-                  <span className="role-lbl"><RoleIcon role="bowl" size={13} /> Bowlers</span>
+                  <span className="role-lbl"><RoleIcon role="Bowler" size={15} /> Bowlers</span>
                   <b className="role-cap">5 Players</b>
                 </div>
                 <div className="squad-role-item">
-                  <span className="role-lbl"><RoleIcon role="wk" size={13} /> Keepers</span>
+                  <span className="role-lbl"><RoleIcon role="Wicket Keeper" size={15} /> Keepers</span>
                   <b className="role-cap">2 Players</b>
                 </div>
                 <div className="squad-role-item">
-                  <span className="role-lbl"><RoleIcon role="ar" size={13} /> All-Rounders</span>
+                  <span className="role-lbl"><RoleIcon role="All-Rounder" size={15} /> All-Rounders</span>
                   <b className="role-cap">3 Players</b>
                 </div>
               </div>
@@ -183,7 +186,7 @@ export default function Landing() {
             </div>
           </div>
 
-          {/* Card 3: Auction Set System & Unsold Round*/}
+          {/* Card 3: Auction Set System & Unsold Rules*/}
           <div className="rule-card landing-fade-up delay-3">
             <div className="rule-card-header">
               <Layers className="rule-icon" size={22} />
@@ -195,10 +198,6 @@ export default function Landing() {
               <li><span>Unsold Players:</span> <b>Marked Unsold if no bids</b></li>
               <li><span>Final Unsold Round:</span> <b>Returned for final re-bids</b></li>
             </ul>
-            <div className="rule-note-box">
-              <CheckCircle2 size={16} className="text-turf" />
-              <span>Bidding requires valid purse floor balance, remaining role slots, no overseas player limit, and minimum 3 Indian players.</span>
-            </div>
           </div>
 
           {/* Card 4: Winner & Tie-Breaker Criteria*/}

@@ -39,7 +39,18 @@ function Keeper() {
   )
 }
 
-const MAP = { 'Batsman': Bat, 'Bowler': Ball, 'All-Rounder': AllRounder, 'Wicket Keeper': Keeper }
+const MAP = {
+  'Batsman': Bat,
+  'bat': Bat,
+  'Bowler': Ball,
+  'bowl': Ball,
+  'All-Rounder': AllRounder,
+  'ar': AllRounder,
+  'Wicket Keeper': Keeper,
+  'wk': Keeper,
+  'Keeper': Keeper,
+  'keeper': Keeper,
+}
 
 export default function RoleIcon({ role, size = 20, className = '', title }) {
   const Glyph = MAP[role] || Bat
