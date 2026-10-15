@@ -1,6 +1,6 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Play, Pause, SkipForward, CheckCircle2, XCircle, RotateCcw, Radio, Wifi, WifiOff, Search, Square, Eye, EyeOff, Shuffle } from 'lucide-react'
+import { Play, Pause, SkipForward, CheckCircle2, XCircle, RotateCcw, Radio, Wifi, WifiOff, Search, Square, Eye, EyeOff, Shuffle, Maximize2, Minimize2 } from 'lucide-react'
 import ToastContainer from '../components/Toast'
 import Modal, { ConfirmDialog } from '../components/Modal'
 import FranchiseModal from '../components/FranchiseModal'
@@ -31,6 +31,42 @@ export default function AdminControl() {
   const [catFilter, setCatFilter] = useState('All')
   const [sortBy, setSortBy] = useState('order')
   const [selectedFranchiseId, setSelectedFranchiseId] = useState(null)
+  const [expanded, setExpanded] = useState(() => {
+    try {
+      return localStorage.getItem('jpl_admin_control_expanded') === 'true'
+    } catch (e) {
+      return false
+    }
+  })
+  const [isFullscreen, setIsFullscreen] = useState(false)
+
+  useEffect(() => {
+    const onFsChange = () => setIsFullscreen(Boolean(document.fullscreenElement))
+    document.addEventListener('fullscreenchange', onFsChange)
+    return () => document.removeEventListener('fullscreenchange', onFsChange)
+  }, [])
+
+  const isExpanded = expanded || isFullscreen
+
+  const toggleExpand = useCallback(() => {
+    setExpanded(prev => {
+      const next = !prev
+      try {
+        localStorage.setItem('jpl_admin_control_expanded', String(next))
+      } catch (e) {}
+      return next
+    })
+  }, [])
+
+  const toggleFullscreen = useCallback(async () => {
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen()
+      } else {
+        await document.documentElement.requestFullscreen()
+      }
+    } catch (err) {}
+  }, [])
 
   const [showOtpModal, setShowOtpModal] = useState(false)
   const [otpInput, setOtpInput] = useState('')
@@ -164,6 +200,15 @@ export default function AdminControl() {
         </div>
         <div className="head-actions">
           <button
+            type="button"
+            className={`btn btn-sm ${isExpanded ? 'btn-primary' : 'btn-ghost'}`}
+            onClick={toggleExpand}
+            title={isExpanded ? 'Collapse screen (Show player queue)' : 'Expand screen (Hide player queue for screen sharing)'}
+          >
+            {isExpanded ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
+            <span>{isExpanded ? 'Collapse screen' : 'Expand screen'}</span>
+          </button>
+          <button
             className={`btn btn-sm ${showRankings ? 'btn-success' : 'btn-ghost'}`}
             onClick={() => emit('admin:toggleRankings', { enabled: !showRankings })}
             title="Declare auction results for franchises"
@@ -186,13 +231,40 @@ export default function AdminControl() {
         </div>
       </div>
 
-      <div className="control-grid">
+      <div className={`control-grid${isExpanded ? ' is-expanded' : ''}`}>
         <section className="panel control-lot">
           <div className="panel-head">
-            <h2>On the block</h2>
-            <span className={`status-pill status-${state.status.toLowerCase()}`}>
-              {state.status === 'Live' && <i className="live-dot" />}{state.status}
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '.6rem', flexWrap: 'wrap' }}>
+              <h2>On the block</h2>
+              <span className={`status-pill status-${state.status.toLowerCase()}`}>
+                {state.status === 'Live' && <i className="live-dot" />}{state.status}
+              </span>
+              {isExpanded && (
+                <span className="chip chip-success" style={{ fontSize: '0.74rem', padding: '0.2rem 0.55rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  <EyeOff size={12} /> Screen Expanded (Queue Hidden)
+                </span>
+              )}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '.4rem' }}>
+              <button
+                type="button"
+                className={`btn btn-sm ${isExpanded ? 'btn-primary' : 'btn-ghost'}`}
+                onClick={toggleExpand}
+                title={isExpanded ? 'Collapse screen (Show player queue)' : 'Expand screen (Hide player queue for screen sharing)'}
+              >
+                {isExpanded ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
+                <span>{isExpanded ? 'Collapse screen' : 'Expand screen'}</span>
+              </button>
+              <button
+                type="button"
+                className="icon-btn"
+                onClick={toggleFullscreen}
+                title={isFullscreen ? 'Exit browser fullscreen' : 'Toggle browser fullscreen'}
+                aria-label={isFullscreen ? 'Exit browser fullscreen' : 'Toggle browser fullscreen'}
+              >
+                {isFullscreen ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
+              </button>
+            </div>
           </div>
 
           {p ? (
@@ -233,6 +305,21 @@ export default function AdminControl() {
             >
               <SkipForward size={18} /> {roleFilter !== 'All' ? `Next ${roleFilter}` : 'Next player'}
             </button>
+            {isExpanded && (
+              <select
+                value={roleFilter}
+                onChange={e => setRoleFilter(e.target.value)}
+                className="select-sm"
+                title="Filter next player by role"
+                style={{ flex: '0 0 auto', minWidth: '130px', padding: '0.65rem 0.8rem', borderRadius: 'var(--r-sm)', background: 'var(--night-2)', color: 'var(--chalk-1)', border: '1px solid var(--line-2)' }}
+              >
+                <option value="All">All Roles</option>
+                <option value="Batsman">Batsmen</option>
+                <option value="Bowler">Bowlers</option>
+                <option value="All-Rounder">All-Rounders</option>
+                <option value="Wicket Keeper">Keepers</option>
+              </select>
+            )}
             {state.status === 'Live' && <button className="btn btn-ghost btn-lg" onClick={() => emit('admin:pauseAuction')}><Pause size={18} /> Pause</button>}
             {state.status === 'Paused' && <button className="btn btn-success btn-lg" onClick={() => emit('admin:resumeAuction')}><Play size={18} /> Resume</button>}
             <button className="btn btn-success btn-lg" onClick={() => ask('sell')} disabled={!open || !state.highestBidder}>
@@ -245,76 +332,78 @@ export default function AdminControl() {
           <BidFeed bids={state.bidHistory} limit={5} />
         </section>
 
-        <section className="panel control-queue">
-          <div className="panel-head" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '.6rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '.5rem', flexWrap: 'wrap' }}>
-              <h2>Player queue <span className="count">{queue.length}</span></h2>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '.4rem', flex: 1, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-                <button
-                  className="btn btn-ghost btn-sm"
-                  onClick={handleRandomizeQueue}
-                  disabled={hasBidsOnCurrentLot || randomizing}
-                  title="Randomize player queue following the 10-player role slot rule"
-                >
-                  <Shuffle size={14} /> {randomizing ? 'Randomizing…' : 'Randomize'}
-                </button>
-                <label className="search" style={{ minWidth: '160px', maxWidth: '240px' }}>
-                  <Search size={15} />
-                  <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search name/country/code" />
-                </label>
+        {!isExpanded && (
+          <section className="panel control-queue">
+            <div className="panel-head" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '.6rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '.5rem', flexWrap: 'wrap' }}>
+                <h2>Player queue <span className="count">{queue.length}</span></h2>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '.4rem', flex: 1, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                  <button
+                    className="btn btn-ghost btn-sm"
+                    onClick={handleRandomizeQueue}
+                    disabled={hasBidsOnCurrentLot || randomizing}
+                    title="Randomize player queue following the 10-player role slot rule"
+                  >
+                    <Shuffle size={14} /> {randomizing ? 'Randomizing…' : 'Randomize'}
+                  </button>
+                  <label className="search" style={{ minWidth: '160px', maxWidth: '240px' }}>
+                    <Search size={15} />
+                    <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search name/country/code" />
+                  </label>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '.4rem', flexWrap: 'wrap' }}>
+                <select value={roleFilter} onChange={e => setRoleFilter(e.target.value)} className="select-sm" title="Filter by role">
+                  <option value="All">All Roles</option>
+                  <option value="Batsman">Batsmen</option>
+                  <option value="Bowler">Bowlers</option>
+                  <option value="All-Rounder">All-Rounders</option>
+                  <option value="Wicket Keeper">Keepers</option>
+                </select>
+                <select value={catFilter} onChange={e => setCatFilter(e.target.value)} className="select-sm" title="Filter by category">
+                  <option value="All">All Categories</option>
+                  <option value="Overseas">Overseas</option>
+                  <option value="Uncapped">Uncapped</option>
+                </select>
+                <select value={sortBy} onChange={e => setSortBy(e.target.value)} className="select-sm" title="Sort queue">
+                  <option value="order">Queue Order</option>
+                  <option value="name">Name (A-Z)</option>
+                  <option value="price">Base Price</option>
+                  <option value="rank">Rank</option>
+                </select>
               </div>
             </div>
-            <div style={{ display: 'flex', gap: '.4rem', flexWrap: 'wrap' }}>
-              <select value={roleFilter} onChange={e => setRoleFilter(e.target.value)} className="select-sm" title="Filter by role">
-                <option value="All">All Roles</option>
-                <option value="Batsman">Batsmen</option>
-                <option value="Bowler">Bowlers</option>
-                <option value="All-Rounder">All-Rounders</option>
-                <option value="Wicket Keeper">Keepers</option>
-              </select>
-              <select value={catFilter} onChange={e => setCatFilter(e.target.value)} className="select-sm" title="Filter by category">
-                <option value="All">All Categories</option>
-                <option value="Overseas">Overseas</option>
-                <option value="Uncapped">Uncapped</option>
-              </select>
-              <select value={sortBy} onChange={e => setSortBy(e.target.value)} className="select-sm" title="Sort queue">
-                <option value="order">Queue Order</option>
-                <option value="name">Name (A-Z)</option>
-                <option value="price">Base Price</option>
-                <option value="rank">Rank</option>
-              </select>
-            </div>
-          </div>
-          <ul className="queue-list">
-            {queue.map(q => (
-              <li key={q.id}>
-                <span className="queue-no">{pad2(q.auction_order)}</span>
-                <Initials initials={q.initials} size="sm" />
-                <div className="queue-text">
-                  <b>{q.name} {q.country && <span className="country-badge">({q.country})</span>}</b>
-                  <small><RoleIcon role={q.playing_role} size={13} /> {roleMeta(q.playing_role).short} · {formatShort(q.base_price)} · {q.current_rank ? `#${q.current_rank}` : 'NR'}</small>
-                </div>
-                <button className="btn btn-ghost btn-sm" disabled={hasBidsOnCurrentLot} onClick={() => emit('admin:startPlayer', { playerId: q.id })}><Play size={14} /> Start</button>
-              </li>
-            ))}
-            {!queue.length && <li className="muted queue-empty">{players.loading ? 'Loading players…' : 'No Available players.'}</li>}
-          </ul>
+            <ul className="queue-list">
+              {queue.map(q => (
+                <li key={q.id}>
+                  <span className="queue-no">{pad2(q.auction_order)}</span>
+                  <Initials initials={q.initials} size="sm" />
+                  <div className="queue-text">
+                    <b>{q.name} {q.country && <span className="country-badge">({q.country})</span>}</b>
+                    <small><RoleIcon role={q.playing_role} size={13} /> {roleMeta(q.playing_role).short} · {formatShort(q.base_price)} · {q.current_rank ? `#${q.current_rank}` : 'NR'}</small>
+                  </div>
+                  <button className="btn btn-ghost btn-sm" disabled={hasBidsOnCurrentLot} onClick={() => emit('admin:startPlayer', { playerId: q.id })}><Play size={14} /> Start</button>
+                </li>
+              ))}
+              {!queue.length && <li className="muted queue-empty">{players.loading ? 'Loading players…' : 'No Available players.'}</li>}
+            </ul>
 
-          {unsold.length > 0 && (
-            <>
-              <h3 className="sub-head">Unsold <span className="count">{unsold.length}</span></h3>
-              <ul className="queue-list">
-                {unsold.map(u => (
-                  <li key={u.id}>
-                    <Initials initials={u.initials} size="sm" />
-                    <div className="queue-text"><b>{u.name} {u.country && <span className="country-badge">({u.country})</span>}</b><small>{roleMeta(u.playing_role).label}</small></div>
-                    <button className="btn btn-ghost btn-sm" onClick={() => emit('admin:reAuction', { playerId: u.id })}><RotateCcw size={14} /> Re-auction</button>
-                  </li>
-                ))}
-              </ul>
-            </>
-          )}
-        </section>
+            {unsold.length > 0 && (
+              <>
+                <h3 className="sub-head">Unsold <span className="count">{unsold.length}</span></h3>
+                <ul className="queue-list">
+                  {unsold.map(u => (
+                    <li key={u.id}>
+                      <Initials initials={u.initials} size="sm" />
+                      <div className="queue-text"><b>{u.name} {u.country && <span className="country-badge">({u.country})</span>}</b><small>{roleMeta(u.playing_role).label}</small></div>
+                      <button className="btn btn-ghost btn-sm" onClick={() => emit('admin:reAuction', { playerId: u.id })}><RotateCcw size={14} /> Re-auction</button>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+          </section>
+        )}
 
         <section className="panel control-teams">
           <div className="panel-head"><h2>Team purses</h2></div>
