@@ -305,21 +305,6 @@ export default function AdminControl() {
             >
               <SkipForward size={18} /> {roleFilter !== 'All' ? `Next ${roleFilter}` : 'Next player'}
             </button>
-            {isExpanded && (
-              <select
-                value={roleFilter}
-                onChange={e => setRoleFilter(e.target.value)}
-                className="select-sm"
-                title="Filter next player by role"
-                style={{ flex: '0 0 auto', minWidth: '130px', padding: '0.65rem 0.8rem', borderRadius: 'var(--r-sm)', background: 'var(--night-2)', color: 'var(--chalk-1)', border: '1px solid var(--line-2)' }}
-              >
-                <option value="All">All Roles</option>
-                <option value="Batsman">Batsmen</option>
-                <option value="Bowler">Bowlers</option>
-                <option value="All-Rounder">All-Rounders</option>
-                <option value="Wicket Keeper">Keepers</option>
-              </select>
-            )}
             {state.status === 'Live' && <button className="btn btn-ghost btn-lg" onClick={() => emit('admin:pauseAuction')}><Pause size={18} /> Pause</button>}
             {state.status === 'Paused' && <button className="btn btn-success btn-lg" onClick={() => emit('admin:resumeAuction')}><Play size={18} /> Resume</button>}
             <button className="btn btn-success btn-lg" onClick={() => ask('sell')} disabled={!open || !state.highestBidder}>
